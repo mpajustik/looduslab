@@ -47,9 +47,18 @@ siis muudab värvimuutus ühte rida, mitte kahtekümmet faili.
 
 ## 0.3 Deploy Cloudflare'i
 
-- [ ] Loo Cloudflare'i konto → Workers & Pages → ühenda GitHubi repo
-- [ ] Build command: `npm run build`, deploy command: `npx wrangler deploy`
-- [ ] Kontrolli, et *.workers.dev aadress avaneb ka telefonis
+- [x] Loo Cloudflare'i konto → Workers & Pages → ühenda GitHubi repo
+- [x] Build command: `npm run build`, deploy command: `npx wrangler deploy`
+- [x] Kontrolli, et *.workers.dev aadress avaneb ka telefonis
+      (2026-08-02: leht on üleval, otselink /kursus elab värskendamise üle)
+
+**Aadressid:**
+
+- production (main haru): <https://looduslab.merlis-pajustik.workers.dev>
+- eelvaade (muu haru): `<haru>-looduslab.merlis-pajustik.workers.dev`
+
+Mõlemad lülitid tuleb Cloudflare'is käsitsi sisse lülitada (Settings →
+Domains & Routes → Worker URL) – vaikimisi on nad väljas ja aadress ei avane.
 
 **Valmis, kui:** muudad avalehe teksti, git push, ja muudatus on ~1 min
 pärast internetis.
