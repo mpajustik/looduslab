@@ -7,6 +7,7 @@ import ModulePage from "./pages/ModulePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProgressPage from "./pages/ProgressPage";
 import ReviewPage from "./pages/ReviewPage";
+import StepDemoPage from "./pages/StepDemoPage";
 import TeacherPage from "./pages/TeacherPage";
 
 /**
@@ -24,6 +25,11 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
             <Route path="kursus" element={<CoursePage />} />
+            {/* Ainult arenduses: sammuraami demo (samm 1.2). Täpne tee
+                võidab /m/:slug üle, seega päris moodulid ei kannata. */}
+            {import.meta.env.DEV && (
+              <Route path="m/test" element={<StepDemoPage />} />
+            )}
             <Route path="m/:slug" element={<ModulePage />} />
             <Route path="kordamine" element={<ReviewPage />} />
             <Route path="edenemine" element={<ProgressPage />} />
