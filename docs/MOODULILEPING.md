@@ -184,9 +184,19 @@ lubatud tüüp, mitte vaikevalik.
    praktiline töö on katmata? Alusta sellest, mitte lemmikteemast.
    **NB:** raport valmib alles etapis 4.0. Etapi 1 kaks pilootmoodulit on
    plaaniga ette antud – nende juures seda sammu ei ole ja see on ootuspärane
-2. Kopeeri sisu/MALL-moodul.md → `sisu/MOODUL-<slug>.md` ja täida (sh
-   ainekava seosed ID-dega failist sisu/AINEKAVA-fyysika-8.md)
-3. Ütle AI-le: „Loo moodul sisu/MOODUL-<slug>.md põhjal moodulilepingu järgi"
-4. Kontrolli füüsikat: loe model.ts läbi, käivita testid, proovi piirväärtusi
-5. Proovi moodul telefonis läbi õpilase pilguga
-6. Commit; kontrolli, et katvusraport läks paremaks
+2. Vaata jaotuskava (`sisu/JAOTUS-fyysika-8.md`) – milline planeeritud
+   moodul selle augu katab? Kui plokk on veel jagamata, jaga see esmalt
+   (skill `/jaga-plokk`) ja kinnita jaotus. Ainekava seoseid EI tuleta iga
+   mooduli juures uuesti nullist – muidu õpetavad kaks moodulit sama
+   mõistet ja kolmas jääb tegemata
+3. Kopeeri sisu/MALL-moodul.md → `sisu/MOODUL-<slug>.md` ja täida; ainekava
+   seosed (õpitulemused, mõisted, praktiline töö) võta jaotusrealt
+4. Ütle AI-le: „Loo moodul sisu/MOODUL-<slug>.md põhjal moodulilepingu järgi"
+5. Kontrolli füüsikat: loe model.ts läbi, käivita testid, proovi piirväärtusi
+6. Proovi moodul telefonis läbi õpilase pilguga
+7. Commit; märgi jaotusreale staatus `ehitatud` ja kontrolli, et
+   katvusraport läks paremaks
+
+Katvuse tõde tuleb ALATI manifestidest, mitte jaotuskavast: jaotus on plaan,
+manifest on tehtud töö. Raport ei tohi näidata rohelist selle eest, mis on
+alles planeeritud.
