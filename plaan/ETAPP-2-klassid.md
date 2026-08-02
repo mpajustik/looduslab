@@ -211,7 +211,7 @@ tõestatud, et RLS peab. Vastupidine järjekord tähendaks, et internetis on
 - [ ] Käivita mõlemad migratsioonid prod-projektis; sync-modules prod-i
 - [ ] Korda turvatesti punktid 1–3 prod-is (kiirversioon: 15 min – RLS on
       sama SQL, aga kontrolli, et see ka päriselt käivitatud sai)
-- [ ] Cloudflare Pages production saab prod-võtmed, eelvaated dev-võtmed
+- [ ] Cloudflare Workers: production saab prod-võtmed, eelvaated dev-võtmed
 - [ ] Varundus: pg_dump skript + juhend (või kontrolli Supabase varunduse
       olemasolu oma plaanil) – enne esimest päris klassi peab olema viis
       andmeid taastada

@@ -18,7 +18,8 @@ Supabase: Postgres + RLS │ Auth │ Edge Functions
 - **Ei ole**: oma serverit, Dockerit, mikroteenuseid, SSR-i, Reduxit,
   monorepo pakette. Need lisatakse alles tõestatud vajaduse korral.
 - Kogu taustaloogika elab andmebaasis (RLS) ja Edge Functionites.
-- Majutus: Cloudflare Pages, git push → automaatne deploy + haru eelvaated.
+- Majutus: Cloudflare Workers (staatilised failid, seadistus wrangler.jsonc),
+  git push → automaatne deploy + haru eelvaated.
 
 ## Põhikihid rakenduses
 
@@ -84,4 +85,5 @@ moodulist.
 
 - Kaks Supabase projekti: `looduslab-dev` ja `looduslab-prod`
 - .env.local (gitignore!): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-- Cloudflare Pages: production = main haru, eelvaade = iga PR
+- Cloudflare Workers: production = main haru (`wrangler deploy`), eelvaade =
+  iga muu haru (`wrangler versions upload` annab eraldi aadressi)

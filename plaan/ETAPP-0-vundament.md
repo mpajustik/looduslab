@@ -60,16 +60,19 @@ directory"). Sama CDN ja sama git-põhine deploy; Pages jääb vanade
 projektide jaoks. Repo pool on valmis:
 
 - `wrangler.jsonc` – `assets.directory: ./dist` ja
-  `not_found_handling: "single-page-application"` (ilma selleta annaks
+  `assets.not_found_handling: "single-page-application"` (ilma selleta annaks
   otselink /kursus lehe värskendamisel Cloudflare'i 404)
 - `wrangler` on devDependency, et versioon oleks lukus, mitte „mis parasjagu
   npx alla laadib"
-- `public/_redirects` KUSTUTATUD: Workers'i staatiliste failide juures ei
-  toimi `/* /index.html 200` rida (200-ümberkirjutust see fail seal ei
-  toeta) – seda tööd teeb nüüd `not_found_handling`
+- `public/_redirects` KUSTUTATUD – aga mitte sellepärast, et Workers seda ei
+  toetaks: `_redirects` fail töötab ka Workersi staatiliste failidega.
+  Põhjus on, et SPA-fallback'i jaoks on Workersis oma dokumenteeritud võti
+  (`assets.not_found_handling`), ja kahte seadistust, mis teevad sama asja,
+  ei tasu paralleelselt hoida. Nii on kogu deploy-seadistus ühes failis.
 
-Cloudflare'i vormis ei ole midagi muuta: vaikeväärtused (`npm run build`,
-`npx wrangler deploy`, path `/`) on õiged. „Builds for non-production
+Cloudflare'i vormis kontrolli, et **build command on `npm run build`** ja
+deploy command `npx wrangler deploy` (path `/`) – Cloudflare pakub neid ise
+välja, aga vastutus, et need õiged on, jääb meile. „Builds for non-production
 branches" jäta sisse – iga haru saab oma eelvaate-aadressi.
 
 ## 0.4 Marsruudid ja raam
@@ -97,7 +100,7 @@ branches" jäta sisse – iga haru saab oma eelvaate-aadressi.
   Arenduses saab seda ise näha aadressil /viga-test (toodangu buildi see ei jõua).
 - Otselink /m/:slug peab lehe värskendamise üle elama: algselt tehti selleks
   public/_redirects, aga Workersi valikuga (samm 0.3) asendus see failiga
-  wrangler.jsonc → `not_found_handling: "single-page-application"`.
+  wrangler.jsonc → `assets.not_found_handling: "single-page-application"`.
 - Lisatud paketid: react-router (v8) ja lucide-react – mõlemad CLAUDE.md
   eelnevalt kinnitatud pinus.
 
@@ -140,7 +143,8 @@ checkerit alles siis, kui õpilane vale tagasiside saab.
 
 ## 0.7 (Valikuline) Domeen
 
-- [ ] Osta looduslab.ee (või muu), seo Cloudflare Pagesiga
+- [ ] Osta looduslab.ee (või muu), seo Workersi projektiga
+      (Workers & Pages → projekt → Settings → Domains & Routes → Custom domain)
 
 ---
 
