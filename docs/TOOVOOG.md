@@ -56,6 +56,13 @@ sõltumatut kihti väikese diff'i peal. Iga ülesande juures:
    > käsitlemata sisendid, RLS, preview-režiimi lekked."
    Uus vestlus ei tea, miks otsused sündisid – just see teeb ta
    erapooletuks. Kõige suuremad asjad: `/code-review ultra` (tasuline).
+
+   **Riskantsel sammul kutsu appi TEINE mudel – Codex** (vt allpool
+   „Teine mudel"). Uus Claude'i vestlus ei tea, miks otsused sündisid, aga
+   ta jagab sama mudeli kalduvusi: kui Claude tegi RLS-poliitikas
+   loogikavea, teeb sama vea üsna tõenäoliselt ka teine Claude. Teisel
+   mudelil on need kalduvused teised – see vähendab riski, aga ei kaota
+   seda. Lõpliku otsuse teed ikka sina.
 5. **Käsitsi proovimine** – 360 px + töölaud. Küsi AI-lt „mida peaksin
    käsitsi proovima?" ja proovi ka üks asi, mida ta EI nimetanud
    (nt sisend -5 või tühi väli).
@@ -72,10 +79,73 @@ katki läheb." Päris vea puhul: kõigepealt test, mis vea kinni püüab
 | UI-tekst, stiil | lint + build + silmaga üle |
 | model.ts, checker | + testid teadaolevate väärtustega (alati!) |
 | Tavaline moodulisamm | + `/code-review` samas sessioonis |
-| RLS, migratsioonid, engine, salvestamine | + puhas sessioon või `/code-review ultra`; SQL loed ise rida-realt |
+| RLS, migratsioonid, engine, salvestamine | + **Codex** (`/ulevaatus` teeb ise) või `/code-review ultra`; SQL loed ise rida-realt |
 
 Kõik kihid on odavad ainult siis, kui diff on väike – seepärast commit
 iga sammu järel.
+
+## Teine mudel: Codex erapooletu ülevaatajana
+
+Codex CLI on Windowsis natiivselt (WSL-i pole vaja) ja loeb projektist
+faili `AGENTS.md`, kus on kirjas tema roll: **ülevaataja, mitte kirjutaja.**
+Ta ei paranda leide ega tee commit'i.
+
+**Sina ei pea seda eraldi meeles pidama.** Skill `/ulevaatus` on nüüd
+kaheastmeline: CodeRabbit jookseb alati, Codex lisaks siis, kui samm on
+riskisamm. Riskisammud on plaanifailides ette märgitud reaga „Codexi
+ülevaatus tehtud – riskisamm". Lisaks kutsutakse Codex alati, kui diff
+puudutab kasvõi üht neist:
+
+`src/modules/**/model.ts` · `src/checker/**` · `src/engine/**` ·
+`supabase/migrations/**` · `supabase/functions/**` · võtme või
+isikuandmetega kohad
+
+Muidu piisab CodeRabbitist. Ütle `/ulevaatus codex`, kui tahad Codexit
+kindlasti. `/ulevaatus kiire` jätab ta vahele **ainult tavasammul** –
+riskisammul seda ei täideta, muidu jääks kohustuslik kontroll tegemata ja
+plaani linnuke valetaks.
+
+**Millal riskisamm:** siis, kui vale tulemus või andmeleke jõuaks õpilaseni
+VAIKSELT. Katkist nuppu näed kohe; vale rõhuvalemit ei näe keegi. Sedasama
+ütleb ka plaanifailides rida „Codexi ülevaatus tehtud – riskisamm".
+
+**Käsitsi, ilma skillita:**
+
+```bash
+npm run review
+```
+
+Vaatab commit'imata muudatused (ka uued failid) ja kirjutab leiud faili
+`codex-ulevaatus.md` (git ignoreerib seda). Võtab ~5 minutit. Juba
+commit'itud sammu või terve haru jaoks ava Codex vestlusena (`codex`) ja
+ütle: „Loe AGENTS.md ja tee seal kirjeldatud ülevaatus viimasele
+commit'ile" (või „harule main-i suhtes").
+
+**Leiud loed sina.** Claude toob need ette ja liigitab (päris viga vs
+stiiliküsimus), aga **mida parandatakse, otsustad sina** – täpselt nagu
+CodeRabbiti puhul. Päris vea puhul kõigepealt test, mis vea punaseks teeb,
+alles siis parandus.
+
+**Loe leiud failist `codex-ulevaatus.md`, mitte terminalist.** Sinu
+PowerShell on ConstrainedLanguage-režiimis, seega terminalis lähevad
+täpitähed katki (`tÃ¶Ã¶voo`) ja logisse vilksatab liivakasti vigu
+(`CreateProcessWithLogonW failed: 267`).
+
+**Kontrolli aga alati, et fail päriselt tekkis ja ei ole tühi.** Kui käsk
+kukkus või fail on tühi, siis ülevaatust EI toimunud – ükskõik mida logi
+näitab. Ainult siis, kui käsk läks läbi ja failis on leiud, on ülalmainitud
+read müra, mitte rike.
+
+Kaks ülevaatajat ei ole kaks korda rohkem tööd: CodeRabbit näeb stiili ja
+mustreid, Codex näeb loogikat ja piirjuhte. Kui mõlemad osutavad samale
+reale, tasub sinna eriti hoolikalt vaadata – aga ka kaks ülevaatajat
+võivad korraga eksida, seega kontrolli leid ikka üle.
+
+*(Väike detail: valmis alamkäsk `codex exec review` siin ei sobinud – ta ei
+võta oma prompti ega järgi `AGENTS.md`-d, vaid annab kolmerealise üldsõnalise
+vastuse. Seepärast on skriptis tavaline `codex exec`, mis loeb `AGENTS.md`
+ette. `-s read-only` on seal meelega: see keelab Codexil faile muuta
+päriselt, mitte ainult palvena.)*
 
 ## Kui midagi läheb katki
 

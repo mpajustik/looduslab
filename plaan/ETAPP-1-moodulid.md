@@ -86,6 +86,7 @@ tekib ta kogemata kolme eri kohta.
 > valed, piiripealsed, ühikuvahetusega, koma-vastused.
 
 - [ ] Testid rohelised; proovi ise 5 imelikku sisendit (tühik, „2,5m", …)
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 1.5 Checker: valikvastused
 
@@ -94,6 +95,7 @@ tekib ta kogemata kolme eri kohta.
 > StepShelli demo-sammudega.
 
 - [ ] Demo-moodulis saab vastata arv- ja valikküsimusele ning saab tagasisidet
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 1.6 Edenemise salvestus seadmesse (+ preview-režiim)
 
@@ -109,6 +111,7 @@ tekib ta kogemata kolme eri kohta.
 
 - [ ] Sulge ja ava leht keset moodulit – jätkub õigest kohast
 - [ ] preview-režiimis läbitud moodul EI jäta localStorage'i ühtegi jälge
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 **Miks preview juba nüüd:** seda vajavad „Vaata õpilasena" (2.14) ja
 demo-režiim (4.2). Hiljem külge poogitud „ära salvesta" lipp on täpselt see
@@ -125,6 +128,7 @@ koht, kust tekib fantoomõpilane õpetaja klassivaates.
 > spetsifikatsioonis loetletud väärtustega. Ei mingit UI-d.
 
 - [ ] Testid rohelised; **loe model.ts ise läbi ja kontrolli füüsikat**
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 1.8 Simulatsiooni visuaal
 
@@ -157,6 +161,8 @@ koht, kust tekib fantoomõpilane õpetaja klassivaates.
 > mudelile ±1° piires. Ära lisa juhuslikkust model.ts-i.
 
 - [ ] Tabel kontrollib täidetust; selgituse juures on ennustus nähtav
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): ±1°
+      lugemistolerants on checkeri loogika, mitte kuvamine
 
 ## 1.12 Harjutamine ja väljumispilet
 
@@ -207,6 +213,10 @@ Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
 - [ ] 1.20 practice + exit
 - [ ] 1.21 teacher.ts + reviewCards + registry.ts + kursusefaili plokk 5 +
       telefonis läbimine
+
+**Riskisammud selles loendis:** 1.15 (füüsika `model.ts`-is) ja 1.19
+(graafiku ja tolerantsi loogika) – nende juures jookseb `/ulevaatus`-es ka
+Codex, nagu moodulil 1.
 
 Kui mall vajas mooduli 2 juures muutmist: rakenda muudatus tagasi ka
 moodulile 1 (eraldi sessioon).

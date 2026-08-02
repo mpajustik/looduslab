@@ -58,6 +58,13 @@ stiiliküsimus) – leide EI parandata pimesi. Sisselogimine
 (`coderabbit auth login`) käib kasutaja enda terminalis – CodeRabbit
 keeldub agendi-terminalis sisse logimast.
 
+**Riskisammul** (model.ts, checker, engine, migratsioonid, Edge Functionid,
+saladused) lisab `/ulevaatus` teise mudeli: `npm run review` käivitab
+Codexi erapooletu ülevaatajana (juhis failis AGENTS.md, leiud
+`codex-ulevaatus.md`-sse). Otsuse teeb muudetud failide järgi, mitte tunde
+järgi – täpne loend on skillis. Leiud liigitatakse kasutajale ette; **mida
+parandatakse, otsustab kasutaja**. Vt docs/TOOVOOG.md „Teine mudel".
+
 ## Kaustastruktuur
 
 ```
@@ -128,7 +135,8 @@ tests/                        # model.ts ja checker'i testid
 - [ ] Töötab telefonivaates (360 px) ja töölauavaates
 - [ ] UI-tekstid eesti keeles, õigekiri kontrollitud
 - [ ] Uus loogika model.ts/checker'is on testidega kaetud
-- [ ] CodeRabbiti ülevaatus tehtud (skill `/ulevaatus`) ja leiud triaažitud
+- [ ] Ülevaatus tehtud (skill `/ulevaatus`) ja leiud triaažitud –
+      riskisammul jookseb CodeRabbiti kõrval ka Codex
 - [ ] git commit tehtud selgitava sõnumiga
 
 ## Viited

@@ -49,6 +49,7 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
       on unique – need kaks kaovad kõige kergemini ära
 - [ ] Proovi ise: `update responses set module_version = '9.9.9'` peab
       andma vea. Kui ei anna, on trigger tegemata
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 2.4 Migratsioon: RLS
 
@@ -62,6 +63,7 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
       ühtegi rida – VÄLJA ARVATUD `modules`, mis on teadlikult avalik
       (kataloog peab töötama ka külalisele). Kui `attempts` tagastab kasvõi
       ühe rea, on RLS katki
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 2.5 Moodulite metaandmete sünk
 
@@ -72,6 +74,7 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 
 - [ ] Mõlemad pilootmoodulid on modules tabelis; skripti uuesti käivitamine
       ei tekita duplikaate
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 **Miks:** attempts viitab module_id-le – ilma selle sammuta pole tabelis
 ühtegi moodulit, mille külge vastused siduda.
@@ -96,6 +99,7 @@ SMTP (nt Resend, tasuta tase) – ära lahenda ette, aga tea, kus lahendus on.
 > tagastatakse üks kord). Deploy Supabase CLI-ga. Testi curl-iga enne UI-d.
 
 - [ ] curl-test: funktsioon loob klassi rea, tagastab koodi, baasis on räsi
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 2.8 Klassi loomise UI + QR
 
@@ -123,6 +127,7 @@ SMTP (nt Resend, tasuta tase) – ära lahenda ette, aga tea, kus lahendus on.
 
 - [ ] Neli curl-testi annavad õiged tulemused
 - [ ] Baasis on ip_hash, mitte loetav IP; üle 24 h vanad read kaovad
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 2.10 Õpilase liitumise UI
 
@@ -146,6 +151,7 @@ SMTP (nt Resend, tasuta tase) – ära lahenda ette, aga tea, kus lahendus on.
 - [ ] Õpilase vastused ilmuvad dev-projekti tabelitesse koos versiooniga
 - [ ] Ühe mooduli läbimine tekitab TÄPSELT ÜHE attempts rea (mitte ühe
       sammu kohta) ja mitu responses rida
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 2.12 Klassivaade: elav vaade
 
@@ -165,6 +171,8 @@ SMTP (nt Resend, tasuta tase) – ära lahenda ette, aga tea, kus lahendus on.
 
 - [ ] Õpetaja näeb ühe pilguga, mis küsimus valmistas raskusi
 - [ ] Kahe eri major-versiooni vastused ei ole ühte tulpa liidetud
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): vale koond
+      on vaikne viga, õpetaja usub seda
 
 ## 2.14 Jagamislink
 
@@ -176,6 +184,7 @@ SMTP (nt Resend, tasuta tase) – ära lahenda ette, aga tea, kus lahendus on.
 
 - [ ] Link telefonis → moodul avaneb ilma navigeerimiseta
 - [ ] „Vaata õpilasena" töötab ja EI tekita andmeid klassivaatesse
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 2.15 Privaatsus ja kustutamine
 
@@ -187,6 +196,8 @@ SMTP (nt Resend, tasuta tase) – ära lahenda ette, aga tea, kus lahendus on.
 > review_items (kinnitusdialoogiga). Kontrolli, et FK-d on ON DELETE CASCADE.
 
 - [ ] Privaatsusleht olemas; klassi kustutamine viib kõik seotud read kaasa
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): kustutamine
+      on pöördumatu, orvuks jäänud read jäävad märkamata
 
 ## 2.16 TURVATEST dev-keskkonnas (kohustuslik – ENNE prod-i loomist!)
 

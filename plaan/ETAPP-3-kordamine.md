@@ -19,6 +19,7 @@
 
 - [ ] Mooduli lõpetamine tekitab kordamiskaardid
 - [ ] Preview-režiimis lõpetamine EI tekita review_items ridu
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 3.2 Ajastusloogika
 
@@ -28,6 +29,7 @@
 > „teadsin" liigub edasi. Kirjuta testid ajastusloogikale.
 
 - [ ] Testid rohelised; loogika on nii lihtne, et suudad seda peast selgitada
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 3.3 Tänased kaardid
 

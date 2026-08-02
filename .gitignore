@@ -19,6 +19,9 @@ npm-debug.log*
 .vite/
 coverage/
 
+# Codexi ülevaatuse väljund (ajutine, iga sammu järel uus)
+codex-ulevaatus.md
+
 # Toimeti ja OS
 .DS_Store
 Thumbs.db

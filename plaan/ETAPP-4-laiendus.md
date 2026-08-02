@@ -59,6 +59,7 @@ kooliaasta rütm:
 
 - [ ] Projektoril loetav klassi tagant; õpetaja saab ennustused ekraanile
 - [ ] Demo läbimine ei jäta jälge ei localStorage'i ega andmebaasi
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 ## 4.3 PWA ja kehv võrk
 
@@ -81,6 +82,8 @@ Neli eraldi sessiooni:
       sõbralik teade. Testi piiri ületamist.
 - [ ] **4.4d UI.** „Vihje" nupp kuvatakse alles pärast õpilase enda katset.
       Proovi läbi mõlemal pilootmoodulil – kas vihjed on päriselt sisukad?
+- [ ] Codexi ülevaatus tehtud iga alamsammu järel – **riskisamm**
+      (`/ulevaatus`): võti, kulupiir ja väljundi valideerimine
 
 Reeglid (CLAUDE.md-st, korda üle):
 
@@ -108,6 +111,8 @@ Reeglid (CLAUDE.md-st, korda üle):
 > töölauale nende nimekiri.
 
 - [ ] Tagasiside jõuab sinuni – see on moodulite kvaliteedi mootor
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): uus tabel,
+      uus RLS, vabatekst õpilaselt
 
 ---
 
