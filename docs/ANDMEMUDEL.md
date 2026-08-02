@@ -13,6 +13,9 @@ classes       id, teacher_id, name, code_hash, code_expires_at, created_at
 students      id (= anonüümse auth-kasutaja id), class_id, display_name, created_at
 modules       id (text, nt 'physics.peegeldumisseadus'), slug, title, subject,
               status, version, minutes (jsonb)  -- kirjutab AINULT sync-modules
+              -- unique (slug) – slug on globaalselt unikaalne üle KÕIGI
+              -- ainete, sest marsruut on /m/:slug ilma aineta
+              -- (docs/MOODULILEPING.md „Slug-konventsioon")
               -- NB: kursusesse kuulumist andmebaasis EI OLE – struktuur elab
               -- kursusefailides (docs/SISUHALDUS.md)
 attempts      id, student_id, module_id, module_version,
@@ -24,10 +27,15 @@ attempts      id, student_id, module_id, module_version,
               -- ega nullida current_step'i. module_version = viimati kasutatud
               -- versioon (upsert uuendab). Major-versioonide eristamine on
               -- koondvaate loogika (docs/MOODULILEPING.md „Versioonimine")
-responses     id, attempt_id, step, question_id, payload (jsonb),
+responses     id, attempt_id, module_version, step, question_id, payload (jsonb),
               is_correct (null kui pole hinnatav), revised_count, created_at
               -- ÜKS RIDA = ÜKS VASTUS; siin elab sammu tasandi info
-              -- unique (attempt_id, question_id)
+              -- module_version kirjutatakse SISESTAMISEL ja ei muutu kunagi.
+              -- Seda EI TOHI lugeda attempts pealt: seal upsertitakse see
+              -- viimati kasutatud versiooniks ja vana vastus saaks vale sildi
+              -- unique (attempt_id, question_id, module_version) – sama
+              -- versiooni sees upsert (revised_count++), versioonide vahel
+              -- tekib eraldi rida ja vana vastus jääb oma versiooni külge
 review_items  id, student_id, module_id, card_id, due_date, interval_days,
               last_result ('again'|'hard'|'good'), updated_at
               -- unique (student_id, module_id, card_id) – mooduli
@@ -68,8 +76,11 @@ Põhimõtted:
 - `payload` on jsonb – küsimuste struktuur muutub, tabel mitte
 - Ei kunagi: e-post (v.a õpetaja), sünniaeg, fotod, klassikood avatekstina
 - `modules` tabelisse kirjutab ainult sync-modules skript, mitte rakendus
-- `module_version` + `question_id` vastuse küljes: kui mooduli sisu hiljem
-  muutub, jääb vana vastus seotuks versiooniga, mille kohta ta anti.
+- `module_version` + `question_id` **`responses` rea enda küljes** (mitte
+  `attempts` kaudu!): kui mooduli sisu hiljem muutub, jääb vana vastus
+  seotuks versiooniga, mille kohta ta anti. `attempts.module_version`
+  näitab ainult viimati kasutatud versiooni – kui koondvaade loeks
+  versiooni sealt, saaks eile antud vastus täna avaldatud versiooni sildi.
   Millal versioon muutub ja miks `question_id` EI TOHI muutuda –
   docs/MOODULILEPING.md „Versioonimine". Ilma selle reeglita laguneb
   õpetaja koondvaade (etapp 2.13) vaikselt ja märkamatult

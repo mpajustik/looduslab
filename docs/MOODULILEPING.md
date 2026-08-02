@@ -51,6 +51,14 @@ ilma mooduleid muutmata.
 `/m/:slug` marsruut mooduli registrist tuletada ilma ühtegi manifesti
 laadimata. Kursusefaili test kontrollib, et see kokkulepe kehtib.
 
+**Slug on globaalselt unikaalne – üle KÕIGI ainete, mitte ainult aine sees.**
+Marsruudis `/m/:slug` ainet ei ole, seega `physics.rohk` ja `chemistry.rohk`
+annaksid mõlemad `/m/rohk` ja register peaks kahe vahel loosima. Kaks kohta,
+kus seda hoitakse: registri test (kaks moodulit ei tohi jagada slugi) ja
+`unique (slug)` kitsendus `modules` tabelis (docs/ANDMEMUDEL.md). Slug on
+reegli 11 järgi igavene – seda kokkulepet hiljem tagantjärele kehtestada
+ei saa, seepärast kehtib ta juba enne teise aine olemasolu.
+
 ## Versioonimine (millal `version` muutub)
 
 Iga vastus salvestatakse koos `module_version`-iga. Et see number midagi

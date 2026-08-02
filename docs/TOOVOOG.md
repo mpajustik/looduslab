@@ -29,7 +29,17 @@ sõltumatut kihti väikese diff'i peal. Iga ülesande juures:
    mitte AI iseennast. Näide:
    > „Kirjuta testid: vesi ρ=1000 kg/m³, h=2 m, g=9,8 m/s² → 19 600 Pa.
    > Sügavus 0 → 0 Pa. Negatiivne sügavus → [sinu otsus]."
-3. **Diff üle – sina loed, AI vastab.** `git diff` enne commit'i.
+3. **Diff üle – sina loed, AI vastab.** Lavasta KÕIK enne lugemist:
+   `git diff` üksi ei näita ei lavastatud muudatusi ega uusi faile – ja uus
+   moodul ongi peamiselt uued failid, seega paljas `git diff` näitaks sulle
+   tühjust.
+
+   ```bash
+   git add -A
+   git status --short   # millised failid üldse puutusid
+   git diff --staged    # mis nendes muutus – ka uutes failides
+   ```
+
    Vaata kolme asja: kas muudeti AINULT ülesande faile, kas füüsika on
    ainult model.ts-is, kas midagi ei kustunud, mida sa ei palunud.
    Arusaamatu rida? „Selgita lihtsas eesti keeles."
