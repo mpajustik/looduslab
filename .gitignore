@@ -1,0 +1,3 @@
+# Teadmata litsentsiga allika-PDF-id ei lähe git'i (vt sisu/ALLIKAD.md);
+# vaba litsentsiga PDF-i saab erandina lisada: git add -f
+sisu/allikad/*.pdf

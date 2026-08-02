@@ -27,6 +27,22 @@ litsentsi all – enne sellist kasutust arutada kasutajaga).
 Vastuolu korral allika ja ainekava vahel jääb peale
 `AINEKAVA-fyysika-8.md` (sisu tõe allikas).
 
+## PDF-allikad
+
+PDF-failid käivad samuti kausta `sisu/allikad/` ja saavad ENNE lisamist
+rea registritabelisse. Konventsioon:
+
+- **Failinimi:** sama loogika mis väljavõtetel, nt `OPIK-F8-taielik.pdf`,
+  `TV-keemia-8.pdf`.
+- **Git:** `sisu/allikad/*.pdf` on gitignore'is – teadmata litsentsiga
+  PDF-e EI commit'ita kunagi (repo avalikuks minek = levitamine). Failid
+  elavad ainult selles arvutis; AI loeb neid kohapealt. Selge vaba
+  litsentsiga (nt CC) PDF-i tohib erandina lisada käsuga `git add -f`.
+- **Kasutus:** PDF on tooresallikas. Teema kohta, millest moodulit
+  tehakse, tõmmatakse vajalikud lõigud MALL-valjavote.md järgi
+  tekstifaili koos leheküljeviitega (nt „lk 34–37") – nii on sisu
+  otsitav ja PDF-i ei pea iga kord uuesti läbi lappama.
+
 ## Register
 
 | Allikas | URL | Litsents | Kasutusreegel |
