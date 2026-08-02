@@ -49,6 +49,36 @@ kasutajaid ja platvorm müüb teenuseid edasi.
 - PWA (4.3) → õuesõpe kehva võrguga on juba plaanis
 - Teenuste fail on sisu → müügipoole muutmine ei vaja arendust
 
+## Idee ootel: kontrolltööde generaator (õpetaja-alas)
+
+**Mis see on:** õpetaja leht, mis genereerib ainekava õpitulemuste põhjal
+tunnikontrolli või kontrolltöö failina (algul prinditav HTML või .md, mille
+õpetaja Wordi kopeerib ja ise täiendab; .docx-eksport alles siis, kui
+selleks paketti päriselt vaja on – reegel 4). Õpetaja valib plokid/moodulid,
+generaator paneb kokku töö nii, et kõik valitud õpitulemused on kaetud, ja
+oskab luua mitu varianti. Hiljem võimalik ka automaatkontrolliga versioon
+(checker + tolerantsid on juba olemas; juurde oleks vaja „töö" andmemudelit:
+töö eksemplar, variant, õpilase sooritus).
+
+**Miks see EI vaja praegu ettevalmistust:** kogu tooraine tekib moodulite
+tootmisel niikuinii –
+
+- iga küsimus `activities.ts`-is: igavene `question_id`, õige vastus,
+  tolerants, ühik (moodulilepingu nõue);
+- `reviewCards` tüübisiltidega (concept/calc/graph/explain/transfer) on
+  sisuliselt valmis küsimustepank;
+- manifesti `outcomes`/`concepts` seovad iga mooduli (= ühe õpieesmärgi)
+  ainekava ID-dega;
+- katvusraport (4.0) annab loogika „kas kõik õpitulemused on kaetud" tasuta.
+
+Generaator on seega puhtalt LUGEV funktsioon olemasoleva sisu peal – teda
+saab lisada igal ajal ilma midagi ümber ehitamata. Ainus eeldus: sisu
+tootmisel (4.1) peetakse moodulilepingust kinni.
+
+**Millal otsustada:** mitte enne, kui füüsika 8. klassi katvus on piisav,
+et genereeritud töö oleks päriselt terviklik (muidu on generaatori väljund
+auklik ja jätab kehva mulje). Sobiv hetk on etapi 4.1 keskpaik või hiljem.
+
 ## Millal ehitada
 
 - **MITTE enne 2. etapi lõppu** – ristmüük vajab õpetajaid, keda veel pole
