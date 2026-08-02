@@ -94,8 +94,14 @@ pealkirjad on õiged (kontrolli ainekava vastu!).
 > `npm run lint`, `npm run test`, `npm run build`. Lisa ka Dependabot
 > (.github/dependabot.yml, nädalane npm uuenduste kontroll). Ei midagi muud.
 
-- [ ] Tee sihilikult katkine test → push → GitHub näitab punast → paranda
-- [ ] Dependabot on sees – turvapaigad ei jää seisma
+- [x] Tee sihilikult katkine test → push → GitHub näitab punast → paranda
+      (b2d6580 punane → 974b5e4 roheline, 2026-08-02). CI peatus enne
+      build-sammu – katkise testiga koodi edasi ei ehitata.
+- [x] Dependabot on sees – turvapaigad ei jää seisma (.github/dependabot.yml)
+
+**Hilisemaks (etapp 2, kui tekivad päris õpilased):** lülita GitHubis sisse
+branch protection, et punase CI-ga ei saaks main-i pushida. Praegu mitte –
+soloarendajat, kes töötab otse main-i peal, see ainult takistaks.
 
 **Miks:** Cloudflare ehitab, aga EI käivita teste. Ilma CI-ta märkad katkist
 checkerit alles siis, kui õpilane vale tagasiside saab.
