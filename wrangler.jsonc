@@ -1,0 +1,18 @@
+{
+  // Cloudflare Workers – staatiline leht (ei ühtegi serverikoodi rida).
+  // Cloudflare ehitab `npm run build` ja saadab siis `npx wrangler deploy`,
+  // mis laeb üles kausta dist sisu.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "looduslab",
+  "compatibility_date": "2026-08-02",
+  // Wrangler ei saada Cloudflare'ile kasutusstatistikat (GDPR-hoiak).
+  "send_metrics": false,
+  "assets": {
+    "directory": "./dist",
+    // Kogu marsruutimine käib brauseris (React Router). Ilma selle reata
+    // annaks otselink /kursus või /m/:slug lehe värskendamisel 404 –
+    // "single-page-application" vastab tundmatule aadressile index.html-iga
+    // ja React Router otsustab edasi (sh näitab meie oma 404-lehte).
+    "not_found_handling": "single-page-application"
+  }
+}

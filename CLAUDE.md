@@ -17,7 +17,9 @@ oma otsuseid lühidalt ja eesti keeles.
 - TanStack Query (serveriandmed), Zod (valideerimine)
 - Recharts (andmegraafikud), oma SVG (simulatsioonide visuaalid), KaTeX (valemid)
 - Supabase: Postgres + Auth + RLS + Edge Functions
-- Vitest (testid), majutus: Cloudflare Pages
+- Vitest (testid), majutus: Cloudflare Workers staatiliste failidena
+  (wrangler devDependency'na, seadistus wrangler.jsonc – Cloudflare suunab
+  uued projektid Pages'i asemel Workersisse; sama CDN, sama git-põhine deploy)
 - qrcode (klassikoodi QR, etapp 2), vite-plugin-pwa (etapp 4),
   @sentry/react (veaseire, etapp 2)
 

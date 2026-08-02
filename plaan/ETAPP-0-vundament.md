@@ -45,14 +45,32 @@ Disainitokenid (bg-brand, text-ink, bg-teacher-soft …) on failis
 src/index.css. Komponentides kasuta ALATI semantilist nime, mitte `teal-700` –
 siis muudab värvimuutus ühte rida, mitte kahtekümmet faili.
 
-## 0.3 Deploy Cloudflare Pagesi
+## 0.3 Deploy Cloudflare'i
 
-- [ ] Loo Cloudflare'i konto → Pages → ühenda GitHubi repo
-- [ ] Build: `npm run build`, output: `dist`
-- [ ] Kontrolli, et *.pages.dev aadress avaneb ka telefonis
+- [ ] Loo Cloudflare'i konto → Workers & Pages → ühenda GitHubi repo
+- [ ] Build command: `npm run build`, deploy command: `npx wrangler deploy`
+- [ ] Kontrolli, et *.workers.dev aadress avaneb ka telefonis
 
 **Valmis, kui:** muudad avalehe teksti, git push, ja muudatus on ~1 min
 pärast internetis.
+
+**Otsus (2026-08-02): Workers, mitte Pages.** Cloudflare suunab uued
+git-projektid Workers Builds'i (vorm küsib „deploy command", mitte „output
+directory"). Sama CDN ja sama git-põhine deploy; Pages jääb vanade
+projektide jaoks. Repo pool on valmis:
+
+- `wrangler.jsonc` – `assets.directory: ./dist` ja
+  `not_found_handling: "single-page-application"` (ilma selleta annaks
+  otselink /kursus lehe värskendamisel Cloudflare'i 404)
+- `wrangler` on devDependency, et versioon oleks lukus, mitte „mis parasjagu
+  npx alla laadib"
+- `public/_redirects` KUSTUTATUD: Workers'i staatiliste failide juures ei
+  toimi `/* /index.html 200` rida (200-ümberkirjutust see fail seal ei
+  toeta) – seda tööd teeb nüüd `not_found_handling`
+
+Cloudflare'i vormis ei ole midagi muuta: vaikeväärtused (`npm run build`,
+`npx wrangler deploy`, path `/`) on õiged. „Builds for non-production
+branches" jäta sisse – iga haru saab oma eelvaate-aadressi.
 
 ## 0.4 Marsruudid ja raam
 
@@ -77,8 +95,9 @@ pärast internetis.
 - Veapüüdja (src/ui/ErrorBoundary.tsx) on kogu rakenduse ümber, mitte ainult
   lehe sees – ka raami viga näitab „Midagi läks valesti", mitte valget ekraani.
   Arenduses saab seda ise näha aadressil /viga-test (toodangu buildi see ei jõua).
-- public/_redirects: Cloudflare Pages peab andma igale aadressile index.html,
-  muidu murdub otselink /m/:slug lehe värskendamisel (vajalik sammu 0.3 jaoks).
+- Otselink /m/:slug peab lehe värskendamise üle elama: algselt tehti selleks
+  public/_redirects, aga Workersi valikuga (samm 0.3) asendus see failiga
+  wrangler.jsonc → `not_found_handling: "single-page-application"`.
 - Lisatud paketid: react-router (v8) ja lucide-react – mõlemad CLAUDE.md
   eelnevalt kinnitatud pinus.
 
