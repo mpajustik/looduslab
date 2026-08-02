@@ -19,13 +19,19 @@ attempts      id, student_id, module_id, module_version,
               status ('started'|'completed'), current_step,
               started_at, finished_at
               -- ÜKS RIDA = ÜKS MOODULIKÄIK (mitte üks samm!)
-              -- unique (student_id, module_id, module_version)
+              -- unique (student_id, module_id) – versioon EI kuulu võtmesse:
+              -- patch/minor uuendus keset moodulit ei tohi tekitada uut rida
+              -- ega nullida current_step'i. module_version = viimati kasutatud
+              -- versioon (upsert uuendab). Major-versioonide eristamine on
+              -- koondvaate loogika (docs/MOODULILEPING.md „Versioonimine")
 responses     id, attempt_id, step, question_id, payload (jsonb),
               is_correct (null kui pole hinnatav), revised_count, created_at
               -- ÜKS RIDA = ÜKS VASTUS; siin elab sammu tasandi info
               -- unique (attempt_id, question_id)
 review_items  id, student_id, module_id, card_id, due_date, interval_days,
               last_result ('again'|'hard'|'good'), updated_at
+              -- unique (student_id, module_id, card_id) – mooduli
+              -- teistkordne lõpetamine ei tekita topeltkaarte
 ```
 
 **Miks attempts on moodulikäigu, mitte sammu kohta** (see oli varem

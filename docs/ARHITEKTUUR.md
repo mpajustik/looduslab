@@ -36,7 +36,10 @@ Supabase: Postgres + RLS │ Auth │ Edge Functions
 **Moodulite register** on ainus koht, mis teab kõiki mooduleid. Kolm asja
 sõltuvad temast ja peavad seetõttu olema kooskõlas:
 
-1. `/m/:slug` laadib mooduli laisalt (`React.lazy` + registri `import()`)
+1. `/m/:slug` laadib mooduli laisalt (`React.lazy` + registri `import()`).
+   Slug tuletatakse id-st: id on alati `<subject>.<slug>`
+   (docs/MOODULILEPING.md „Slug-konventsioon") – registrit ei pea slug'i
+   pärast dubleerima ega manifeste ette laadima
 2. kursusefaili test kontrollib, et iga viidatud id on registris olemas
 3. `sync-modules` (etapp 2.5) ja `coverage` (etapp 4.0) käivad registrit läbi
 

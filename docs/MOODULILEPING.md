@@ -46,6 +46,11 @@ NB! Moodul EI tea, millises kursuses või plokis ta asub – järjestuse määra
 kursusefail (vt docs/SISUHALDUS.md). Nii saab teemasid vabalt ümber jagada
 ilma mooduleid muutmata.
 
+**Slug-konventsioon:** id on alati kujul `<subject>.<slug>`
+(nt `physics.peegeldumisseadus` → slug `peegeldumisseadus`). Nii saab
+`/m/:slug` marsruut mooduli registrist tuletada ilma ühtegi manifesti
+laadimata. Kursusefaili test kontrollib, et see kokkulepe kehtib.
+
 ## Versioonimine (millal `version` muutub)
 
 Iga vastus salvestatakse koos `module_version`-iga. Et see number midagi

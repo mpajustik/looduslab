@@ -30,8 +30,10 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 > responses, review_items JA tugitabel join_attempts (pidurduse logi, vajalik
 > sammus 2.9). Jäta assignments tabel VÄLJA (MVP-s jagamine = link; sammude
 > valik tuleb hiljem); feedback tabel tuleb etapis 4.6. attempts on ÜHE
-> MOODULIKÄIGU kohta (status, current_step, unique student+module+version),
-> mitte sammu kohta – sammu tasandi info elab responses-is. Kõik FK-d õpilase
+> MOODULIKÄIGU kohta (status, current_step, unique student+module –
+> module_version on tavaline veerg, MITTE võtme osa), mitte sammu kohta –
+> sammu tasandi info elab responses-is. review_items unique
+> student+module+card. Kõik FK-d õpilase
 > suunas ON DELETE CASCADE. RLS-i veel MITTE. Ära käivita – näita SQL üle
 > vaatamiseks, selgita iga tabelit ühe lausega.
 
