@@ -26,26 +26,27 @@ moodulite tootmine (4.1) käib pidevalt.
 Rütm: 1–2 VÄIKEST moodulit nädalas. Iga mooduli kohta:
 
 1. Vaata katvusraportit – vali katmata õpitulemus/mõiste/praktiline töö
-2. Kopeeri sisu/MALL-moodul.md → täida (ainekava ID-d, suurusreegel!)
-3. AI loob mooduli malli peale (vt docs/MOODULILEPING.md protsess)
-4. Füüsika kontroll + telefonis läbimine + commit + raport paremaks
+2. Leia sisu/JAOTUS-fyysika-8.md-st rida, mis selle augu katab. Kui plokk
+   on veel jagamata, jaga see esmalt (`/jaga-plokk sisu/AINEKAVA-fyysika-8.md
+   P<n>`) ja kinnita jaotus – alles siis edasi
+3. Kopeeri sisu/MALL-moodul.md → täida, ainekava ID-d jaotusrealt
+   (suurusreegel!)
+4. AI loob mooduli malli peale (vt docs/MOODULILEPING.md protsess)
+5. Füüsika kontroll + telefonis läbimine + commit; märgi jaotusreale
+   staatus `ehitatud` ja kontrolli, et raport läks paremaks
 
 Moodulid on väikesed (5–20 min, 3–6 sammu) – üks ainekava plokk on
 tüüpiliselt 4–8 moodulit, mis järjestatakse kursusefailis alateemade alla.
 
-Soovituslik järjekord (kooliaasta rütmis):
+**MILLISED moodulid ühest plokist tulevad, otsustab ainult
+sisu/JAOTUS-fyysika-8.md** – ära dubleeri seda loendit siia plaani, muidu
+lähevad kaks nimekirja lahku. Siin on ainult PLOKKIDE järjekord, s.o
+kooliaasta rütm:
 
-- [ ] Plokk 1 lõpuni: Valgusallikad ja liigitus (P1-T1); Täis- ja poolvari
-      + varjutused (P1-PT1); Kuu faasid; Tasapeegli kujutis (P1-PT4);
-      Valgusfiltrid ja värvid (P1-T3, P1-PT2)
-- [ ] Plokk 2: Murdumine (P2-T1); Täielik peegeldumine; Läätsed ja kiirte
-      käik (P2-T3); Kujutise konstrueerimine (P2-PT1); D = 1/f harjutus
-      (P2-T6); Silm ja prillid (P2-T5); Luubi suurendus (P2-PT3)
-- [ ] Plokk 5 lõpuni: Rõhk ja pindala (P5-T1, P5-PT1); Pascali seadus
-      (P5-T2); Õhurõhk ja ilmaandmed (P5-PT2); Üleslükkejõud (P5-T2,
-      P5-PT3); Ujumine ja uppumine (P5-T3); Fü = ρgV harjutus (P5-T5)
-- [ ] Plokk 3: Liikumisgraafikud (P3-T1); Keskmine kiirus (P3-T4);
-      Inerts ja vastastikmõju (P3-T2, T3); Tihedus (P3-T4, P3-PT2)
+- [ ] Plokk 1 lõpuni (piloot `peegeldumisseadus` juba olemas)
+- [ ] Plokk 2
+- [ ] Plokk 5 lõpuni (piloot `vedeliku-rohk` juba olemas)
+- [ ] Plokk 3
 - [ ] Plokid 4, 6, 7 samas rütmis – alati katvusraporti järgi
 
 ## 4.2 Esitlusrežiim (demo)
