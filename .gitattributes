@@ -1,0 +1,19 @@
+# Reavahetused: git'is JA töökoopias alati LF – ka Windowsis.
+# Ilma selle failita sõltub tulemus iga arvuti core.autocrlf seadest ja
+# diff'i võib täituda ridadega, mida keegi pole puutunud.
+* text=auto eol=lf
+
+# Kahendfailid – git ei tohi nende sisu kunagi ümber kirjutada.
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.zip   binary
+
+# Lukufail on masina genereeritud: GitHub voldib diff'i vaikimisi kokku,
+# aga `git diff` kohapeal töötab endiselt tavaliselt.
+package-lock.json linguist-generated=true
