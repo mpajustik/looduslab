@@ -42,7 +42,9 @@ kas ta näeb õpetaja materjali.
 - **Baaskomponendid shadcn/ui-st** (Button, Card, Tabs, Dialog, Accordion,
   Progress, Sonner teated) – kohandatud meie värvidele. MITTE ehitada oma
   akordioni/dialoogi/tabsi nullist: shadcn omad on ligipääsetavad ja
-  viimistletud
+  viimistletud. **Erand:** kui brauseril on selle jaoks oma element, võidab
+  see mõlemat – akordion on `<details>`/`<summary>` (src/ui/Accordion.tsx),
+  sest klaviatuur, ekraanilugeja ja Ctrl+F töötavad seal ilma koodita
 - **Ikoonid ainult lucide-react** – ühtlane joon, mitte kunagi emojid UI
   elementidena
 - **Tokenid** (Tailwindi teemas, mitte suvalised väärtused igas failis):

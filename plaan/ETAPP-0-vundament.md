@@ -132,6 +132,29 @@ branches" jäta sisse – iga haru saab oma eelvaate-aadressi.
 **Valmis, kui:** kursuseleht näeb telefonis korralik välja ja plokkide
 pealkirjad on õiged (kontrolli ainekava vastu!).
 
+**Otsused (2026-08-02):**
+
+- Kursusefail on `src/content/fyysika-8.ts`, plokid P1–P7 järjekorras
+  (kommentaarides ainekava plokk, mille lühendatud pealkirja õpilane näeb).
+  Moodulite loendid on tühjad – sisu tuleb etapis 1.
+- **Skeem (zod) EI jõua toodangu bundle'isse.** `src/content/courseSchema.ts`
+  (zod) impordib ainult test; `src/content/schema.ts` võtab sealt tüübid
+  `import type` kaudu, mis kompileerimisel kaob. Mõõdetud vahe: 297 kB →
+  237 kB (92 → 76 kB pakituna). Põhjus: kursusefail on staatiline, seega
+  piisab, kui CI valideerib selle ühe korra – iga õpilase brauser ei pea
+  sama kontrolli uuesti alla laadima (reegel 13). Hind: katkine kursusefail
+  paistab välja testist, mitte brauserist. Sellepärast ON test kohustuslik
+  valvur, mitte lisa.
+- **Akordion on `<details>`/`<summary>`, mitte Radix/shadcn** (samm 0.2
+  ütles „võta shadcn'ist"). Brauseri oma element annab klaviatuuri,
+  ekraanilugeja ja Ctrl+F-otsingu tasuta, ilma paketita ja ilma
+  JavaScriptita. Kui kunagi on vaja „korraga avatud ainult üks" või
+  animeeritud kõrgust, vaata valik uuesti üle. Kirjas ka disainijuhises.
+- Skeemi reeglid: pealkiri ei tohi olla tühi, plokil on kas `modules` VÕI
+  `parts` (see hoiab sügavuse kahe tasemega), sama mooduli id ei kordu ÜHES
+  loendis (üle kursuse kordumine on lubatud – kordamisplokk viitab samadele
+  moodulitele, docs/SISUHALDUS.md).
+
 ## 0.6 CI: testid igal pushil
 
 > **Prompt AI-le:** Loo .github/workflows/ci.yml: igal pushil `npm ci`,
