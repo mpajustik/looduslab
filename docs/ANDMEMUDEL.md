@@ -30,7 +30,8 @@ attempts      id, student_id, module_id, module_version,
 responses     id, attempt_id, module_version, step, question_id, payload (jsonb),
               is_correct (null kui pole hinnatav), revised_count, created_at
               -- ÜKS RIDA = ÜKS VASTUS; siin elab sammu tasandi info
-              -- module_version kirjutatakse SISESTAMISEL ja ei muutu kunagi.
+              -- module_version on NOT NULL ja muutumatu: kirjutatakse
+              -- sisestamisel, hilisem UPDATE tõstab vea (trigger allpool).
               -- Seda EI TOHI lugeda attempts pealt: seal upsertitakse see
               -- viimati kasutatud versiooniks ja vana vastus saaks vale sildi
               -- unique (attempt_id, question_id, module_version) – sama
@@ -128,6 +129,39 @@ create policy "teacher_read" on attempts
             where s.id = attempts.student_id
               and c.teacher_id = auth.uid()));
 ```
+
+## `responses.module_version` muutumatus (trigger)
+
+RLS lubab õpilasel oma `responses` rida UPDATE-ida – see on `revised_count`
+jaoks vajalik. Seega ei takista miski sama päringut versiooni üle
+kirjutamast: üks viga `progress.ts`-is, mis paneb payloadi jooksva
+versiooni, ja vana vastus saab uue sildi. „Ei muutu kunagi" peab olema
+andmebaasi kitsendus, mitte kokkulepe:
+
+```sql
+-- veerg ise: create table responses (...) sees, mitte eraldi
+--   module_version text not null,
+
+-- muutumatus
+create or replace function responses_version_immutable()
+returns trigger language plpgsql as $$
+begin
+  if new.module_version is distinct from old.module_version then
+    raise exception 'responses.module_version on muutumatu (vana=%, uus=%)',
+      old.module_version, new.module_version;
+  end if;
+  return new;
+end $$;
+
+create trigger responses_version_immutable
+  before update on responses
+  for each row execute function responses_version_immutable();
+```
+
+**Miks trigger, mitte `revoke update (module_version)`:** rakendus salvestab
+upsert'iga (`insert … on conflict do update`) ja saadab selle veeru kaasa ka
+siis, kui väärtus ei muutu. Õiguse äravõtmine katkestaks tavalise
+salvestamise; trigger ärkab ainult päris muutuse peale.
 
 ## Teadlikud otsused ja teadaolevad piirangud
 

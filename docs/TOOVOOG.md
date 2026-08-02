@@ -29,16 +29,21 @@ sõltumatut kihti väikese diff'i peal. Iga ülesande juures:
    mitte AI iseennast. Näide:
    > „Kirjuta testid: vesi ρ=1000 kg/m³, h=2 m, g=9,8 m/s² → 19 600 Pa.
    > Sügavus 0 → 0 Pa. Negatiivne sügavus → [sinu otsus]."
-3. **Diff üle – sina loed, AI vastab.** Lavasta KÕIK enne lugemist:
-   `git diff` üksi ei näita ei lavastatud muudatusi ega uusi faile – ja uus
-   moodul ongi peamiselt uued failid, seega paljas `git diff` näitaks sulle
-   tühjust.
+3. **Diff üle – sina loed, AI vastab.** Paljas `git diff` ei näita uusi
+   faile – ja uus moodul ongi peamiselt uued failid, seega näitaks ta sulle
+   tühjust. Tee nähtavaks nii:
 
    ```bash
-   git add -A
-   git status --short   # millised failid üldse puutusid
-   git diff --staged    # mis nendes muutus – ka uutes failides
+   git status --short   # millised failid puutusid – ka uued
+   git add -N .         # uued failid nähtavaks; sisu EI lavastata
+   git diff             # kogu muudatus, ka uutes failides
    ```
+
+   `-N` tähendab „kavatsen lisada": fail muutub `git diff`-ile nähtavaks,
+   aga sisu jääb lavastamata. Ülevaatus on lugemine – see ei tohi sinu eest
+   otsustada, mis commit'i läheb. (`git add -A` teeks just seda ja järgmine
+   `git commit` haaraks kaasa ka failid, mis ülesandesse ei kuulu – vastu
+   reeglit 7.) `.gitignore` kehtib, seega `.env` jääb puutumata.
 
    Vaata kolme asja: kas muudeti AINULT ülesande faile, kas füüsika on
    ainult model.ts-is, kas midagi ei kustunud, mida sa ei palunud.

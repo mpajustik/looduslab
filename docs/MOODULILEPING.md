@@ -59,6 +59,15 @@ kus seda hoitakse: registri test (kaks moodulit ei tohi jagada slugi) ja
 reegli 11 järgi igavene – seda kokkulepet hiljem tagantjärele kehtestada
 ei saa, seepärast kehtib ta juba enne teise aine olemasolu.
 
+**Kolmas valvur on käitusajal – ja teda on päriselt vaja.** Test jookseb
+CI-s, `unique (slug)` alles sync-modules ajal; kumbki ei ole brauseris
+kohal. `registry.ts` võtmed on id-d, seega kaks sama slugiga moodulit EI
+tekita duplikaatvõtit – objekt on täiesti korrektne ja `/m/rohk` lahendub
+lihtsalt selleks, kumb otsingus ees on. Vaikne vale moodul, mitte
+veateade. Seepärast: slug → id indeks ehitatakse registrist üks kord ja see
+VISKAB VEA, kui kaks moodulit jagavad slugi. Arenduses krahh on parem kui
+toodangus vale moodul.
+
 ## Versioonimine (millal `version` muutub)
 
 Iga vastus salvestatakse koos `module_version`-iga. Et see number midagi
