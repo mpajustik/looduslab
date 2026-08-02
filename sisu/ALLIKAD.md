@@ -45,9 +45,9 @@ rea registritabelisse. Konventsioon:
 
 ## Register
 
-| Allikas | URL | Litsents | Kasutusreegel |
+| Allikas | URL / fail | Litsents | Kasutusreegel |
 |---|---|---|---|
-| Erkki Tempel, „Füüsika 8. klassile" (rets. J. Paaver, H. Voolaid; toim. K. Reivelt), Opik/fyysika.ee | https://opik.fyysika.ee/index.php/book/view/36 | teadmata (lehel ei ole märgitud) | ainult faktikontroll ja analoogid; sõnasõnaline kopeerimine keelatud, kuni EFS-ilt pole luba küsitud |
+| Erkki Tempel, „Füüsika 8. klassile" (rets. J. Paaver, H. Voolaid; toim. K. Reivelt), Opik/fyysika.ee | https://opik.fyysika.ee/index.php/book/view/36 · PDF: `allikad/OPIK-F8-taielik.pdf` (162 lk, gitignore'is) · indeks: `allikad/OPIK-F8-INDEKS.md` | teadmata (lehel ei ole märgitud) | ainult faktikontroll ja analoogid; sõnasõnaline kopeerimine keelatud, kuni EFS-ilt pole luba küsitud |
 | e-Koolikott (HARNO õppevaraportaal) | https://e-koolikott.ee | materjalipõhine – kontrolli IGA materjali litsentsi eraldi | CC-litsentsiga materjali tohib kohandada litsentsi tingimuste järgi (viide kirja väljavõttefaili) |
 
 Uue allika lisamisel: lisa rida siia tabelisse ENNE, kui allikast
