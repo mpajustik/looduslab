@@ -1,0 +1,4 @@
+# Cloudflare Pages: kogu marsruutimine käib brauseris (React Router).
+# Ilma selle reeglita annaks otselink /m/valgus-peegeldub Cloudflare'i enda
+# 404-lehe – seepärast serveerime igale aadressile index.html (staatus 200).
+/*    /index.html   200

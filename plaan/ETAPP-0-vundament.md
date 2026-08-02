@@ -64,10 +64,23 @@ pärast internetis.
 > valesti" + „Proovi uuesti" nupp – MITTE valge tühi ekraan). Disain
 > docs/DISAINIJUHIS.md järgi.
 
-- [ ] Kõik marsruudid avanevad, navigatsioon töötab telefonis (360 px)
-- [ ] Vale aadress näitab 404; visatud viga näitab error boundary lehte
+- [x] Kõik marsruudid avanevad, navigatsioon töötab telefonis (360 px)
+- [x] Vale aadress näitab 404; visatud viga näitab error boundary lehte
 
 **Valmis, kui:** klõpsid kõik lehed läbi telefonivaates ilma vigadeta.
+
+**Otsused (2026-08-02):**
+
+- Navigatsiooni loend elab ühes failis src/app/navigation.ts – ülariba
+  (töölaud) ja alumine riba (telefon) loevad sama loendit, nii ei saa need
+  lahku minna. Test hoiab piiri: max 4 valikut, aadressid unikaalsed.
+- Veapüüdja (src/ui/ErrorBoundary.tsx) on kogu rakenduse ümber, mitte ainult
+  lehe sees – ka raami viga näitab „Midagi läks valesti", mitte valget ekraani.
+  Arenduses saab seda ise näha aadressil /viga-test (toodangu buildi see ei jõua).
+- public/_redirects: Cloudflare Pages peab andma igale aadressile index.html,
+  muidu murdub otselink /m/:slug lehe värskendamisel (vajalik sammu 0.3 jaoks).
+- Lisatud paketid: react-router (v8) ja lucide-react – mõlemad CLAUDE.md
+  eelnevalt kinnitatud pinus.
 
 ## 0.5 Kursuseleht (staatiline)
 
