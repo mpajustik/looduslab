@@ -3,9 +3,7 @@ import { cn } from "../src/ui/cn";
 
 describe("cn", () => {
   it("liidab klassid tühikuga", () => {
-    // SIHILIKULT KATKI: CI harjutus (plaan/ETAPP-0, samm 0.6).
-    // Õige ootus on "rounded-lg bg-brand" – järgmine commit parandab tagasi.
-    expect(cn("rounded-lg", "bg-brand")).toBe("see ootus on vale");
+    expect(cn("rounded-lg", "bg-brand")).toBe("rounded-lg bg-brand");
   });
 
   it("jätab välja false, null ja undefined", () => {
