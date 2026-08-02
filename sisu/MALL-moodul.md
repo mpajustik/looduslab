@@ -42,6 +42,16 @@ avastus / virtuaalne labor / harjutusmoodul / teooriakonspekt>
 - **Õpilase tegevused:** (D) <millised digiteeritavad tegevused moodul
   realiseerib>; (K) <millised lähevad teacher.ts õpetajajuhendisse>
 
+## Allikad (soovituslik)
+
+- **Teooria tugi:** <milline sisu/allikad/ fail toetas teooriat, või „–"
+  (õpetaja enda teadmine)>
+- **Ülesannete näidised:** <millised practice-ülesanded on millise
+  väljavõtte analoogid>
+
+NB! Kasutusreeglid on failis sisu/ALLIKAD.md – teadmata litsentsiga
+allikast ainult faktikontroll ja analoogid, mitte kunagi sõnasõnaline tekst.
+
 ## Füüsika (model.ts jaoks)
 
 <valemid, seosed, lubatud vahemikud, testiväärtused (vähemalt 3 teadaolevat

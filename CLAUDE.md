@@ -126,6 +126,10 @@ tests/                        # model.ts ja checker'i testid
   viitab õpitulemustele/mõistetele/praktilistele töödele siit
 - Uue mooduli spetsi mall: sisu/MALL-moodul.md (sh suurusreegel: moodul on
   väike – 5–20 min, 3–6 sammu, üks õpieesmärk)
+- Välised allikad (õpikud, ülesandekogud): sisu/ALLIKAD.md – teadmata
+  litsentsiga allikast EI kopeerita sõnasõnalist teksti ega ülesande
+  sõnastust rakendusse kunagi; ainult faktikontroll ja analoogid
+  (uued arvud, uus kontekst, oma sõnastus)
 - Moodulite jaotuskava: sisu/JAOTUS-fyysika-8.md – otsus, kuidas ainekava
   plokid moodulteks jagunevad (täidab skill /jaga-plokk, kinnitab kasutaja)
 - Moodulite sisu: sisu/MOODUL-*.md (valmis pedagoogilised spetsifikatsioonid)
