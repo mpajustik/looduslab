@@ -25,15 +25,41 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 > jagavad slugi (docs/MOODULILEPING.md „Slug-konventsioon") – vaikne vale
 > moodul on hullem kui krahh. Ei mingit UI-d.
 
-- [ ] Tüübid + Zod skeemid olemas, `npm run build` õnnestub
-- [ ] Register on olemas; kursusefaili test (0.5) kontrollib nüüd ka, et iga
-      viidatud id on registris – eemalda sealt ajutine kommentaar
-- [ ] Test: kaks sama slugiga moodulit registris → indeksi ehitamine viskab
-      vea (mitte ei vali vaikselt üht)
+- [x] Tüübid + Zod skeemid olemas, `npm run build` õnnestub
+      (src/engine/contract.ts + contractSchema.ts, 2026-08-02)
+- [x] Register on olemas; kursusefaili test (0.5) kontrollib nüüd ka, et iga
+      viidatud id on registris – ajutine kommentaar eemaldatud
+- [x] Test: kaks sama slugiga moodulit registris → indeksi ehitamine viskab
+      vea (mitte ei vali vaikselt üht) (tests/registry.test.ts)
 
 **Miks register kohe:** temast sõltuvad kolm asja (laisk laadimine `/m/:slug`,
 kursusefaili viidete test, hilisem sync-modules ja coverage). Kui teda ei ole,
 tekib ta kogemata kolme eri kohta.
+
+**Otsused (2026-08-02):**
+
+- **Zod ei jõua toodangu bundle'isse** – sama muster mis kursusefailil
+  (samm 0.5). `contractSchema.ts` (zod) impordib ainult test;
+  `contract.ts` võtab tüübid `import type` kaudu ja pakub `defineModule` /
+  `defineActivities`, mis AINULT annavad objektile tüübi. See on siin
+  tähtsam kui kursusefaili juures: manifest.ts ja activities.ts laaditakse
+  igas brauseris, seega runtime-valideerimine tähendaks zodi igal lehel.
+  Hind: katkine moodul paistab välja testist, mitte brauserist – seepärast
+  ON tests/contract.test.ts ja tests/registry.test.ts kohustuslikud valvurid,
+  mitte lisa.
+- **Sammutüübid on register (`stepSchemas`), mitte käsitsi kirjutatud
+  union.** Uue tüübi lisamine = üks kirje. Test hoiab piiri: iga registri
+  tüüp peab jõudma ka valideerimisse, muidu tekiks tüüp, mida keegi ei
+  kontrolli.
+- **Küsimuse ja sammu id eesliide peab olema sammu tüüp** (`practice-3`
+  practice-sammus). Ilma selleta näiks õpetaja koondvaates vastus tulevat
+  vales sammust – ja `question_id` on igavene, seda hiljem ei paranda.
+- **Registri kirje laadib mooduli mõlemad pooled** (`manifest` +
+  `activities`) ühe funktsiooniga. CodeRabbit soovitas juba nüüd eraldada
+  ka komponendi laadija (`React.lazy`) – jäi tegemata, sest ühtegi moodulit
+  ega moodulilehte veel ei ole (reegel 7). **Vaata see uuesti üle sammus
+  1.13:** kui kursuseleht hakkab vajama ainult mooduli pealkirja, ei tohi
+  see kaasa tirida Simulation.tsx-i; siis tuleb laadija pooleks lõigata.
 
 ## 1.2 StepShell: raam ja liikumine
 

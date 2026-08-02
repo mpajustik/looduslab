@@ -21,8 +21,8 @@ export type CoursePart = z.infer<typeof partSchema>;
  * CI-s, mitte iga kord igas brauseris. Funktsioon ise annab kursusefailile
  * tüübi ja ühe selge sissepääsu.
  *
- * NB: viidatud mooduli OLEMASOLU ei kontrolli praegu keegi – moodulite
- * registrit (src/modules/registry.ts) veel ei ole, see tuleb sammuga 1.1.
+ * Sama test kontrollib ka, et iga viidatud mooduli id on olemas moodulite
+ * registris (src/modules/registry.ts).
  */
 export function defineCourse(course: Course): Course {
   return course;

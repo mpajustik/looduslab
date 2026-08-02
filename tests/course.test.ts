@@ -2,21 +2,26 @@ import { describe, expect, it } from "vitest";
 import { course } from "../src/content/fyysika-8";
 import { courseSchema } from "../src/content/courseSchema";
 import { blockModules } from "../src/content/schema";
+import { hasModule } from "../src/modules/registry";
 
 /**
  * Siin kontrollitakse kursusefaili STRUKTUURI, mitte sisu õigsust.
  *
  * See test ON kursusefaili ainus valvur: rakendus ise skeemi ei jooksuta
  * (vt src/content/schema.ts), seega katkine kursusefail avastatakse siin.
- *
- * TULEB SAMMUS 1.1: kontroll, et iga viidatud mooduli id on olemas ka
- * src/modules/registry.ts-is. Registrit veel ei ole, seega katkist viidet
- * praegu tabada ei saa. Kui registry.ts valmib, lisa siia test:
- *   "iga kursusefaili moodul on registris olemas".
  */
 describe("kursusefail fyysika-8", () => {
   it("läbib skeemi", () => {
     expect(() => courseSchema.parse(course)).not.toThrow();
+  });
+
+  it("viitab ainult moodulitele, mis on registris olemas", () => {
+    // Kirjaviga mooduli id-s annaks lehel tühja koha, mitte veateate.
+    // Registrist puuduv id on siin viga (docs/ARHITEKTUUR.md).
+    const missing = course.blocks
+      .flatMap(blockModules)
+      .filter((id) => !hasModule(id));
+    expect(missing).toEqual([]);
   });
 
   it("sisaldab ainekava seitset plokki, igal pealkiri olemas", () => {
