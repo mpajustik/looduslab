@@ -43,6 +43,21 @@ Kaks viimast käsku VALMIVAD hiljem. Kuni need puuduvad, ei kehti ka
 moodulilepingu „alusta katvusraportist" samm – etapi 1 kaks pilootmoodulit
 on plaaniga ette antud.
 
+## Ülevaatus enne commit'i
+
+Iga sammu lõpus vaatab muudatused üle CodeRabbit CLI. Windowsis natiivset
+klienti ei ole, seega käib see WSL Ubuntu kaudu:
+
+```bash
+# projekti juurkaustast – wsl viib töökausta ise kaasa
+wsl -d Ubuntu -- coderabbit review --uncommitted --include-untracked --agent
+```
+
+Skill `/ulevaatus` teeb selle ära ja triaažib leiud (päris viga vs
+stiiliküsimus) – leide EI parandata pimesi. Sisselogimine
+(`coderabbit auth login`) käib kasutaja enda terminalis – CodeRabbit
+keeldub agendi-terminalis sisse logimast.
+
 ## Kaustastruktuur
 
 ```
@@ -113,6 +128,7 @@ tests/                        # model.ts ja checker'i testid
 - [ ] Töötab telefonivaates (360 px) ja töölauavaates
 - [ ] UI-tekstid eesti keeles, õigekiri kontrollitud
 - [ ] Uus loogika model.ts/checker'is on testidega kaetud
+- [ ] CodeRabbiti ülevaatus tehtud (skill `/ulevaatus`) ja leiud triaažitud
 - [ ] git commit tehtud selgitava sõnumiga
 
 ## Viited
