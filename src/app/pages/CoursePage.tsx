@@ -36,10 +36,6 @@ function blockMeta(block: CourseBlock) {
 }
 
 function BlockContent({ block }: { block: CourseBlock }) {
-  if (blockModules(block).length === 0) {
-    return <p>Selle teema tunnid on veel tegemisel.</p>;
-  }
-
   if (block.parts) {
     return (
       <div className="flex flex-col gap-4">
@@ -59,8 +55,15 @@ function BlockContent({ block }: { block: CourseBlock }) {
 /**
  * Praegu näidatakse mooduli id-d. Sammus 1.1 tuleb registri
  * (src/modules/registry.ts) kaudu pealkiri ja link moodulile.
+ *
+ * Tühja loendi teade on SIIN, mitte ploki tasemel – nii saab ka üksik tühi
+ * alateema oma selgituse, mitte ei jää lihtsalt tühjaks reaks.
  */
 function ModuleList({ modules }: { modules: string[] }) {
+  if (modules.length === 0) {
+    return <p>Tunnid on veel tegemisel.</p>;
+  }
+
   return (
     <ul className="flex flex-col gap-2">
       {modules.map((id) => (

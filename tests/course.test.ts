@@ -48,6 +48,21 @@ describe("kursuse skeem", () => {
     ).toThrow();
   });
 
+  it("ei loe pealkirjaks tühikuid", () => {
+    expect(() =>
+      courseSchema.parse({
+        ...validCourse,
+        blocks: [{ title: "   ", modules: [] }],
+      }),
+    ).toThrow();
+  });
+
+  it("nõuab plokilt kas mooduleid või alateemasid, mitte kumbagi puudu", () => {
+    expect(() =>
+      courseSchema.parse({ ...validCourse, blocks: [{ title: "Plokk" }] }),
+    ).toThrow();
+  });
+
   it("ei luba sama mooduli id-d ühes loendis kaks korda", () => {
     expect(() =>
       courseSchema.parse({
@@ -75,23 +90,25 @@ describe("kursuse skeem", () => {
   });
 
   it("piirab sügavuse kahe tasemega: alateemal ei saa olla alateemasid", () => {
-    const parsed = courseSchema.parse({
-      ...validCourse,
-      blocks: [
-        {
-          title: "Plokk",
-          parts: [
-            {
-              title: "Alateema",
-              modules: [],
-              parts: [{ title: "Liiga sügav", modules: [] }],
-            },
-          ],
-        },
-      ],
-    });
-    // Kolmas tase ei jõua kursusesse – skeem viskab selle minema.
-    expect(parsed.blocks[0].parts?.[0]).not.toHaveProperty("parts");
+    // Kolmas tase on VIGA, mitte vaikselt äravisatav lisaväli – muidu
+    // kaoks kogu alamsisu ära ja keegi ei saaks teada.
+    expect(() =>
+      courseSchema.parse({
+        ...validCourse,
+        blocks: [
+          {
+            title: "Plokk",
+            parts: [
+              {
+                title: "Alateema",
+                modules: [],
+                parts: [{ title: "Liiga sügav", modules: [] }],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow();
   });
 
   it("nõuab mooduli id-lt kokkulepitud kuju", () => {

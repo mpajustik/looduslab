@@ -31,28 +31,47 @@ const moduleListSchema = z
     message: "Sama mooduli id kordub ühes loendis",
   });
 
-/** Alateema = teine ja ÜHTLASI viimane tase (sügavamale minna ei saa). */
-export const partSchema = z.object({
-  title: z.string().min(1, "Alateemal peab olema pealkiri"),
+/**
+ * Pealkiri, mida õpilane näeb: tühikutest koosnev pealkiri EI kõlba.
+ * `min(1)` üksi laseks läbi ka stringi "   ", mis lehel paistaks tühja
+ * reana. Trimmimise asemel LÜKKAME tagasi – skeem jookseb ainult testis,
+ * seega parandus peab jõudma faili, mitte kaduma mälus.
+ */
+const titleSchema = (what: string) =>
+  z.string().refine((value) => value.trim().length > 0, {
+    message: `${what} peab olema pealkiri (mitte tühi ega ainult tühikud)`,
+  });
+
+/**
+ * Alateema = teine ja ÜHTLASI viimane tase.
+ * `strictObject` = tundmatu võti on VIGA, mitte vaikimisi äravisatud. Nii
+ * annab kolmas tase (`parts` alateema sees) või kirjaviga võtmenimes
+ * punase testi, mitte vaikselt kaduma läinud sisu.
+ */
+export const partSchema = z.strictObject({
+  title: titleSchema("Alateemal"),
   modules: moduleListSchema,
 });
 
 export const blockSchema = z
-  .object({
-    title: z.string().min(1, "Plokil peab olema pealkiri"),
+  .strictObject({
+    title: titleSchema("Plokil"),
     /** Kas otse moodulid ... */
     modules: moduleListSchema.optional(),
     /** ... VÕI alateemad, kui plokk kasvab suureks. Mitte mõlemat. */
-    parts: z.array(partSchema).optional(),
+    parts: z.array(partSchema).min(1).optional(),
   })
-  .refine((block) => !(block.modules && block.parts), {
-    message: "Plokil on kas modules VÕI parts, mitte mõlemad",
+  // Täpselt üks neist peab olemas olema. Ilma selleta oleks plokk, millel
+  // on ainult pealkiri, "korras" – aga leht ei teaks, mida seal näidata.
+  // Tühi plokk kirjuta `modules: []`, siis on kavatsus näha.
+  .refine((block) => Boolean(block.modules) !== Boolean(block.parts), {
+    message: "Plokil peab olema kas modules VÕI parts, täpselt üks neist",
   });
 
-export const courseSchema = z.object({
+export const courseSchema = z.strictObject({
   /** Püsiv id – ära muuda (jagatud lingid ja andmebaas ripuvad selle küljes) */
   id: z.string().min(1),
-  title: z.string().min(1),
+  title: titleSchema("Kursusel"),
   blocks: z
     .array(blockSchema)
     .min(1)
