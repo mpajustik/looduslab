@@ -88,6 +88,11 @@ praktilised tööd P*-PT* ID-dega).
   praktilised tööd on kaetud, mitme mooduliga, ja MIS ON PUUDU
 - Uue mooduli valik algab katvusraportist: kata augud enne, kui lähed
   sügavamale sinna, kus juba on
+- MIDA täpselt ehitada, ütleb jaotuskava `sisu/JAOTUS-fyysika-8.md`:
+  raport näitab augu, jaotuskava ütleb, milline planeeritud moodul selle
+  katab. Jagamata ploki saab moodulteks jagada skilliga `/jaga-plokk`
+- Jaotuskava on PLAAN, manifestid on katvuse tõde – raport loeb ainult
+  manifeste, muidu näeks planeeritud moodul välja nagu tehtud
 - Kursus on „valmis" alles siis, kui raportis pole ühtegi katmata
   õpitulemust, mõistet ega praktilist tööd
 - Praktilise töö katvus tähendab: simulatsioon/virtuaalne labor katab töö
