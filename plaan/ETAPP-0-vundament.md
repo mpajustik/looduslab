@@ -10,9 +10,10 @@ kursuseleht 7 teemaplokiga, ja koodimuudatus jõuab internetti ühe käsuga.
 
 ## 0.1 Repo ja reeglifailid
 
-- [ ] Loo GitHubis privaatne repo `looduslab`, klooni arvutisse
-- [ ] Kopeeri CLAUDE.md, docs/, plaan/, sisu/ repo juurde
-- [ ] Esimene commit
+- [x] Loo GitHubis privaatne repo `looduslab`, klooni arvutisse
+      (repo loodi olemasolevast kaustast: remote lisatud + push)
+- [x] Kopeeri CLAUDE.md, docs/, plaan/, sisu/ repo juurde
+- [x] Esimene commit (0196266, 2026-08-02)
 
 **Valmis, kui:** repo on GitHubis ja failid sees.
 
