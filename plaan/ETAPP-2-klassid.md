@@ -35,7 +35,9 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 > sammu tasandi info elab responses-is. responses on VASTUPIDINE: seal ON
 > module_version võtme osa (unique attempt_id + question_id + module_version)
 > ja seda EI tuletata attempts pealt – vt docs/ANDMEMUDEL.md kommentaari
-> responses juures. modules.slug on unique (slug on globaalselt unikaalne).
+> responses juures. See veerg on NOT NULL ja saab muutumatuse triggeri –
+> SQL on ANDMEMUDEL-i peatükis „responses.module_version muutumatus",
+> võta sealt. modules.slug on unique (slug on globaalselt unikaalne).
 > review_items unique student+module+card. Kõik FK-d õpilase
 > suunas ON DELETE CASCADE. RLS-i veel MITTE. Ära käivita – näita SQL üle
 > vaatamiseks, selgita iga tabelit ühe lausega.
@@ -45,6 +47,8 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
       mitmeti mõistetava skeemi jäänuk)
 - [ ] Kontrolli, et responses võtmes ON `module_version` ja `modules.slug`
       on unique – need kaks kaovad kõige kergemini ära
+- [ ] Proovi ise: `update responses set module_version = '9.9.9'` peab
+      andma vea. Kui ei anna, on trigger tegemata
 
 ## 2.4 Migratsioon: RLS
 

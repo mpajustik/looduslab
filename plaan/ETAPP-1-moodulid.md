@@ -20,11 +20,16 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 > Sammutüübid registripõhiselt (stepRegistry), et uusi tüüpe saaks hiljem
 > LISADA ilma olemasolevaid muutmata. Zod-skeemid valideerimiseks.
 > Loo ka src/modules/registry.ts: `id → () => import(...)` kaardistus
-> (esialgu tühi) – see on ainus koht, mis teab kõiki mooduleid. Ei mingit UI-d.
+> (esialgu tühi) – see on ainus koht, mis teab kõiki mooduleid. Sinna kõrvale
+> slug → id indeks, mis ehitatakse üks kord ja VISKAB VEA, kui kaks moodulit
+> jagavad slugi (docs/MOODULILEPING.md „Slug-konventsioon") – vaikne vale
+> moodul on hullem kui krahh. Ei mingit UI-d.
 
 - [ ] Tüübid + Zod skeemid olemas, `npm run build` õnnestub
 - [ ] Register on olemas; kursusefaili test (0.5) kontrollib nüüd ka, et iga
       viidatud id on registris – eemalda sealt ajutine kommentaar
+- [ ] Test: kaks sama slugiga moodulit registris → indeksi ehitamine viskab
+      vea (mitte ei vali vaikselt üht)
 
 **Miks register kohe:** temast sõltuvad kolm asja (laisk laadimine `/m/:slug`,
 kursusefaili viidete test, hilisem sync-modules ja coverage). Kui teda ei ole,
