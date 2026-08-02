@@ -27,10 +27,23 @@ kursuseleht 7 teemaplokiga, ja koodimuudatus jõuab internetti ühe käsuga.
 > src/engine, src/checker, src/lib, src/modules). Ära lisa muid sõltuvusi.
 > Avaleht kuvab „LoodusLab AI" ja ühe nupu (shadcn Button).
 
-- [ ] `npm run dev` näitab avalehte
-- [ ] `npm run build` õnnestub
+- [x] `npm run dev` näitab avalehte (180a967 + 2026-08-02)
+- [x] `npm run build` õnnestub
 
 **Valmis, kui:** mõlemad käsud töötavad ja struktuur vastab CLAUDE.md-le.
+
+**Otsus (2026-08-02):** shadcn/ui komponente EI seadistatud kõiki korraga.
+Praegu on olemas Button ja Card (src/ui/, oma kood, null uut sõltuvust) ning
+`cn()` abifunktsioon clsx + tailwind-merge asemel. Dialog, Tabs, Accordion,
+Progress ja Sonner toovad kaasa Radixi paketid – need lisatakse siis, kui
+esimene ekraan neid päriselt vajab (Accordion tuleb sammuga 0.5). Põhjus:
+reegel 13 (väike bundle) ja reegel 4 (uus pakett ainult vajadusel).
+Ligipääsetavuse loogikaga komponendid (Dialog, Accordion) VÕETAKSE shadcn'ist,
+mitte ei kirjutata ise.
+
+Disainitokenid (bg-brand, text-ink, bg-teacher-soft …) on failis
+src/index.css. Komponentides kasuta ALATI semantilist nime, mitte `teal-700` –
+siis muudab värvimuutus ühte rida, mitte kahtekümmet faili.
 
 ## 0.3 Deploy Cloudflare Pagesi
 

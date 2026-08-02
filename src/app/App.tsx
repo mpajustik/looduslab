@@ -1,24 +1,27 @@
+import { Button } from "../ui/Button";
+import { Card, CardDescription, CardTitle } from "../ui/Card";
+
 export default function App() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center gap-8 px-4 py-12">
       <div className="flex flex-col gap-3">
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-4xl font-semibold tracking-tight text-ink">
           LoodusLab AI
         </h1>
-        <p className="text-lg text-slate-600">
+        <p className="text-lg text-ink-soft">
           Füüsika simulatsioonid ja harjutused 8. klassile. Vundament on püsti –
           sisu tuleb järgmiste sammudega.
         </p>
       </div>
 
-      {/* Ajutine nupp: asendub shadcn/ui Button'iga, kui see sammu 0.2
-          teises pooles seadistatakse. */}
-      <button
-        type="button"
-        className="min-h-11 self-start rounded-lg bg-teal-700 px-6 text-base font-medium text-white transition-colors duration-150 hover:bg-teal-800 focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 focus-visible:outline-none"
-      >
-        Alusta
-      </button>
+      <Card>
+        <CardTitle>Kursus on tulekul</CardTitle>
+        <CardDescription className="mt-1">
+          Teemaplokid ja esimesed moodulid lisanduvad lähipäevil.
+        </CardDescription>
+      </Card>
+
+      <Button className="self-start">Alusta</Button>
     </main>
   );
 }

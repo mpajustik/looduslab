@@ -1,1 +1,63 @@
+/* LoodusLab AI – globaalne stiililähtekoht.
+   Kõik värvid ja fondid on SIIN ühes kohas (docs/DISAINIJUHIS.md).
+   Komponendid kasutavad semantilisi nimesid (bg-brand, text-ink), mitte
+   otse teal-700 – nii muudad värvi hiljem ühest reast, mitte 20 failist. */
+
 @import "tailwindcss";
+
+/* Inter Variable self-hostitult – MITTE Google Fonts CDN-ist (GDPR). */
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Põhivärv: nupud, aktiivne samm, lingid */
+  --color-brand: var(--color-teal-700);
+  --color-brand-strong: var(--color-teal-800);
+  --color-brand-soft: var(--color-teal-50);
+
+  /* Info: õpilase infokastid */
+  --color-info: var(--color-blue-700);
+  --color-info-soft: var(--color-blue-50);
+
+  /* Õpetaja-ala: ALATI kollane, et õpilane ei kahtleks, kelle materjal see on */
+  --color-teacher: var(--color-amber-600);
+  --color-teacher-soft: var(--color-amber-50);
+
+  /* Tagasiside: värv ei ole kunagi ainus info kandja – lisa alati ikoon+tekst */
+  --color-correct: var(--color-green-600);
+  --color-correct-soft: var(--color-green-50);
+  --color-retry: var(--color-red-600);
+  --color-retry-soft: var(--color-red-50);
+
+  /* Tekst: ink = põhitekst, ink-soft = teisene */
+  --color-ink: var(--color-slate-900);
+  --color-ink-soft: var(--color-slate-600);
+  --color-line: var(--color-slate-200);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-white);
+    color: var(--color-ink);
+  }
+
+  /* Fookus peab olema ALATI nähtav – klaviatuuriga navigeerimine on nõue,
+     mitte lisavõimalus (docs/DISAINIJUHIS.md → Ligipääsetavus). */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  /* Kes on liikumise välja lülitanud, ei näe meilt ühtegi animatsiooni. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
