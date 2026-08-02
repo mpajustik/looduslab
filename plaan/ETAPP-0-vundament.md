@@ -126,8 +126,10 @@ branches" jäta sisse – iga haru saab oma eelvaate-aadressi.
 > hiljem lisatakse. /kursus leht renderdab selle faili põhjal: plokid
 > kaartidena, akordion, tühi plokk näitab „Tulekul". Mobiilivaade ennekõike.
 
-- [ ] 7 plokki kuvatakse, akordion töötab, kursusefaili test on roheline
-- [ ] Test kontrollib praegu struktuuri, mitte viiteid – kommentaar on sees
+- [x] 7 plokki kuvatakse, akordion töötab, kursusefaili test on roheline
+      (d34902f + 5f6bef0, kontrollitud brauseris 2026-08-02)
+- [x] Test kontrollib praegu struktuuri, mitte viiteid – kommentaar on sees
+      (tests/course.test.ts algus: mida sammus 1.1 juurde lisada)
 
 **Valmis, kui:** kursuseleht näeb telefonis korralik välja ja plokkide
 pealkirjad on õiged (kontrolli ainekava vastu!).
