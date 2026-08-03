@@ -45,6 +45,16 @@ const DEMO_STEPS: Step[] = [
     ],
   },
   {
+    type: "hook",
+    id: "hook-1",
+    title: "Kuhu peegeldub valguskiir?",
+    body: [
+      "Mari mängib pimedas toas taskulambiga. Ta suunab valguskiire peeglile, aga tahab, et kiir tabaks kindlat kohta seinal – täpselt märklauda.",
+      "Praegu läheb kiir peeglilt hoopis mööda märklauast. Kuhupoole peab Mari peeglit keerama, et kiir tabaks märklauda?",
+      "Täna õpid ennustama, kuhu valguskiir peegeldub – ja miks see nii juhtub.",
+    ],
+  },
+  {
     type: "precheck",
     id: "precheck-1",
     title: "Kontrolli, kas jäi meelde",
@@ -115,6 +125,27 @@ const DEMO_STEPS: Step[] = [
             correct: false,
             misconception: "ainult-peegel-peegeldab",
           },
+        ],
+      },
+    ],
+  },
+  {
+    type: "predict",
+    id: "predict-1",
+    title: "Paku oma ennustus",
+    body: [
+      "Kujuta ette tasapeeglit, mis lebab laual. Sellele langeb valguskiir 30° nurga all – nurk on mõõdetud pinnaga risti oleva joone (ristsirge) suhtes.",
+    ],
+    questions: [
+      {
+        kind: "choice",
+        id: "predict-1",
+        prompt: "Kui suure nurga all ristsirge suhtes lahkub peegeldunud kiir?",
+        options: [
+          { id: "15", text: "15°", correct: false },
+          { id: "30", text: "30°", correct: true },
+          { id: "60", text: "60°", correct: false },
+          { id: "materjal", text: "Sõltub peegli materjalist", correct: false },
         ],
       },
     ],

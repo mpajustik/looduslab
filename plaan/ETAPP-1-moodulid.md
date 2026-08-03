@@ -553,7 +553,38 @@ päris veaga, mitte ühe ülevaataja maitsega:
 > **Prompt AI-le:** Loo activities.ts sammud 1–3 täpselt spetsifikatsiooni
 > tekstidega. Ennustus lukustub enne explore-sammu avamist.
 
-- [ ] Ennustust ei saa pärast simulatsiooni nägemist muuta
+- [x] Ennustust ei saa pärast simulatsiooni nägemist muuta
+      (brauseris üle kontrollitud 360 px ja 1280 px juures: predict-1
+      lukustub kohe esitamise järel ja jääb lukku ka explore-sammu
+      külastades ja tagasi tulles, 2026-08-03)
+
+**Otsused (2026-08-03):**
+
+- **Precheck oli juba varasemast sammust demos olemas** – 1.10 uus sisu on
+  ainult `hook-1` ja `predict-1`. `activities.ts` ei teki veel: sisu elab
+  endiselt `StepDemoPage.tsx` `DEMO_STEPS`-is (samm 1.9 otsus – moodul
+  läheb registrisse alles sammus 1.13, siis koondub kogu sisu
+  activities.ts-i).
+- **Ennustus EI kasuta QuestionCardi/checkerit.** `PredictStep` kutsub
+  `ChoiceInput` otse, ilma `checkAnswer` + `Feedback`-ita – muidu näeks
+  õpilane kohe „Õige!"/„Vale", mis on vastuolus contractSchema.ts kommentaariga
+  „Salvestatakse, EI hinnata". `ChoiceInput` iseenesest ei näita õigsust
+  (ainult õpilase enda valikut), seega sobis otse kasutada.
+- **Lukustumine tuleb tasuta olemasolevast mustrist, mitte uuest koodist.**
+  `StepShell` lukustab „Edasi" vastamata sammu peal (samm 1.3) ja ükski
+  sisestuskomponent (`ChoiceInput`, `NumericInput`) ei luba esitatud
+  vastust muuta – seega täitis „ennustus lukustub enne explore't ja jääb
+  lukku" nõude juba olemasolev arhitektuur, ilma et predict oleks pidanud
+  midagi erilist tegema.
+- **Vabatekst „Miks sa nii arvad?" jääb välja**, nagu QuestionCardi kommentaar
+  juba ütleb: `text`-liiki küsimus jääks alati vastamata (sisend puudub kuni
+  sammuni 1.11) ja lukustaks sammu igaveseks. Sama koht, kuhu explain-samm
+  (1.11) hiljem oma vabateksti lisab.
+- **Hook ja predict kirjeldavad stseeni tekstiga, mitte joonisega.** Ka
+  precheck ja varasemad teooriasammud on siiani puhtalt tekstilised – ühtegi
+  foto/diagrammi tugisüsteemi rakenduses veel ei ole (ainus visuaal on
+  explore-sammu enda SVG simulatsioon). Uue diagrammikomponendi ehitamine
+  jäigi selle sammu mahust välja.
 
 ## 1.11 Sammud pärast simulatsiooni (collect, explain)
 
