@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
-import type { AnswerPayload, Answers } from "../engine/answers";
+import { ArrowLeft, ArrowRight, Lock, RotateCcw } from "lucide-react";
 import { isStepAnswered } from "../engine/answers";
 import { stepQuestions, type Step, type StepType } from "../engine/contract";
+import type { ProgressMode } from "../engine/progress";
+import { useModuleProgress } from "../engine/useModuleProgress";
 import { Button } from "./Button";
 import { STEP_LABELS, stepRegistry } from "./steps/registry";
 import type { StepComponent } from "./steps/types";
@@ -14,40 +15,49 @@ import type { StepComponent } from "./steps/types";
  * joonistab sammukomponent. Nii ei pea seda faili uue sammutüübi pärast
  * avama (docs/MOODULILEPING.md „Laiendatavus").
  *
- * Praegu elavad sammu number ja vastused ainult komponendi olekus. Salvestus
- * (localStorage, hiljem Supabase) tuleb sammus 1.6 – siis liigub see engine'i,
- * mitte siia. Vastuse KUJU (`AnswerPayload`) on juba engine'i oma, et sammus
- * 1.6 ei peaks andmeid ümber tõstma.
+ * Pooleli samm ja vastused elavad engine'is (`useModuleProgress`), mitte
+ * siin: sealt käib ka salvestus seadmesse. Vaade ei tea, KAS ja KUHU
+ * salvestatakse – nii ei saa `preview` (õpetaja „Vaata õpilasena") kogemata
+ * jälge jätta.
  */
 export function StepShell({
   moduleId,
+  moduleVersion,
   moduleTitle,
   steps,
+  mode = "persist",
 }: {
   /**
    * Mooduli id (või demo puhul mõni püsiv silt). Muutumine tähendab: õpilane
-   * on teises moodulis – samm ja vastused algavad nullist. Ilma selleta
-   * kanduksid vastused üle, sest küsimuste id-d (`precheck-1`) korduvad
-   * moodulite vahel ja `/m/:slug` renderdab kõigil moodulitel SAMA komponenti.
+   * on teises moodulis – samm ja vastused laaditakse selle mooduli omadeks.
+   * Ilma selleta kanduksid vastused üle, sest küsimuste id-d (`precheck-1`)
+   * korduvad moodulite vahel ja `/m/:slug` renderdab kõigil moodulitel SAMA
+   * komponenti.
    */
   moduleId: string;
+  /** Mooduli versioon (manifest.version) – läheb iga vastuse külge. */
+  moduleVersion: string;
   /** Mooduli pealkiri – õpilane näeb, mis tunnis ta on. */
   moduleTitle: string;
   steps: Step[];
+  /** `preview` ei salvesta mitte kuhugi. Tuleb marsruudilt, mitte moodulist. */
+  mode?: ProgressMode;
 }) {
-  const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answers>({});
-  const [currentModuleId, setCurrentModuleId] = useState(moduleId);
+  const progress = useModuleProgress({ moduleId, moduleVersion, steps, mode });
+  const [askRestart, setAskRestart] = useState(false);
+  const [askRestartModuleId, setAskRestartModuleId] = useState(moduleId);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const lockHintId = useId();
 
-  // Olek lähtestatakse renderdamise ajal, mitte efektis: nii ei jõua õpilane
-  // näha ühtegi kaadrit eelmise mooduli vastustega (React'i „prop muutus →
-  // korrigeeri olekut" muster).
-  if (currentModuleId !== moduleId) {
-    setCurrentModuleId(moduleId);
-    setIndex(0);
-    setAnswers({});
+  const { index, answers, runId } = progress;
+
+  // Teise moodulisse minnes kaob lahtine „Alusta uuesti" küsimus koos vana
+  // mooduliga – muidu kinnitaks „Jah" nupp uue mooduli vastuste kustutamise,
+  // mida õpilane ei ole veel isegi näinud küsitavat (renderdamise ajal, mitte
+  // efektis – sama muster mis mujal selles failis moodulivahetuse peale).
+  if (askRestartModuleId !== moduleId) {
+    setAskRestartModuleId(moduleId);
+    setAskRestart(false);
   }
 
   useEffect(() => {
@@ -55,29 +65,27 @@ export function StepShell({
     // loeb uue sammu ette ja klaviatuuriga liikuja ei alusta uuesti lehe
     // algusest. Kerimise teeme ise, et fookus ei hüpaks poole ekraani peale.
     //
-    // `moduleId` on sõltuvustes seepärast, et teise mooduli avamisel jääb
-    // `index` nulli – ilma selleta vahetuks sisu ekraanilugeja jaoks vaikselt.
+    // `runId` on sõltuvustes „Alusta uuesti" pärast: kui õpilane oli juba
+    // esimesel sammul, jääb `index` nulli ja ilma selleta jääks fookus
+    // kadunud nupu peale.
     headingRef.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0 });
-  }, [index, moduleId]);
+  }, [index, runId]);
 
   if (steps.length === 0) {
     return <p className="text-lg text-ink-soft">Selles tunnis ei ole ühtegi sammu.</p>;
   }
 
-  // Teine kaitsekiht `moduleId` kõrval: sama mooduli sammude arv võib muutuda
-  // ka ilma id vahetuseta (uus versioon keset seanssi, arenduses hot reload).
-  // 8-sammuliselt moodulilt 3-sammulisele minnes oleks `steps[5]` olematu ja
-  // ekraan valge.
-  const safeIndex = Math.min(index, steps.length - 1);
-  const step = steps[safeIndex];
+  // `index` tuleb engine'ist salvestatud sammu ID järgi, seega ta osutab alati
+  // olemasolevale sammule – ka siis, kui mooduli sammud on vahepeal muutunud.
+  const step = steps[index];
   const label = STEP_LABELS[step.type];
   // Võti on `step.type`, seega komponent SAAB just seda tüüpi sammu. Seda
   // seost TypeScript ise ei näe – siin on ainus koht, kus me talle ütleme.
   const StepContent = stepRegistry[step.type] as StepComponent<StepType> | undefined;
 
-  const isFirst = safeIndex === 0;
-  const isLast = safeIndex === steps.length - 1;
+  const isFirst = index === 0;
+  const isLast = index === steps.length - 1;
   // Lukk hoiab kinni VASTAMATA sammu, mitte valesti vastatud sammu: vale
   // vastusega peab saama edasi liikuda, muidu muutub õppimine karistuseks.
   //
@@ -88,21 +96,13 @@ export function StepShell({
   const locked = StepContent !== undefined && !isStepAnswered(step, answers);
   const questionCount = stepQuestions(step).length;
 
-  // Liigume `safeIndex`-ist, mitte `index`-ist: kui indeks oli vahemikust
-  // väljas, viiks vana väärtusest arvutamine nupu lukku.
-  const move = (delta: number) =>
-    setIndex(Math.min(Math.max(safeIndex + delta, 0), steps.length - 1));
-
-  const handleAnswer = (questionId: string, payload: AnswerPayload) =>
-    setAnswers((current) => ({ ...current, [questionId]: payload }));
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-4">
           <p className="truncate text-sm font-medium text-ink-soft">{moduleTitle}</p>
           <p className="shrink-0 text-sm font-medium text-ink-soft">
-            Samm {safeIndex + 1}/{steps.length}
+            Samm {index + 1}/{steps.length}
           </p>
         </div>
         {/* Riba on kaunistus: sama info on kõrval sõnadega ja ekraanilugeja
@@ -113,9 +113,16 @@ export function StepShell({
         >
           <div
             className="h-full rounded-full bg-brand transition-[width] duration-200"
-            style={{ width: `${((safeIndex + 1) / steps.length) * 100}%` }}
+            style={{ width: `${((index + 1) / steps.length) * 100}%` }}
           />
         </div>
+        {/* Ilma selleta näeks õpetaja „Vaata õpilasena" režiimis, et miski ei
+            salvestu, ja arvaks, et rakendus on katki. */}
+        {mode === "preview" ? (
+          <p className="text-sm text-ink-soft">
+            Eelvaade – vastuseid ei salvestata.
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-4">
@@ -133,16 +140,16 @@ export function StepShell({
         </div>
 
         {StepContent ? (
-          // Võti sunnib uue mooduli või sammu peal uue instantsi. Ilma selleta
-          // taaskasutab React sama komponenti ja sammukomponendi POOLELI olek
-          // (nt tehtud, aga esitamata valik) kanduks üle – küsimuste id-d
-          // (`precheck-1`) korduvad moodulite vahel, seega ei aita ka võtmed
-          // allpool. Esitatud vastused nullib `moduleId` kontroll ülal.
+          // Võti sunnib uue mooduli, sammu või uue käigu peal uue instantsi.
+          // Ilma selleta taaskasutab React sama komponenti ja sammukomponendi
+          // POOLELI olek (nt tehtud, aga esitamata valik) kanduks üle –
+          // küsimuste id-d (`precheck-1`) korduvad moodulite vahel, seega ei
+          // aita ka võtmed allpool. Esitatud vastused tulevad engine'ist.
           <StepContent
-            key={`${moduleId}:${step.id}`}
+            key={`${moduleId}:${runId}:${step.id}`}
             step={step}
             answers={answers}
-            onAnswer={handleAnswer}
+            onAnswer={(questionId, payload) => progress.answer(step, questionId, payload)}
           />
         ) : (
           // Seda ei tohiks õpilane kunagi näha – aga tühi valge ekraan oleks
@@ -167,14 +174,18 @@ export function StepShell({
         ) : null}
 
         <nav aria-label="Sammud" className="flex items-center justify-between gap-3">
-          <Button variant="secondary" onClick={() => move(-1)} disabled={isFirst}>
+          <Button
+            variant="secondary"
+            onClick={() => progress.goToIndex(index - 1)}
+            disabled={isFirst}
+          >
             <ArrowLeft aria-hidden="true" className="size-5" />
             Tagasi
           </Button>
           {/* Viimasel sammul on „Edasi" lukus – mooduli kokkuvõtteekraan
               lisandub sammus 1.12. */}
           <Button
-            onClick={() => move(1)}
+            onClick={() => progress.goToIndex(index + 1)}
             disabled={isLast || locked}
             // Lukus nupule ei saa fookust viia, aga ekraanilugeja
             // sirvimisrežiimis loeb ta põhjuse siiski ette.
@@ -185,6 +196,42 @@ export function StepShell({
           </Button>
         </nav>
       </div>
+
+      {/* „Alusta uuesti" kustutab kõik vastused – seepärast küsitakse üle.
+          Üks eksikombel tabatud nupp ei tohi tunnitööd ära pühkida. */}
+      {progress.hasProgress ? (
+        <div className="flex justify-center">
+          {askRestart ? (
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-line p-4">
+              <p className="text-base text-ink">
+                Alustame otsast? Senised vastused kustuvad.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button
+                  variant="secondary"
+                  // Fookus liigub küsimuse juurde – muidu jääks ta kadunud
+                  // nupu peale ja klaviatuuriga tuleks otsida uuesti.
+                  autoFocus
+                  onClick={() => {
+                    progress.restart();
+                    setAskRestart(false);
+                  }}
+                >
+                  Jah, alusta uuesti
+                </Button>
+                <Button variant="ghost" onClick={() => setAskRestart(false)}>
+                  Loobu
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="ghost" onClick={() => setAskRestart(true)}>
+              <RotateCcw aria-hidden="true" className="size-4" />
+              Alusta uuesti
+            </Button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

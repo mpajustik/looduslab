@@ -220,13 +220,94 @@ ei ole selle sammu ulatuses.
 > (ka mitte localStorage'i) ja tuleb marsruudilt, mitte moodulist
 > (docs/ARHITEKTUUR.md „Kolm salvestusrežiimi", CLAUDE.md reegel 14).
 
-- [ ] Sulge ja ava leht keset moodulit – jätkub õigest kohast
-- [ ] preview-režiimis läbitud moodul EI jäta localStorage'i ühtegi jälge
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] Sulge ja ava leht keset moodulit – jätkub õigest kohast
+      (src/engine/progress.ts + useModuleProgress.ts, src/lib/storage.ts,
+      brauseris üle kontrollitud 2026-08-03)
+- [x] preview-režiimis läbitud moodul EI jäta localStorage'i ühtegi jälge
+      (`/m/test?eelvaade=1` – localStorage jäi sõna-sõnalt samaks)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03:
+      CodeRabbit 7 leidu + Codex 2 leidu, kattusid ühes kohas – vt allpool)
 
 **Miks preview juba nüüd:** seda vajavad „Vaata õpilasena" (2.14) ja
 demo-režiim (4.2). Hiljem külge poogitud „ära salvesta" lipp on täpselt see
 koht, kust tekib fantoomõpilane õpetaja klassivaates.
+
+**Otsused (2026-08-03):**
+
+- **`preview` ei ole lipp, vaid teine salvestuskiht.** `createProgressStore`
+  tagastab preview'le poe, mille `read`/`write`/`clear` ei tee midagi –
+  seega ei pea ükski kutsuja „ära salvesta" meeles pidama. Preview ka EI
+  LOE: õpetaja „Vaata õpilasena" peab algama puhtalt lehelt, mitte tema enda
+  seadmesse jäänud poolikust käigust. Sama poe saab seade, kus
+  localStorage'i ei saa kasutada (Safari privaatrežiim) – siis edenemine ei
+  salvestu, aga rakendus ei kuku kokku.
+- **`currentStep` on sammu ID, mitte järjekorranumber.** Number näitaks uues
+  versioonis vale sammu peale (üks samm juurde ja kõik nihkuvad); id on
+  igavene (CLAUDE.md reegel 11). Kadunud sammu puhul algab moodul otsast –
+  nähtav tagasilangus on parem kui vaikselt vale samm. Kõrvalkasu: StepShelli
+  `safeIndex`-i kaitse enam vaja ei ole, sest indeks tuletatakse iga kord
+  olemasolevate sammude seast.
+- **`is_correct` tuleb ALATI checkerilt** – `withAnswer` kutsub ise
+  `checkAnswer`i, seega ükski ekraan ei saa salvestada oma arvamust õigsusest
+  (CLAUDE.md reegel 3). Kui küsimust sammust ei leita, on tulemus `null`
+  (hindamata), vastus ise jääb alles: see on meie, mitte õpilase viga.
+- **`revisedCount` loeb kordusi ainult SAMA versiooni sees** ja vastuse
+  `createdAt` ei muutu muutmisel. Andmebaasis on unikaalne võti
+  (attempt_id, question_id, module_version) – teise versiooni vastus ei ole
+  sama vastuse uus kuju, vaid teine vastus. Muutmisliides („Muuda vastust")
+  tuleb hiljem; loogika on nüüd olemas ja testitud, seega ei ehita teda
+  kaks korda.
+- **localStorage'i sisu ei usuta.** `parseProgressFile` kontrollib kuju
+  käsitsi (zod ei tohi brauseri bundle'isse – reegel 13) ja viskab katkise
+  kirje kõrvale ÜKSHAAVAL: ühe mooduli rikutud andmed ei tohi kustutada
+  teiste moodulite edenemist. Failil on `version: 1`, et kuju muutudes saaks
+  vana ära tunda.
+- **„Alusta uuesti" küsib üle** (nupp → „Alustame otsast? Senised vastused
+  kustuvad."). Üks eksikombel tabatud nupp ei tohi tunnitööd ära pühkida.
+- **Teadlik piirang: localStorage hoiab question_id kohta ÜHTE vastust, mitte
+  ühte vastust versiooni kohta** (Codexi ülevaatuse leid, 2026-08-03).
+  Supabase'is on `responses` unikaalne võti (attempt_id, question_id,
+  module_version) – uus major-versioon saab oma rea, vana jääb alles. Seade
+  peal on kuju lihtsam: `responses[questionId]` kirjutatakse üle ka siis, kui
+  vana vastus oli teise versiooni oma. Otsustasime seda MITTE parandada
+  sammus 1.6, sest külalise seadmes olev edenemine ei jõua täna niikuinii
+  Supabase'i (docs/ANDMEMUDEL.md „teadaolevad piirangud" p 3) ja etapis 2
+  kirjutatakse `responses` rida vastamise HETKEL, mitte localStorage'ist
+  hiljem üle kandes – seega see kitsendus ei jõua kunagi andmebaasi
+  rikkuma. Kui etapp 2 peaks kunagi nõudma külalise varasema versiooni
+  vastuste taastamist, tuleb kuju siin ümber teha (question_id +
+  moduleVersion liitvõtmeks) – teadlik võlg, mitte unustus.
+- **`status: "completed"` ja `finishedAt` jäävad praegu täitmata** – need
+  seab mooduli kokkuvõtteekraan sammus 1.12. Väljad on kujus olemas, et
+  andmemudelit hiljem ümber ei tehtaks.
+- **Demol on `?eelvaade=1`** (`/m/test?eelvaade=1`), et preview'd saaks käega
+  katsuda juba enne marsruuti 2.14. Toodangusse see leht ei jõua.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** Kolm parandatud, üks
+teadlikult lahtiseks jäetud (vt eelmine punkt), kolm vale leidu:
+
+- *Mõlemad ülevaatajad, sama koht:* `createProgressStore("preview")` kutsus
+  siiski `browserStorage()` (vaikeparameeter arvutati enne `mode`-kontrolli),
+  mis tegi proovikirjutuse `setItem`+`removeItem`. Jälge ei jäänud, aga
+  kirjutamine ISE toimus – vastuolu reegliga 14. Parandus: teine parameeter
+  on nüüd funktsioon (`resolveStorage`), mida preview EI KUTSU üldse; test
+  nõuab, et preview'l antud funktsioon ei lähe kordagi käiku.
+- *CodeRabbit:* kaks `commit`-kutset sama sündmuse sees oleksid lugenud
+  suletuse kaudu vana `progress`-i ja kaotanud esimese muudatuse (täna
+  saavutamatu, aga samm 1.9 „vasta ja liigu automaatselt edasi" muudaks
+  selle päriseks). Esimene katse (ref, mida uuendatakse renderdamise ajal)
+  ei läbinud lint'i (`react-hooks/refs`) – React Compiler ei luba ref'i
+  muuta renderduse sees. Lõplik lahendus: `commit` kasutab `setProgress`
+  FUNKTSIONAALSET vormi, mis saab React'ilt alati värske oleku, ilma
+  ref'ideta.
+- *CodeRabbit:* lahtine „Alusta uuesti" kinnitus kandunuks moodulivahetusel
+  kaasa (saavutamatu enne sammu 1.13, aga kaks rida maksis vähem kui hilisem
+  meenutamine). Parandus: kinnitus nullitakse renderdamise ajal, kui
+  `moduleId` muutub – sama muster mis mujal failis.
+- *Vale leid (3×):* CodeRabbit ütles, et `plaan/`- ja `docs/`-faile ei tohiks
+  selle ülesande käigus muuta. See ON projekti töövoog (iga samm
+  dokumenteerib oma otsused plaanis, CLAUDE.md ja see fail ise) – ülevaataja
+  ei tea seda konteksti.
 
 ---
 

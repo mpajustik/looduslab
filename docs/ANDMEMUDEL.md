@@ -49,7 +49,10 @@ hoidmine ka `attempts`-is dubleeriks sama info kahes kohas ja need kaks
 võiksid omavahel lahku minna. Nüüd on jaotus üheselt selge:
 
 - „mitmes samm on pooleli" (õpetaja elav vaade) = `attempts.current_step`
-  – üks veerg, ilma agregeerimiseta
+  – üks veerg, ilma agregeerimiseta. Väärtus on sammu **ID** (`explore-2`),
+  mitte järjekorranumber: number näitaks uues versioonis vale sammu peale,
+  id on igavene (CLAUDE.md reegel 11). Õpetaja vaade tõlgib id numbriks
+  mooduli sammude järgi
 - „mida ta vastas" = `responses` read
 - „kaua moodul võttis" = `finished_at - started_at` ühe rea peal
 - `revised_count` on vastuse, mitte sammu omadus – seepärast on ta

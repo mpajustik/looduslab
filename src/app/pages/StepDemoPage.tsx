@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router";
 import type { Step } from "../../engine/contract";
 import { StepShell } from "../../ui/StepShell";
 
@@ -114,11 +115,21 @@ const DEMO_STEPS: Step[] = [
 ];
 
 export default function StepDemoPage() {
+  // `/m/test?eelvaade=1` – nii saab preview-režiimi (õpetaja „Vaata
+  // õpilasena", samm 2.14) käega katsuda juba enne, kui see marsruut olemas
+  // on: läbi tehtud moodul ei tohi jätta localStorage'i ühtegi jälge.
+  const [params] = useSearchParams();
+  const mode = params.has("eelvaade") ? "preview" : "persist";
+
   return (
     <StepShell
       moduleId="demo"
+      // Demol ei ole manifesti – versioon on siin ainult selleks, et vastused
+      // saaksid oma versioonisildi (docs/ANDMEMUDEL.md).
+      moduleVersion="0.0.0"
       moduleTitle="Näidistund (arendus)"
       steps={DEMO_STEPS}
+      mode={mode}
     />
   );
 }
