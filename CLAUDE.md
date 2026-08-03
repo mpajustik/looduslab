@@ -43,6 +43,35 @@ Kaks viimast käsku VALMIVAD hiljem. Kuni need puuduvad, ei kehti ka
 moodulilepingu „alusta katvusraportist" samm – etapi 1 kaks pilootmoodulit
 on plaaniga ette antud.
 
+## Mudelivalik (iga sammu alguses)
+
+Enne koodi ütlen ühe reaga, mis mudelit see samm nõuab ja miks. **Mudeli
+vahetab kasutaja** käsuga `/model sonnet` või `/model opus` – ma ei saa seda
+ise teha ja ükski hook ei saa ka (Claude Code hookidel puudub mudeli
+määramise väljund).
+
+| Sammu tüüp | Mudel |
+| --- | --- |
+| Riskisamm: model.ts, checker, engine, migratsioonid, Edge Functionid, saladused | **Opus** |
+| Arhitektuur või silumine: tüübilepingud, uue etapi algus, „ei tea, miks katki on" | **Opus** |
+| Tavasamm mustri järgi: UI-tekstid, stiilid, komponent olemasoleva eeskujul | **Sonnet** |
+| Mehaaniline töö: testid ette antud väärtustega, failide liigutamine, dokumendi täiendus | **Sonnet** |
+
+Riskisammu loend on TÄPSELT sama, mis skillil `/ulevaatus` – üks loend, kaks
+kasutust: mis vajab ülevaatuseks teist mudelit, vajab ka kirjutamiseks
+tugevamat. Otsuse teen muudetavate failide järgi, mitte tunde järgi.
+Kahtluse korral **Opus**: ümber tehtud samm maksab rohkem kui säästetud
+Sonneti-sessioon.
+
+Kui jooksev mudel on soovitatust nõrgem, siis **Opust nõudval sammul ootan
+kinnitust** enne alustamist – see kehtib mõlema Opuse rea kohta, nii
+riskisammu kui ka arhitektuuri/silumise puhul. Sonneti sammul mainin ja
+teen edasi.
+
+**Fable'it ei paku ma kunagi ise** – sellele lülitub ainult kasutaja, sest
+tema otsustab, millal krediiti kulutada. Sama kehtib alamagentide kohta:
+`model: fable` ei tohi sattuda ühessegi agendifaili.
+
 ## Ülevaatus enne commit'i
 
 Iga sammu lõpus vaatab muudatused üle CodeRabbit CLI. Windowsis natiivset

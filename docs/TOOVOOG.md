@@ -8,6 +8,13 @@ käib ja kuidas projekt kontrolli all hoida.
 1. **Ava plaan.** Vaata plaan/ETAPP-X failist järgmine tegemata samm.
 2. **Anna AI-le kontekst.** Alusta sessiooni nii:
    > Loe CLAUDE.md. Teeme plaan/ETAPP-X sammu X.Y. [kleebi sammu tekst]
+
+   Vastuseks ütleb AI esimese asjana, kas see samm nõuab **Opust** (nt
+   füüsika, engine, RLS) või piisab **Sonnetist** (nt UI-tekstid, stiilid).
+   Täpne loend on CLAUDE.md peatükis „Mudelivalik" – **ära korda seda siia**,
+   muidu lähevad kaks nimekirja lahku ja väiksem hakkab valetama.
+   Vahetad sina: `/model sonnet` või `/model opus` – AI seda ise teha ei saa.
+   **Fable'ile lülitad ainult sina** – AI ei paku seda kunagi ise.
 3. **Lase AI-l plaani öelda enne koodi.** „Ütle kõigepealt, mida kavatsed
    muuta ja millistes failides." Kui plaan tundub liiga suur – poolita.
 4. **Kood + kohe proovimine.** `npm run dev` jookseb kõrval; proovi iga
