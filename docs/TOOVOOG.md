@@ -18,7 +18,10 @@ käib ja kuidas projekt kontrolli all hoida.
 3. **Lase AI-l plaani öelda enne koodi.** „Ütle kõigepealt, mida kavatsed
    muuta ja millistes failides." Kui plaan tundub liiga suur – poolita.
 4. **Kood + kohe proovimine.** `npm run dev` jookseb kõrval; proovi iga
-   muudatus ise läbi (telefonivaade DevToolsis!).
+   muudatus ise läbi (telefonivaade DevToolsis!). AI saab sama asja teha
+   chrome-devtools MCP kaudu (`.mcp.json`) – 360 px vaade, töölauavaade,
+   konsooli veateated. See ei asenda sinu enda proovimist (vt reegel allpool
+   „Sammu „valmis" otsus"), aga püüab kinni asjad, mida AI muidu ei näe.
 5. **Testid ja build.** `npm run test && npm run build` – mõlemad rohelised.
 6. **Commit.** Lühike eestikeelne sõnum: mida ja miks.
 7. **Märgi samm tehtuks** plaanifailis (`- [x]`).
@@ -72,7 +75,8 @@ sõltumatut kihti väikese diff'i peal. Iga ülesande juures:
    seda. Lõpliku otsuse teed ikka sina.
 5. **Käsitsi proovimine** – 360 px + töölaud. Küsi AI-lt „mida peaksin
    käsitsi proovima?" ja proovi ka üks asi, mida ta EI nimetanud
-   (nt sisend -5 või tühi väli).
+   (nt sisend -5 või tühi väli). AI oma brauseri-läbivaatus (chrome-devtools
+   MCP) on lisakontroll, mitte asendus – tema ei tea, mis "tundub õige".
 
 **Leidudega käitumine:** ära lase AI-l leide pimesi parandada. Küsi iga
 leiu kohta: „Kas päris viga või stiiliküsimus? Näita sisend, millega see
