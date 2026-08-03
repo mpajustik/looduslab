@@ -119,7 +119,8 @@ tests/                        # model.ts ja checker'i testid
 2. **Iga moodul järgib moodulilepingut** (docs/MOODULILEPING.md). Ära loo
    moodulit teistsuguse struktuuriga.
 3. **Arvulise vastuse õigsust otsustab checker, mitte kunagi AI.** Checker
-   arvestab ühikuid ja lubatud viga (tolerants manifest'is).
+   arvestab ühikuid ja lubatud viga (tolerants iga küsimuse juures
+   `activities.ts`-is, mitte manifest'is – vt docs/MOODULILEPING.md).
 4. **Uus npm-pakett ainult kasutaja loal.** Enne lisamist paku 20-realist oma
    koodi alternatiivi.
 5. **Iga tabel vajab RLS-i.** Migratsioon ilma RLS-reegliteta on poolik.
