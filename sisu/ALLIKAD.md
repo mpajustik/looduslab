@@ -49,6 +49,8 @@ rea registritabelisse. Konventsioon:
 |---|---|---|---|
 | Erkki Tempel, „Füüsika 8. klassile" (rets. J. Paaver, H. Voolaid; toim. K. Reivelt), Opik/fyysika.ee | https://opik.fyysika.ee/index.php/book/view/36 · PDF: `allikad/OPIK-F8-taielik.pdf` (162 lk, gitignore'is) · indeks: `allikad/OPIK-F8-INDEKS.md` | teadmata (lehel ei ole märgitud) | ainult faktikontroll ja analoogid; sõnasõnaline kopeerimine keelatud, kuni EFS-ilt pole luba küsitud |
 | e-Koolikott (HARNO õppevaraportaal) | https://e-koolikott.ee | materjalipõhine – kontrolli IGA materjali litsentsi eraldi | CC-litsentsiga materjali tohib kohandada litsentsi tingimuste järgi (viide kirja väljavõttefaili) |
+| opik.fyysika.ee – õpikute koond (33 raamatut, rahastaja Tiigrihüppe SA / TÜ / TÜ Füüsika Instituut / HTM) | https://opik.fyysika.ee/ | teadmata (lehel litsentsimärget ei ole) | koondkirje – üksikraamatu reaalsel kasutamisel lisa sellele eraldi rida (nt Erkki Tempeli oma ülalpool); vaikimisi kehtib rangeim reegel: ainult faktikontroll ja analoogid |
+| Riiklik õppekava, Füüsika (PK) – HARNO wiki | https://projektid.edu.ee/spaces/OKMV/pages/211453775/PK+F%C3%BC%C3%BCsika | õppekava tekst (PRÕK Lisa 4) autoriõiguseta (riigi õigusakt, AutÕS §5); wiki lisamaterjal (hindamisjuhised, mõistekaardisoovitused) teadmata litsents | õppekava tsiteeritav otse; wiki lisamaterjal ainult faktikontroll ja analoogid |
 
 Uue allika lisamisel: lisa rida siia tabelisse ENNE, kui allikast
 väljavõtteid tegema hakkad. Kui litsentsi ei leia, märgi „teadmata" –
