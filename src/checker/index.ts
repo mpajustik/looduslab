@@ -2,6 +2,7 @@ import type { AnswerPayload } from "../engine/answers";
 import type { Question } from "../engine/contract";
 import { checkChoiceAnswer } from "./choice";
 import { checkNumericAnswer } from "./numeric";
+import { checkTableAnswer } from "./table";
 import { NOT_CHECKABLE, type CheckResult } from "./types";
 
 export type { CheckResult } from "./types";
@@ -31,8 +32,9 @@ export const questionCheckers: { [K in QuestionKind]: CheckerFor<K> } = {
   // Vabateksti EI hinnata kunagi automaatselt (CLAUDE.md reegel 3: õigsust ei
   // otsusta AI). Vastus läheb õpetajale, `correct: null` jõuab andmebaasis
   // `is_correct = null`-iks. Pikkusenõue (`minWords`) on sisestuse, mitte
-  // õigsuse küsimus – see lisandub koos explain-sammuga (1.11).
+  // õigsuse küsimus: selle eest hoolitseb TextInput, mitte checker.
   text: () => ({ correct: null, feedback: "Vastus on salvestatud." }),
+  table: (question, answer) => checkTableAnswer(question, answer.rows),
 };
 
 export function checkAnswer(question: Question, answer: AnswerPayload): CheckResult {

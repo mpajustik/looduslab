@@ -594,9 +594,119 @@ päris veaga, mitte ühe ülevaataja maitsega:
 > liugurit ja tipib käsitsi), mitte mõõtmisviga. Kontroll: iga rida vastab
 > mudelile ±1° piires. Ära lisa juhuslikkust model.ts-i.
 
-- [ ] Tabel kontrollib täidetust; selgituse juures on ennustus nähtav
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): ±1°
-      lugemistolerants on checkeri loogika, mitte kuvamine
+- [x] Tabel kontrollib täidetust; selgituse juures on ennustus nähtav
+      (brauseris üle kontrollitud 360 px ja 1280 px juures: täidetud/poolik
+      tabel, korduv nurk, tolerantsist väljas rida, koma ja ühikuga sisend,
+      sõnaloendur ja ennustuse meeldetuletus – 2026-08-03)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03):
+      ±1° lugemistolerants on checkeri loogika, mitte kuvamine. CodeRabbit
+      2 leidu + Codex 1 leid, kõik kolm päris vead ja parandatud – vt allpool
+
+**Otsused (2026-08-03):**
+
+- **Mõõtetabel on uus KÜSIMUSELIIK (`kind: "table"`), mitte collect-sammu
+  eriväli.** Nii jõuab ta salvestusse, checkerini ja luku alla täpselt samu
+  radu pidi mis iga teine vastus: `withAnswer` → `checkAnswer` → `isCorrect`,
+  `revisedCount`, `responses[question_id]`. Alternatiiv (tabel sammu enda
+  väljana) oleks nõudnud collect-sammule oma salvestusrada – kaks rada
+  tähendaks ühel päeval kaht eri tõde selle kohta, mis on „vastatud".
+  Kõrvalkasu: `collect` skeem lihtsustus (`columns`/`rows` kolisid küsimuse
+  sisse), sest ridade kontroll on nüüd checkeri, mitte sammu asi.
+- **„Vastab mudelile ±1°" EI tähenda, et checker impordib `model.ts`-i.**
+  Küsimus deklareerib seose andmetena (`rule: equal-columns`, veerg A =
+  veerg B ± tolerants) ja checker jääb üldiseks. Kui `src/checker/` teaks
+  peegeldumisseadusest, peaks moodul 2 (vedeliku rõhk, `p = ρgh`) selle
+  kohe uuesti murdma. **Tõde jääb ikka `model.ts`-i:** tests/table.test.ts
+  arvutab paarid `reflectionAngle`-iga ja nõuab, et checker loeks need
+  õigeks – mudeli muutus kukutab testi, mitte ei lase tabelil vaikselt
+  mudelist lahku minna.
+- **Reegel on diskrimineeriv union ühe liikmega (`equal-columns`).** Uue
+  seose lisamine (moodul 2) on LISANDUS, mitte olemasoleva muutmine – sama
+  raudreegel mis sammutüüpidel ja checkeri registril. Ilma `kind`-väljata
+  oleks laiendamine hiljem murdev muudatus; üks rida hoiab tee lahti.
+- **Skeem valvab reeglit kolmes kohas:** veerg, millele reegel osutab, peab
+  olemas olema; veerg ei tohi võrduda iseendaga (siis oleks iga vastus
+  õige); mõlemal veerul peab olema sama ühik („30 cm = 30 °" ei tähenda
+  midagi). Kõik kolm on vaikselt mööduvad vead – ilma valvurita ei paistaks
+  katkine reegel brauseris kuidagi välja.
+- **Veerul on lisaks lubatud VAHEMIK (`min`/`max`) – tavaliselt liuguri
+  piirid.** Ilma selleta kontrollis checker ainult veergudevahelist suhet ja
+  „10000 ja 10000" oleks läbinud (Codexi leid, vt allpool). Vahemik käib
+  veeru, mitte seose kohta: moodulis 2 on ühes tabelis kaks eri suurust eri
+  piiridega. **Teadlik võlg:** vahemik on activities.ts-i andmed ja peab
+  käsitsi klappima Simulation.tsx liuguri konstantidega (`MAX_ANGLE_DEG`),
+  mis on komponendi privaatsed – kooskõla ei valva praegu ükski test. Kui
+  sammus 1.13 activities.ts sünnib, tuleb see kooskõla üle vaadata.
+- **„Kolm ERI nurka" tähendab lugemistolerantsi juures ERISTATAVAT.** 30 ja
+  30,2 mahuvad sama ±1° sisse – need ei ole kaks mõõtmist, vaid üks mõõtmine
+  kaks korda kirja pandud. Täpne võrdlus oleks selle läbi lasknud.
+- **Tabeli tagasiside nimetab rea, aga EI ütle, mis seal olema peaks.**
+  „3. rida ei klapi simulatsiooniga." Seaduspärasuse sõnastamine on
+  järgmise sammu (explain) töö – kui checker selle ette ära ütleb, ei ole
+  explain-sammul enam mõtet. Test valvab, et lause ei sisaldaks oodatud arvu.
+- **Simulatsioon on nähtav ka collect-sammul.** Ilma selleta käiks õpilane
+  iga rea pärast „Tagasi"–„Edasi" ja tipiks lõpuks mälu järgi – siis mõõdab
+  ta iseennast, mitte simulatsiooni. Uut skeemivälja selleks ei ole:
+  `CollectStep` kuvab `Simulation` propsi, kui moodulil see on, ja kutsub
+  sama `unlockedSimulationFeatures`-i mis ExploreStep (mitte-explore sammul
+  annab ta tühja hulga, seega mattpinna lüliti mõõtmise ajal ei sega).
+- **Arvu lugemine kolis `src/checker/number.ts`-i.** Seda vajavad nüüd kaks
+  checkerit (`numeric.ts` ja `table.ts`); kahes kohas kirjutatud koma
+  lugemine läheks ühel päeval lahku ja siis loeks tabel „2,5" teisiti kui
+  vastusekast. Tõstmine, mitte muutmine – tests/numeric.test.ts valvab.
+- **`minWords` on SISESTUSE, mitte õigsuse nõue.** Nupp on lukus, kuni 15
+  sõna täis; checker jätab vabateksti endiselt `correct: null`-iks (CLAUDE.md
+  reegel 3). Loendur on abistav, mitte karistav („Kirjas on 8 sõna, oodatud
+  on vähemalt 15") ja seotud nupuga `aria-describedby` kaudu – lukus nupp
+  ilma põhjuseta on katkine nupp. Ilma `minWords`-ita nõutakse vähemalt üht
+  sõna: tühi vastus avaks „Edasi" luku, ilma et õpilane oleks midagi öelnud.
+- **Ennustuse meeldetuletus elab engine'is (`recall.ts`), mitte
+  komponendis.** Vastuse LOETAVAKS tegemine nõuab küsimust (valiku id →
+  variandi tekst), aga sammukomponent näeb ainult oma sammu. StepShell annab
+  `recall` funktsiooni propsina – sama muster mis `Simulation`. Meeldetuletus
+  näitab AINULT õpilase valikut, ilma õige/vale märgita: „sa eksisid" enne
+  selgitust paneks ta kirjutama seda, mida ta arvab meid kuulda tahtvat.
+- **Skeem valvab, et meelde tuletatav küsimus on VAREM.** Tulevase sammu
+  vastus oleks igavesti tühi ja seda ei paneks keegi brauseris tähele.
+- **Usalduslause tuleb engine'ilt (`STEP_NOTES`), mitte moodulilt** –
+  moodulileping ütleb „engine lisab automaatselt", ja mooduli autori
+  meelespidamise peale jäetud lause ununeb ühel moodulil kindlasti. Täna on
+  täidetud ainult `explain` („Sinu vastust näeb õpetaja."); `predict` („see
+  ei ole hinne") ja `exit` lisanduvad sammus 1.12, kui exit-samm sünnib.
+- **Esitatud tabelit ega selgitust ei saa muuta** – sama reegel mis mujal.
+  Tabeli puhul on see esimene koht, kus „Muuda vastust" hakkab päriselt
+  puuduma (üks tippimisviga lukustab kolm rida). Enne esitamist saab kõiki
+  lahtreid parandada, seega samm on läbitav; aga kui 1.14 katsetusel see
+  konarusena välja tuleb, on `revisedCount` loogika progress.ts-is juba
+  olemas ja ootab ainult liidest.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** Kolm leidu, kõik päris
+vead ja kõik parandatud. Leiud EI kattunud – ülevaatajad vaatasid eri faile,
+aga kõigil kolmel oli sama kuju: **vaikselt vale tulemus, mille juures
+ekraanil ei paista midagi katki.** Just see on riskisammu määratlus.
+
+- *Codex, päris viga (kõige tõsisem):* tabeli checker kontrollis ainult, kas
+  kaks veergu on omavahel võrdsed ±1° piires – mitte seda, kas väärtus saab
+  üldse simulatsioonist tulla. Vastus `-10/-10`, `100/100`, `10000/10000`
+  läbis kolme eri reana ja õpilane sai „Mõõtmised klapivad simulatsiooniga",
+  ilma et oleks midagi mõõtnud. Minu enda testid seda auku ei katnud, sest
+  ma testisin ainult SEOST, mitte väärtusi. Parandus: veeru `min`/`max`
+  (vt otsust ülal) + 4 testi; brauseris üle kontrollitud.
+- *CodeRabbit, päris viga:* `recall.ts` filtreeris tundmatu valiku-id vaikselt
+  välja, seega segavastus („üks tuntud + üks tundmatu") näidanuks õpilasele
+  POOLIKUT ennustust tema enda vastuse pähe. See on **täpselt see muster,
+  mille projekt on sammus 1.5 juba korra tagasi lükanud** (valikuchecker:
+  „tundmatut varianti EI jäeta vaikselt kõrvale"). Minu test kattis ainult
+  juhu, kus KÕIK id-d on tundmatud. Parandus: kasvõi üks tundmatu id → `null`.
+- *CodeRabbit, päris viga (väike):* ilma `minWords`-ita nõudis `TextInput`
+  ikkagi üht sõna, aga loendurit ei näidanud – lukus nupp ilma nähtava
+  põhjuseta. Sama viga, mille pärast StepShell ise luku põhjust näitab
+  (samm 1.3 otsus). Parandus: põhjus on nähtav ka vaikimisi nõude korral.
+- *Codex, kõrvaline muudatus:* märkis, et plaanifail on muudetud. See ON
+  projekti töövoog – sama leid tuli sammudes 1.6 ja 1.8.
+- *Codex ei saanud teste käivitada* (keskkonna poliitika blokeeris `npm run
+  test`), seega tema leid tugines ainult koodilugemisele. Testid jooksid
+  minu käes: 217 rohelist.
 
 ## 1.12 Harjutamine ja väljumispilet
 

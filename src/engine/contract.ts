@@ -25,6 +25,7 @@ export type Question = z.infer<typeof questionSchema>;
 export type NumericQuestion = Extract<Question, { kind: "numeric" }>;
 export type ChoiceQuestion = Extract<Question, { kind: "choice" }>;
 export type TextQuestion = Extract<Question, { kind: "text" }>;
+export type TableQuestion = Extract<Question, { kind: "table" }>;
 export type ReviewCard = z.infer<typeof reviewCardSchema>;
 
 /** manifest.ts sissepääs – metaandmed, mida moodul endast räägib. */
@@ -40,9 +41,9 @@ export function defineActivities(activities: Activities): Activities {
 /**
  * Sammu küsimused ühtemoodi kätte, olenemata tüübist.
  *
- * Osal sammutüüpidel (theory, hook, collect) küsimusi ei ole – siis tuleb
- * tühi loend. Nii ei pea engine, checker ega test tüüpe ükshaaval läbi
- * käima ja uue sammutüübi lisamine ei unusta kedagi.
+ * Osal sammutüüpidel (theory, hook) küsimusi ei ole – siis tuleb tühi loend.
+ * Nii ei pea engine, checker ega test tüüpe ükshaaval läbi käima ja uue
+ * sammutüübi lisamine ei unusta kedagi.
  */
 export function stepQuestions(step: Step): Question[] {
   return "questions" in step ? step.questions : [];

@@ -5,6 +5,8 @@ import type { Question } from "../../engine/contract";
 import { ChoiceInput } from "./ChoiceInput";
 import { Feedback } from "./Feedback";
 import { NumericInput } from "./NumericInput";
+import { TableInput } from "./TableInput";
+import { TextInput } from "./TextInput";
 
 /**
  * Üks küsimus: tekst + vastamise koht + tagasiside pärast esitamist.
@@ -51,10 +53,24 @@ export function QuestionCard({
           onAnswer={(payload) => onAnswer(question.id, payload)}
           labelledBy={promptId}
         />
+      ) : question.kind === "table" ? (
+        <TableInput
+          question={question}
+          answer={answer}
+          onAnswer={(payload) => onAnswer(question.id, payload)}
+          labelledBy={promptId}
+        />
+      ) : question.kind === "text" ? (
+        <TextInput
+          question={question}
+          answer={answer}
+          onAnswer={(payload) => onAnswer(question.id, payload)}
+          labelledBy={promptId}
+        />
       ) : (
-        // Vabatekst valmib koos explain-sammuga (1.11). Kuni siis EI TOHI
-        // ühelgi päris moodulil sellist küsimust olla: vastamata küsimus hoiab
-        // „Edasi" nupu lukus ja õpilane jääks sammule kinni.
+        // Kaitseklapp: täna on igal skeemi küsimuseliigil oma sisestus, seega
+        // siia ei jõuta. Uus liik ilma sisestuseta hoiaks „Edasi" nupu lukus –
+        // aus lause on parem kui tühi koht, aga liik tuleb siia kohe lisada.
         <p className="text-lg text-ink-soft">
           Sellele küsimusele ei oska rakendus veel vastust vastu võtta.
         </p>

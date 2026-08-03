@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { Answers, AnswerPayload } from "../../engine/answers";
 import type { Step, StepType } from "../../engine/contract";
+import type { RecalledAnswer } from "../../engine/recall";
 import type { SimulationProps } from "../../engine/simulationFeatures";
 
 /**
@@ -38,4 +39,12 @@ export type StepComponent<T extends StepType> = ComponentType<{
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
   /** Mooduli simulatsioonikomponent, kui moodulil üks on. */
   Simulation?: ComponentType<SimulationProps>;
+  /**
+   * Varasema küsimuse vastus loetaval kujul (explain näitab ennustust).
+   *
+   * Funktsioon, mitte valmis andmed: ainult sammukomponent teab, MILLIST
+   * vastust ta meelde tuletab, ja StepShell ei pea seda iga sammu jaoks ette
+   * arvutama. Teised sammutüübid jätavad selle propsi lihtsalt kasutamata.
+   */
+  recall?: (questionId: string) => RecalledAnswer | null;
 }>;

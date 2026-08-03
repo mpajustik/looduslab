@@ -17,7 +17,15 @@ import { stepQuestions } from "./contract";
 export type AnswerPayload =
   | { kind: "numeric"; raw: string }
   | { kind: "choice"; optionIds: string[] }
-  | { kind: "text"; text: string };
+  | { kind: "text"; text: string }
+  /**
+   * Mõõtetabel: iga rida on veeru võti → õpilase tipitud TEKST. Sama põhjus
+   * mis `numeric.raw`-il – „30°" ja „30" peavad jõudma checkerini muutmata.
+   */
+  | { kind: "table"; rows: TableRow[] };
+
+/** Üks mõõtetabeli rida: veeru võti → tipitud tekst. */
+export type TableRow = Readonly<Record<string, string>>;
 
 /**
  * question_id → esitatud vastus. Ainult ESITATUD vastused – pooleli mustand

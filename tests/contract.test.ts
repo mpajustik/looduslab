@@ -394,4 +394,48 @@ describe("activitiesSchema", () => {
       }),
     ).toThrow();
   });
+
+  const explainStep = (recallQuestion: string) => ({
+    type: "explain",
+    id: "explain-1",
+    title: "Selgita",
+    recallQuestion,
+    questions: [
+      {
+        kind: "text",
+        id: "explain-1",
+        prompt: "Sõnasta seaduspärasus.",
+        minWords: 15,
+      },
+    ],
+  });
+
+  it("lubab meelde tuletada varasema sammu küsimust", () => {
+    expect(() =>
+      activitiesSchema.parse({
+        steps: [practiceStep("practice-1"), explainStep("practice-1")],
+        reviewCards,
+      }),
+    ).not.toThrow();
+  });
+
+  it("ei luba meelde tuletada küsimust, mida moodulis ei ole", () => {
+    expect(() =>
+      activitiesSchema.parse({
+        steps: [explainStep("predict-9")],
+        reviewCards,
+      }),
+    ).toThrow();
+  });
+
+  it("ei luba meelde tuletada hilisema sammu küsimust", () => {
+    // Sellele ei ole selleks hetkeks veel vastatud – meeldetuletus jääks
+    // igaveseks tühjaks ja seda ei paneks keegi brauseris tähele.
+    expect(() =>
+      activitiesSchema.parse({
+        steps: [explainStep("practice-1"), practiceStep("practice-1")],
+        reviewCards,
+      }),
+    ).toThrow();
+  });
 });

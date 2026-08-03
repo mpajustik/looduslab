@@ -3,10 +3,11 @@ import { ArrowLeft, ArrowRight, Lock, RotateCcw } from "lucide-react";
 import { isStepAnswered } from "../engine/answers";
 import { stepQuestions, type Step, type StepType } from "../engine/contract";
 import type { ProgressMode } from "../engine/progress";
+import { recallAnswer } from "../engine/recall";
 import type { SimulationProps } from "../engine/simulationFeatures";
 import { useModuleProgress } from "../engine/useModuleProgress";
 import { Button } from "./Button";
-import { STEP_LABELS, stepRegistry } from "./steps/registry";
+import { STEP_LABELS, STEP_NOTES, stepRegistry } from "./steps/registry";
 import type { StepComponent } from "./steps/types";
 
 /**
@@ -88,6 +89,7 @@ export function StepShell({
   // olemasolevale sammule – ka siis, kui mooduli sammud on vahepeal muutunud.
   const step = steps[index];
   const label = STEP_LABELS[step.type];
+  const note = STEP_NOTES[step.type];
   // Võti on `step.type`, seega komponent SAAB just seda tüüpi sammu. Seda
   // seost TypeScript ise ei näe – siin on ainus koht, kus me talle ütleme.
   const StepContent = stepRegistry[step.type] as StepComponent<StepType> | undefined;
@@ -145,6 +147,9 @@ export function StepShell({
           >
             {step.title}
           </h1>
+          {/* Usalduslause tuleb engine'ilt, mitte moodulilt – nii ei saa ta
+              ühelgi moodulil ununeda (docs/MOODULILEPING.md). */}
+          {note ? <p className="text-base text-ink-soft">{note}</p> : null}
         </div>
 
         {StepContent ? (
@@ -159,6 +164,9 @@ export function StepShell({
             answers={answers}
             onAnswer={(questionId, payload) => progress.answer(step, questionId, payload)}
             Simulation={Simulation}
+            // Varasema vastuse otsimiseks on vaja KÕIKI samme (küsimus elab
+            // eelmises sammus) – sammukomponent näeb ainult enda oma.
+            recall={(questionId) => recallAnswer(steps, answers, questionId)}
           />
         ) : (
           // Seda ei tohiks õpilane kunagi näha – aga tühi valge ekraan oleks

@@ -188,6 +188,60 @@ const DEMO_STEPS: Step[] = [
       unlocks: [{ feature: "mattpind", afterQuestion: "explore-2" }],
     },
   },
+  {
+    type: "collect",
+    id: "collect-1",
+    title: "Kirjuta mõõtmised üles",
+    body: [
+      "Vali kolm erinevat langemisnurka. Loe iga kord ekraanilt mõlemad nurgad ja kirjuta need tabelisse.",
+      "Kraadimärki ei pea kirjutama – piisab arvust.",
+    ],
+    questions: [
+      {
+        kind: "table",
+        id: "collect-1",
+        prompt: "Kolm mõõtmist simulatsioonist",
+        // `min`/`max` on SIMULATSIOONI liuguri piirid: ilma nendeta läbiks
+        // kontrolli iga kaks võrdset arvu, ka „10000 ja 10000", mida ekraanil
+        // kunagi ei olnud (Codexi ülevaatuse leid 2026-08-03).
+        columns: [
+          { key: "angleIn", label: "Langemisnurk", unit: "°", min: 0, max: 85 },
+          { key: "angleOut", label: "Peegeldumisnurk", unit: "°", min: 0, max: 85 },
+        ],
+        rows: 3,
+        // Kolm ERI nurka: ühest korratud väärtusest ei paista seaduspärasus
+        // välja (sisu/MOODUL-peegeldumisseadus.md „collect").
+        distinctColumn: "angleIn",
+        rule: {
+          kind: "equal-columns",
+          column: "angleOut",
+          equalsColumn: "angleIn",
+          // ±1° on LUGEMISTOLERANTS: simulatsioon on ideaalne, aga õpilane
+          // loeb liugurilt ja tipib käsitsi. Mõõtmishajuvus jääb päris katsele.
+          tolerance: { mode: "absolute", value: 1 },
+        },
+      },
+    ],
+  },
+  {
+    type: "explain",
+    id: "explain-1",
+    title: "Sõnasta seaduspärasus",
+    body: [
+      "Vaata oma kolme mõõtmist. Mis on langemisnurga ja peegeldumisnurga vahel ühist?",
+      "Kirjuta oma sõnadega kolm asja: mida sa väidad, millised mõõtmised seda näitavad ja miks see nii on. Võrdle ka oma ennustusega – kas pidid midagi ümber mõtlema?",
+    ],
+    // Ennustus on kõrval näha, et võrdlemiseks ei peaks samme tagasi kerima.
+    recallQuestion: "predict-1",
+    questions: [
+      {
+        kind: "text",
+        id: "explain-1",
+        prompt: "Sõnasta oma mõõtmiste põhjal seaduspärasus.",
+        minWords: 15,
+      },
+    ],
+  },
 ];
 
 export default function StepDemoPage() {

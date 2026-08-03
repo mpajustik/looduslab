@@ -1,5 +1,7 @@
 import type { StepType } from "../../engine/contract";
 import type { StepComponent } from "./types";
+import { CollectStep } from "./CollectStep";
+import { ExplainStep } from "./ExplainStep";
 import { ExploreStep } from "./ExploreStep";
 import { HookStep } from "./HookStep";
 import { PrecheckStep } from "./PrecheckStep";
@@ -25,6 +27,8 @@ export const stepRegistry: { [T in StepType]?: StepComponent<T> } = {
   precheck: PrecheckStep,
   predict: PredictStep,
   explore: ExploreStep,
+  collect: CollectStep,
+  explain: ExplainStep,
 };
 
 /**
@@ -44,4 +48,27 @@ export const STEP_LABELS: Record<StepType, string | null> = {
   explain: "Selgita oma sõnadega",
   practice: "Harjuta",
   exit: "Kokkuvõte",
+};
+
+/**
+ * Usalduslause sammu juures (docs/DISAINIJUHIS.md „Turvatunne").
+ *
+ * Selle lisab ENGINE, mitte mooduli autor (docs/MOODULILEPING.md „Mida engine
+ * lisab automaatselt") – nii ei saa ta ühelgi moodulil ununeda. Õpilane peab
+ * teadma, kes tema vastust näeb ja kas teda hinnatakse: teadmata jäänud
+ * publik paneb ta kirjutama seda, mis on ohutu, mitte seda, mida ta arvab.
+ *
+ * `null` = sellel sammul ei ole midagi lisada. Predict („see ei ole hinne")
+ * ja exit lisanduvad sammus 1.12 koos exit-sammuga.
+ */
+export const STEP_NOTES: Record<StepType, string | null> = {
+  theory: null,
+  hook: null,
+  precheck: null,
+  predict: null,
+  explore: null,
+  collect: null,
+  explain: "Sinu vastust näeb õpetaja.",
+  practice: null,
+  exit: null,
 };

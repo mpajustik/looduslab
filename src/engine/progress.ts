@@ -335,6 +335,14 @@ function isAnswerPayload(value: unknown): value is AnswerPayload {
       );
     case "text":
       return typeof value.text === "string";
+    case "table":
+      return (
+        Array.isArray(value.rows) &&
+        value.rows.every(
+          (row) =>
+            isRecord(row) && Object.values(row).every((cell) => typeof cell === "string"),
+        )
+      );
     default:
       return false;
   }

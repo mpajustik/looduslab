@@ -115,6 +115,16 @@ const questionIdSchema = z
 /** Kuni 2 vihjet (docs/MOODULILEPING.md) – rohkem on juba vastus. */
 const hintsSchema = z.array(nonEmpty("Vihje")).min(1).max(2);
 
+/**
+ * Lubatud viga: kas protsent vastusest või absoluutne samas ühikus.
+ * Tolerants elab ALATI küsimuse juures, mitte manifest'is
+ * (docs/MOODULILEPING.md) – sama kuju kasutab ka mõõtetabeli rea reegel.
+ */
+const toleranceSchema = z.strictObject({
+  mode: z.enum(["percent", "absolute"]),
+  value: z.number().positive(),
+});
+
 const numericQuestionSchema = z.strictObject({
   kind: z.literal("numeric"),
   id: questionIdSchema,
@@ -124,11 +134,7 @@ const numericQuestionSchema = z.strictObject({
   answer: z.number(),
   /** Nt "kPa", "°". Puudub, kui suurus on ühikuta. */
   unit: z.string().min(1).optional(),
-  /** Lubatud viga: kas protsent vastusest või absoluutne samas ühikus. */
-  tolerance: z.strictObject({
-    mode: z.enum(["percent", "absolute"]),
-    value: z.number().positive(),
-  }),
+  tolerance: toleranceSchema,
   /**
    * Lõksud: teadaolev VALE vastus, mis reedab kindla väärarusaama
    * (nt nurk mõõdetuna pinna, mitte normaali suhtes). Checker (samm 1.4)
@@ -196,10 +202,123 @@ const textQuestionSchema = z.strictObject({
   minWords: z.number().int().positive().optional(),
 });
 
+// ---------------------------------------------------------------------------
+// Mõõtetabel
+// ---------------------------------------------------------------------------
+
+/** Veeru võti on koodinimi (mitte õpilase tekst) – tema järgi käib rea reegel. */
+const columnKeySchema = z
+  .string()
+  .regex(/^[a-z][a-zA-Z0-9]*$/, "Veeru võti on kujul nagu angleIn");
+
+const columnSchema = z
+  .strictObject({
+    key: columnKeySchema,
+    label: nonEmpty("Veeru pealkiri"),
+    /** Nt "°". Ilma selleta on veerg ühikuta arv. */
+    unit: z.string().min(1).optional(),
+    /**
+     * Väärtuste lubatud vahemik – tavaliselt SIMULATSIOONI piirid (liuguri
+     * min ja max). Ilma selleta läbiks kontrolli iga kaks võrdset arvu, ka
+     * „10000 ja 10000", mida ekraanil kunagi ei olnud (Codexi ülevaatuse
+     * leid 2026-08-03). Vahemik käib veeru, mitte veergudevahelise seose
+     * kohta: ühes tabelis võib olla kaks eri suurust eri piiridega.
+     */
+    min: z.number().optional(),
+    max: z.number().optional(),
+  })
+  .refine((column) => column.min === undefined || column.max === undefined || column.min <= column.max, {
+    message: "Veeru min ei tohi olla suurem kui max",
+  });
+
+/**
+ * Kuidas ÜHTE mõõtetabeli rida kontrollitakse.
+ *
+ * Diskrimineeriv union, millel on täna üks liige. Nii on uue seose lisamine
+ * (moodul 2 vajab `p = ρgh`) LISANDUS, mitte olemasoleva muutmine – sama
+ * raudreegel, mis sammutüüpidel ja checkeri registril
+ * (docs/MOODULILEPING.md „Raudreeglid laiendamisel").
+ *
+ * **See ei ole teine füüsikamudel.** Reegel ütleb ainult, milline veerg peab
+ * millisega kokku käima – MIKS see nii on, teab `model.ts` (CLAUDE.md reegel
+ * 1). Test hoiab neid kahte kooskõlas.
+ */
+const equalColumnsRuleSchema = z.strictObject({
+  kind: z.literal("equal-columns"),
+  /** Kontrollitav veerg (õpilase loetud väärtus). */
+  column: columnKeySchema,
+  /** Veerg, millega ta peab võrduma. */
+  equalsColumn: columnKeySchema,
+  /**
+   * Lugemistolerants, MITTE mõõtmisviga: simulatsioon on ideaalne, aga
+   * õpilane loeb liugurilt ja tipib käsitsi (sisu/MOODUL-peegeldumisseadus.md).
+   */
+  tolerance: toleranceSchema,
+});
+
+const tableRuleSchema = z.discriminatedUnion("kind", [equalColumnsRuleSchema]);
+
+const tableQuestionSchema = z
+  .strictObject({
+    kind: z.literal("table"),
+    id: questionIdSchema,
+    prompt: nonEmpty("Küsimus"),
+    hints: hintsSchema.optional(),
+    columns: z.array(columnSchema).min(2),
+    /** Mitu rida õpilane täidab. */
+    rows: z.number().int().positive(),
+    /**
+     * Selle veeru väärtused peavad ridade vahel ERINEMA („kolm eri nurka") –
+     * ühest korratud väärtusest ei paista seaduspärasus välja.
+     */
+    distinctColumn: columnKeySchema.optional(),
+    rule: tableRuleSchema,
+  })
+  .superRefine((question, ctx) => {
+    const keys = new Set(question.columns.map((column) => column.key));
+    if (keys.size !== question.columns.length) {
+      ctx.addIssue({ code: "custom", message: "Kahel veerul on sama võti" });
+    }
+    // Olematule veerule osutav reegel ei kontrolliks MITTE MIDAGI ja seda ei
+    // paneks keegi brauseris tähele – seepärast valvab seda skeem.
+    for (const [field, key] of [
+      ["rule.column", question.rule.column],
+      ["rule.equalsColumn", question.rule.equalsColumn],
+      ...(question.distinctColumn ? [["distinctColumn", question.distinctColumn]] : []),
+    ] as const) {
+      if (!keys.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `${field} osutab veerule "${key}", mida tabelis ei ole`,
+        });
+      }
+    }
+    if (question.rule.column === question.rule.equalsColumn) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Veerg ei saa võrduda iseendaga – siis oleks iga vastus õige",
+      });
+    }
+    // Kaht eri ühikus veergu ei saa omavahel võrrelda: „30 cm = 30 °" ei
+    // tähenda midagi. Ühikuteisendus tabeli SEES oleks eraldi reegliliik.
+    const unitOf = (key: string) => question.columns.find((column) => column.key === key)?.unit;
+    if (
+      keys.has(question.rule.column) &&
+      keys.has(question.rule.equalsColumn) &&
+      unitOf(question.rule.column) !== unitOf(question.rule.equalsColumn)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "equal-columns reegli mõlemal veerul peab olema sama ühik",
+      });
+    }
+  });
+
 export const questionSchema = z.discriminatedUnion("kind", [
   numericQuestionSchema,
   choiceQuestionSchema,
   textQuestionSchema,
+  tableQuestionSchema,
 ]);
 
 // ---------------------------------------------------------------------------
@@ -292,23 +411,18 @@ export const stepSchemas = {
       })
       .optional(),
   }),
-  /** Mõõtetabel: veerud ja ridade arv. Ridade kontroll lisandub sammus 1.11. */
+  /**
+   * Andmete kogumine simulatsioonist.
+   *
+   * Tabel ise on KÜSIMUS (`kind: "table"`), mitte sammu eriväli: nii jõuab ta
+   * salvestusse, checkerini ja luku alla täpselt samu radu pidi mis iga teine
+   * vastus – collect ei pea endale eraldi rada ehitama.
+   */
   collect: z.strictObject({
     type: z.literal("collect"),
     ...stepBase,
     body: bodySchema.optional(),
-    columns: z
-      .array(
-        z.strictObject({
-          key: z
-            .string()
-            .regex(/^[a-z][a-zA-Z0-9]*$/, "Veeru võti on kujul nagu angleIn"),
-          label: nonEmpty("Veeru pealkiri"),
-          unit: z.string().min(1).optional(),
-        }),
-      )
-      .min(2),
-    rows: z.number().int().positive(),
+    questions: questionsSchema.min(1),
   }),
   /** Väide–tõend–põhjendus vabatekstina. Õpetajale nähtav. */
   explain: z.strictObject({
@@ -316,6 +430,12 @@ export const stepSchemas = {
     ...stepBase,
     body: bodySchema.optional(),
     questions: questionsSchema.min(1),
+    /**
+     * Varasema küsimuse id, mille vastust õpilasele kõrval meelde tuletatakse
+     * (sisu/MOODUL-peegeldumisseadus.md: „Võrdle oma ennustusega 3. sammust").
+     * Peab osutama VAREM tulnud sammu küsimusele – seda valvab activitiesSchema.
+     */
+    recallQuestion: questionIdSchema.optional(),
   }),
   /** Ülesanded: näidis → osaline → iseseisev. */
   practice: z.strictObject({
@@ -381,6 +501,8 @@ export const activitiesSchema = z
     }
 
     const questionIds: string[] = [];
+    /** Küsimused, mis on juba MÖÖDAS – meelde saab tuletada ainult neid. */
+    const earlierQuestionIds = new Set<string>();
     for (const step of activities.steps) {
       // Sammu id eesliide peab olema sammu tüüp: explore-2, mitte samm-2.
       if (!step.id.startsWith(`${step.type}-`)) {
@@ -412,8 +534,21 @@ export const activitiesSchema = z
         }
       }
 
+      // Meeldetuletus tagurpidi (tulevase sammu vastusele) jääks igaveseks
+      // tühjaks – õpilane ei ole sellele veel vastanud. Vaikselt puuduv
+      // ennustus on hullem kui punane test.
+      if (step.type === "explain" && step.recallQuestion) {
+        if (!earlierQuestionIds.has(step.recallQuestion)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Samm "${step.id}" tuletab meelde küsimust "${step.recallQuestion}", aga sellele ei ole selleks hetkeks veel vastatud`,
+          });
+        }
+      }
+
       for (const question of stepQuestions(step)) {
         questionIds.push(question.id);
+        earlierQuestionIds.add(question.id);
         // Sama reegel küsimusel – nii on vastuste tabelis kohe näha,
         // millisest sammust vastus tuli (docs/MOODULILEPING.md).
         if (!question.id.startsWith(`${step.type}-`)) {
