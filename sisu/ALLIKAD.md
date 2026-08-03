@@ -43,6 +43,32 @@ rea registritabelisse. Konventsioon:
   tekstifaili koos leheküljeviitega (nt „lk 34–37") – nii on sisu
   otsitav ja PDF-i ei pea iga kord uuesti läbi lappama.
 
+## Pildistatud allikad ja transkriptsioonid
+
+Kui allikas on olemas ainult **paberil või fotodena** (nt telefoniga
+pildistatud raamat), ei ole tekst otsitav. Sel juhul tehakse
+**transkriptsioon**: fotodelt kirjutatakse sisu markdown-faili, valemid
+KaTeX-kujul, tabelid markdown-tabelitena, joonised tekstikirjeldusena.
+
+Konventsioon:
+
+- **Failinimi:** `<ALLIKAS>-taielik.md`, kõrvale commit'itav
+  `<ALLIKAS>-INDEKS.md`.
+- **Git:** `sisu/allikad/*-taielik.md` on gitignore'is. Transkriptsioon on
+  sõnasõnaline tekst, seega kehtib talle **sama reegel mis PDF-ile** –
+  teadmata litsentsiga allika teksti repos ei hoita.
+- **Mis läheb INDEKS-faili (commit'itakse):** ainult see, mis ei ole
+  autoriõigusega kaitstav – füüsikalised **faktid, konstandid, valemid,
+  mõistete loend, leheküljeviited, teadaolevad vead**. Definitsioonide
+  sõnastus jääb transkriptsiooni.
+- **Arvtabelid loetakse fotolt üle** (mitte OCR-ist): pildistatud raamatu
+  köiteserv kõverdub ja veerud satuvad nihkesse. Iga rida kontrollitakse
+  teadaoleva füüsikalise väärtuse vastu ja leitud vead kirjutatakse
+  INDEKS-faili tabelisse „Teadaolevad vead".
+- **Jooniseid ei lõigata fotolt välja.** Kui joonist on moodulis vaja,
+  joonistatakse see oma SVG-na ümber – nii on ta litsentsipuhas ja vastab
+  reeglile „oma SVG simulatsioonide visuaalid".
+
 ## Register
 
 | Allikas | URL / fail | Litsents | Kasutusreegel |
@@ -50,6 +76,7 @@ rea registritabelisse. Konventsioon:
 | Erkki Tempel, „Füüsika 8. klassile" (rets. J. Paaver, H. Voolaid; toim. K. Reivelt), Opik/fyysika.ee | https://opik.fyysika.ee/index.php/book/view/36 · PDF: `allikad/OPIK-F8-taielik.pdf` (162 lk, gitignore'is) · indeks: `allikad/OPIK-F8-INDEKS.md` | teadmata (lehel ei ole märgitud) | ainult faktikontroll ja analoogid; sõnasõnaline kopeerimine keelatud, kuni EFS-ilt pole luba küsitud |
 | e-Koolikott (HARNO õppevaraportaal) | https://e-koolikott.ee | materjalipõhine – kontrolli IGA materjali litsentsi eraldi | CC-litsentsiga materjali tohib kohandada litsentsi tingimuste järgi (viide kirja väljavõttefaili) |
 | opik.fyysika.ee – õpikute koond (33 raamatut, rahastaja Tiigrihüppe SA / TÜ / TÜ Füüsika Instituut / HTM) | https://opik.fyysika.ee/ | teadmata (lehel litsentsimärget ei ole) | koondkirje – üksikraamatu reaalsel kasutamisel lisa sellele eraldi rida (nt Erkki Tempeli oma ülalpool); vaikimisi kehtib rangeim reegel: ainult faktikontroll ja analoogid |
+| „Füüsika põhivara põhikoolile" (autor/kirjastus/aasta TÄPSUSTAMATA – tiitelleht ja impressum pildistamata) | fotod ja PDF kaustas `OneDrive\Desktop\füüsika põhivara\` (75 lk, **repos ei ole**) · transkriptsioon: `allikad/POHIVARA-F8-taielik.md` (gitignore'is) · indeks: `allikad/POHIVARA-F8-INDEKS.md` | teadmata | ainult faktikontroll ja analoogid; sõnasõnaline kopeerimine keelatud. Tugevaim allikas **terminoloogia ja valemikuju** kontrolliks (definitsioonipõhine põhivara). ⚠️ Lisa 7: vee aurustumissoojus on trükitud valesti (0,2·10⁶ p.o 2,3·10⁶) – vt INDEKS „Teadaolevad vead" |
 | Riiklik õppekava, Füüsika (PK) – HARNO wiki | https://projektid.edu.ee/spaces/OKMV/pages/211453775/PK+F%C3%BC%C3%BCsika | õppekava tekst (PRÕK Lisa 4) autoriõiguseta (riigi õigusakt, AutÕS §5); wiki lisamaterjal (hindamisjuhised, mõistekaardisoovitused) teadmata litsents | õppekava tsiteeritav otse; wiki lisamaterjal ainult faktikontroll ja analoogid |
 
 Uue allika lisamisel: lisa rida siia tabelisse ENNE, kui allikast

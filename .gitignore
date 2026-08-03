@@ -26,3 +26,6 @@ codex-ulevaatus.md
 .DS_Store
 Thumbs.db
 *.local
+
+# Teadmata litsentsiga allikate taastranskriptsioonid (vt sisu/ALLIKAD.md)
+sisu/allikad/*-taielik.md
