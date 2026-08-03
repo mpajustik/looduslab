@@ -145,6 +145,31 @@ describe("checkNumericAnswer – lõksud", () => {
   });
 });
 
+describe("checkNumericAnswer – tagasiside ei käsi teha võimatut", () => {
+  /**
+   * Esitatud vastust ei saa praegu muuta („Muuda vastust" tuleb sammus 1.6).
+   * Seni ei tohi ükski lause öelda „proovi uuesti" ega „kirjuta" – õpilane
+   * näeks käsku, mida ekraanil täita ei saa, ja arvaks, et rakendus on katki.
+   * Kui 1.6 lisab vastuse muutmise, TOHIB selle testi kaotada – aga siis
+   * teadlikult, mitte kogemata.
+   */
+  const forbidden = /uuesti|kirjuta|vasta ühikus/i;
+
+  it("vale vastus ei kutsu uuesti proovima", () => {
+    expect(checkNumericAnswer(lengthQuestion, "9 m").feedback).not.toMatch(forbidden);
+  });
+
+  it("arusaamatu sisend ei anna käsku, mida täita ei saa", () => {
+    expect(checkNumericAnswer(lengthQuestion, "kakskümmend").feedback).not.toMatch(forbidden);
+  });
+
+  it("vale ühik ei anna käsku, mida täita ei saa, aga ütleb oodatud ühiku", () => {
+    const result = checkNumericAnswer(lengthQuestion, "25 kg");
+    expect(result.feedback).not.toMatch(forbidden);
+    expect(result.feedback).toContain("m");
+  });
+});
+
 describe("checkNumericAnswer – imelikud sisendid", () => {
   it("tühi string ei ole arv", () => {
     expect(checkNumericAnswer(lengthQuestion, "").correct).toBe(false);

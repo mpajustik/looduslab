@@ -165,7 +165,7 @@ Sama fail ekspordib ka `reviewCards` (3–6 kaarti, pilootmoodulitel kuni 10):
 export const reviewCards = [
   { id: "rc-1", type: "concept",     // concept | calc | graph | explain | transfer
     question: "Millise joone suhtes mõõdetakse langemis- ja peegeldumisnurka?",
-    answer: "Pinnanormaali suhtes" },
+    answer: "Pinna ristsirge suhtes" },
   // …
 ];
 ```

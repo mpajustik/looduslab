@@ -28,7 +28,7 @@ kinnitamist, üks korraga.
 
 | Slug | Tüüp | Katab | Õpetab mõisted | Staatus |
 |---|---|---|---|---|
-| peegeldumisseadus | juhitud tund (piloot) | P1-T2 (osa: peegeldumisseadus, joonised, katse); P1-PT3 | valguskiir, tasapeegel, mattpind, langemisnurk, peegeldumisnurk, pinnanormaal | spetsitud |
+| peegeldumisseadus | juhitud tund (piloot) | P1-T2 (osa: peegeldumisseadus, joonised, katse); P1-PT3 | valguskiir, tasapeegel, mattpind, langemisnurk, peegeldumisnurk, pinna ristsirge | spetsitud |
 
 **Katvuse kontroll:** plokk on jagamata. Katmata: P1-T1, P1-T2 (osa:
 sirgjooneline levimine, muud joonised), P1-T3; P1-PT1, P1-PT2, P1-PT4;

@@ -30,10 +30,10 @@ const DEMO_STEPS: Step[] = [
   {
     type: "theory",
     id: "theory-3",
-    title: "Normaal – joon, mille suhtes nurki mõõdetakse",
+    title: "Pinna ristsirge – joon, mille suhtes nurki mõõdetakse",
     body: [
-      "Nurki ei mõõdeta mitte peegli pinna, vaid pinnaga risti oleva joone suhtes. Seda risti joont nimetatakse normaaliks.",
-      "Sellest ühest kokkuleppest sõltub kogu peegeldumisseadus. Pinna suhtes mõõtes saad hoopis teise arvu: see täiendab normaalist mõõdetud nurga 90 kraadini.",
+      "Nurki ei mõõdeta mitte peegli pinna, vaid pinnaga risti oleva joone suhtes. Seda risti joont nimetatakse pinna ristsirgeks.",
+      "Sellest ühest kokkuleppest sõltub kogu peegeldumisseadus. Pinna suhtes mõõtes saad hoopis teise arvu: see täiendab ristsirgest mõõdetud nurga 90 kraadini.",
     ],
   },
   {
@@ -45,6 +45,7 @@ const DEMO_STEPS: Step[] = [
         kind: "choice",
         id: "precheck-1",
         prompt: "Millise joone suhtes mõõdetakse valguskiire langemisnurka?",
+        hints: ["Kummast joonest mõõdetakse peegeldumisseaduse nurki?"],
         options: [
           {
             id: "pind",
@@ -53,8 +54,10 @@ const DEMO_STEPS: Step[] = [
             misconception: "nurk-pinna-suhtes",
           },
           {
+            // Variandi id jääb muutumatuks ka mõiste ümbernimetamisel –
+            // vastused ripuvad id, mitte teksti küljes (CLAUDE.md reegel 11).
             id: "normaal",
-            text: "Normaali suhtes – joone suhtes, mis on peegli pinnaga risti",
+            text: "Pinna ristsirge suhtes – joone suhtes, mis on peegli pinnaga risti",
             correct: true,
           },
           {
@@ -62,6 +65,47 @@ const DEMO_STEPS: Step[] = [
             text: "Peegeldunud kiire suhtes",
             correct: false,
             misconception: "nurk-kiirte-vahel",
+          },
+        ],
+      },
+      {
+        // Arvvastus koos lõksuga: 35° on nurk PINNA suhtes, õige vastus on
+        // 55° ristsirge suhtes (sisu/MOODUL-peegeldumisseadus.md, practice 3).
+        kind: "numeric",
+        id: "precheck-2",
+        prompt:
+          "Kiir langeb tasapeeglile nii, et moodustab peegli PINNAGA 35° nurga. Kui suur on peegeldumisnurk pinna ristsirge suhtes?",
+        hints: [
+          "Kummast joonest mõõdetakse peegeldumisseaduse nurki?",
+          "Ristsirge ja pinna vahel on 90°.",
+        ],
+        answer: 55,
+        unit: "°",
+        // Tolerants peab olema positiivne (contractSchema) – 0,5° on siin
+        // sisuliselt „täpne vastus", vt plaani lahtist küsimust sammu 1.4 all.
+        tolerance: { mode: "absolute", value: 0.5 },
+        traps: [
+          {
+            answer: 35,
+            misconception: "nurk-pinna-suhtes",
+            feedback:
+              "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+          },
+        ],
+      },
+      {
+        kind: "choice",
+        id: "precheck-3",
+        prompt: "Millised väited peegeldumise kohta on õiged? Õigeid vastuseid on mitu.",
+        multiple: true,
+        options: [
+          { id: "sile", text: "Siledalt pinnalt peegelduvad kõrvuti kiired korrapäraselt", correct: true },
+          { id: "matt", text: "Kare pind saadab kiired laiali eri suundadesse", correct: true },
+          {
+            id: "ainult-peegel",
+            text: "Ainult läikivad esemed peegeldavad valgust",
+            correct: false,
+            misconception: "ainult-peegel-peegeldab",
           },
         ],
       },

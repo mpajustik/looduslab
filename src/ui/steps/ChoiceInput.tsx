@@ -17,8 +17,9 @@ const OPTION_ROW =
  * klõpsu vastuseks ja „Edasi" lukk ei ava end kogemata.
  *
  * Õigsust siin EI hinnata (CLAUDE.md reegel 3): `option.correct` on olemas,
- * aga seda loeb checker sammus 1.5. Praegu näeb õpilane pärast esitamist
- * ainult oma valikut.
+ * aga seda loeb checker (src/checker/choice.ts). Pärast esitamist näitab see
+ * komponent ainult õpilase enda valikut – õiget varianti me välja ei anna,
+ * tagasiside tuleb kõrvale checkerilt (QuestionCard → Feedback).
  */
 export function ChoiceInput({
   question,
@@ -42,36 +43,33 @@ export function ChoiceInput({
 
   if (submitted) {
     return (
-      <div className="flex flex-col gap-3">
-        <ul aria-label="Sinu valik" className="flex flex-col gap-2">
-          {question.options.map((option) => {
-            const chosen = submitted.includes(option.id);
-            return (
-              <li
-                key={option.id}
-                className={cn(
-                  OPTION_ROW,
-                  chosen
-                    ? "border-brand bg-brand-soft font-medium text-ink"
-                    : "border-line text-ink-soft",
-                )}
-              >
-                {/* Ikoon on kaunistus – sama info on kõrval sõnadega, sest värv
-                    ega kujund ei tohi olla ainus info kandja. */}
-                <Check
-                  aria-hidden="true"
-                  className={cn("mt-1 size-5 shrink-0", chosen ? "text-brand" : "invisible")}
-                />
-                <span>
-                  {option.text}
-                  {chosen ? <span className="sr-only"> – sinu vastus</span> : null}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="text-base text-ink-soft">Vastus on esitatud.</p>
-      </div>
+      <ul aria-label="Sinu valik" className="flex flex-col gap-2">
+        {question.options.map((option) => {
+          const chosen = submitted.includes(option.id);
+          return (
+            <li
+              key={option.id}
+              className={cn(
+                OPTION_ROW,
+                chosen
+                  ? "border-brand bg-brand-soft font-medium text-ink"
+                  : "border-line text-ink-soft",
+              )}
+            >
+              {/* Ikoon on kaunistus – sama info on kõrval sõnadega, sest värv
+                  ega kujund ei tohi olla ainus info kandja. */}
+              <Check
+                aria-hidden="true"
+                className={cn("mt-1 size-5 shrink-0", chosen ? "text-brand" : "invisible")}
+              />
+              <span>
+                {option.text}
+                {chosen ? <span className="sr-only"> – sinu vastus</span> : null}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     );
   }
 

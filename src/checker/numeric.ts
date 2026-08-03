@@ -1,4 +1,5 @@
 import type { NumericQuestion } from "../engine/contract";
+import type { CheckResult } from "./types";
 
 /**
  * Arvvastuse kontroll (CLAUDE.md reegel 3: õigsust ei otsusta kunagi vaade).
@@ -6,13 +7,11 @@ import type { NumericQuestion } from "../engine/contract";
  * `raw` on õpilase tipitud tekst muutmata kujul (src/engine/answers.ts
  * `AnswerPayload.numeric.raw`) – koma/punkti lugemine ja ühikuteisendus
  * käivad SIIN, mitte vaates.
+ *
+ * Tulemuse kuju on ühine kõigi checkeritega (./types) – arvvastus jõuab
+ * `correct: null`-ini ainult sissepääsu (./index) kaudu, siin on vastus alati
+ * kas õige või vale.
  */
-export type NumericCheckResult = {
-  correct: boolean;
-  feedback: string;
-  /** Ainult siis, kui vastus tabas teadaolevat lõksu (question.traps). */
-  misconception?: string;
-};
 
 /**
  * Toetatud ühikuperekonnad – iga kirje kaardistab ühiku kordajaks baasühikuni.
@@ -88,10 +87,10 @@ function resolveGivenUnit(givenUnit: string, expectedUnit: string): string {
   return givenUnit === "" ? expectedUnit : givenUnit;
 }
 
-export function checkNumericAnswer(question: NumericQuestion, raw: string): NumericCheckResult {
+export function checkNumericAnswer(question: NumericQuestion, raw: string): CheckResult {
   const parsed = parseRaw(raw);
   if (!parsed) {
-    return { correct: false, feedback: 'Ei tundnud vastust arvuna ära. Kirjuta nt "2,5".' };
+    return { correct: false, feedback: 'Seda vastust ei tundnud arvuna ära – oodatud on arv, nt „2,5".' };
   }
 
   const expectedUnit = question.unit ?? "";
@@ -101,7 +100,7 @@ export function checkNumericAnswer(question: NumericQuestion, raw: string): Nume
     return {
       correct: false,
       feedback: expectedUnit
-        ? `See ühik ei sobi. Vasta ühikus ${expectedUnit}.`
+        ? `See ühik ei sobi – oodatud ühik on ${expectedUnit}.`
         : "See küsimus ei vaja ühikut.",
     };
   }
@@ -118,5 +117,8 @@ export function checkNumericAnswer(question: NumericQuestion, raw: string): Nume
     return { correct: false, feedback: trap.feedback, misconception: trap.misconception };
   }
 
-  return { correct: false, feedback: "Vastus ei ole õige. Proovi uuesti." };
+  // Lause EI kutsu uuesti proovima: esitatud vastust ei saa praegu muuta
+  // („Muuda vastust" tuleb sammus 1.6). Käsk, mida ekraanil täita ei saa,
+  // paneb õpilase arvama, et rakendus on katki. Sama sõnastus valikvastusel.
+  return { correct: false, feedback: "See ei ole õige vastus." };
 }

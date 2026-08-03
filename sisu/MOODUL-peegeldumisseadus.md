@@ -2,7 +2,7 @@
 
 Ainekava seos (AINEKAVA-fyysika-8.md): plokk P1; õpitulemused: P1-T2 (osa:
 peegeldumisseadus, joonised, katse); mõisted, mida õpetab: valguskiir,
-tasapeegel, mattpind, langemisnurk, peegeldumisnurk, pinnanormaal;
+tasapeegel, mattpind, langemisnurk, peegeldumisnurk, pinna ristsirge;
 praktiline töö: P1-PT3 (sim + päris katse juhend õpetajale).
 Vanus: 8. klass. Kestused: demo 10 min, tund 45 min, iseseisev 25 min.
 NB: see on täispikk „juhitud tund" tüüpi pilootmoodul – tavamoodulid on
@@ -13,11 +13,11 @@ slug: `peegeldumisseadus` · id: `physics.peegeldumisseadus`
 ## Füüsika (model.ts jaoks)
 
 - Peegeldumisseadus: peegeldumisnurk = langemisnurk. **Nurgad mõõdetakse
-  ALATI pinnanormaali suhtes** (see on ka peamine väärarusaamade allikas).
+  ALATI pinna ristsirge suhtes** (see on ka peamine väärarusaamade allikas).
 - `reflectionAngle(incidenceDeg) = incidenceDeg` (0–90°)
 - `angleFromSurface(angleFromNormalDeg) = 90 - angleFromNormalDeg`
-- Peegeldunud kiire suund tasapinnal: langemiskiir, normaal ja peegeldunud
-  kiir on samas tasandis, normaali suhtes sümmeetrilised
+- Peegeldunud kiire suund tasapinnal: langemiskiir, ristsirge ja peegeldunud
+  kiir on samas tasandis, ristsirge suhtes sümmeetrilised
 - Definitsioonipiirkond: 0–90°. Väljaspool seda visatakse viga (funktsioon
   ei „paranda" sisendit vaikselt). 90° on lubatud matemaatiline piirjuht
   (kiir libiseb piki pinda, tagastab 90°) – SIMULATSIOONI liugur lõpeb
@@ -25,7 +25,7 @@ slug: `peegeldumisseadus` · id: `physics.peegeldumisseadus`
 - Sim on IDEAALNE: väärtused tulevad mudelist täpselt, mõõtmismüra ei ole
   (mõõtmise hajuvus jääb päris katsele, vt teacher.ts)
 - Testid: 0° → 0° (risti pinnaga, kiir tagasi); 30° → 30°; 45° → 45°;
-  90° → 90° (piirjuht); −5° ja 95° → viga; pinna suhtes 30° = normaali
+  90° → 90° (piirjuht); −5° ja 95° → viga; pinna suhtes 30° = ristsirge
   suhtes 60°
 
 ## Sammud
@@ -45,22 +45,22 @@ Mari peegli keerama, et laserikiir tabaks märklauda seina peal?" + eesmärk:
 
 ### 3. predict – ennustus (lukustub!)
 
-Joonis: kiir langeb tasapeeglile 30° nurga all normaali suhtes. Normaal on
-joonisel näidatud ja nimetatud. „Kui suure nurga all normaali suhtes lahkub
+Joonis: kiir langeb tasapeeglile 30° nurga all ristsirge suhtes. Ristsirge on
+joonisel näidatud ja nimetatud. „Kui suure nurga all ristsirge suhtes lahkub
 peegeldunud kiir?" Valikud: (a) 15° (b) 30° (c) 60° (d) sõltub peegli
 materjalist. + vabatekst „Miks sa nii arvad?"
 
 ### 4. explore – simulatsioon
 
-SVG: tasapeegel horisontaalselt, punktvalgusallikas, langemiskiir, normaal
-(kriipsjoon), peegeldunud kiir. Liugur: langemisnurk 0–85° (normaali
+SVG: tasapeegel horisontaalselt, punktvalgusallikas, langemiskiir, ristsirge
+(kriipsjoon), peegeldunud kiir. Liugur: langemisnurk 0–85° (ristsirge
 suhtes). Kuvatakse suurelt: langemisnurk ja peegeldumisnurk väärtustena.
 
 Ülesanded simulatsioonis (järjest):
 
 1. „Sea langemisnurk 30°. Mis on peegeldumisnurk?"
 2. „Leia nurk, mille korral kiir peegeldub otse tagasi." (vastus: 0°)
-3. „Lülita sisse nurk pinna suhtes (lisavaade). Sea langemisnurk normaali
+3. „Lülita sisse nurk pinna suhtes (lisavaade). Sea langemisnurk ristsirge
    suhtes 60°. Mitu kraadi on see pinna suhtes?" (30°)
 
 Lisalüliti (avaneb pärast ülesannet 2): „mattpind" – sama kiir mattpinnal
@@ -83,30 +83,30 @@ Võrdle oma ennustusega 3. sammust – kas pidid midagi ümber mõtlema?"
 
 ### 7. practice – harjutamine
 
-1. **Näidis (lahendatud):** kiir langeb 40° normaali suhtes → peegeldub 40°;
+1. **Näidis (lahendatud):** kiir langeb 40° ristsirge suhtes → peegeldub 40°;
    joonisel kõik nurgad tähistatud.
-2. **Osaline:** kiir langeb 25° normaali suhtes. Peegeldumisnurk = ___°
+2. **Osaline:** kiir langeb 25° ristsirge suhtes. Peegeldumisnurk = ___°
    (vastus 25, tolerants 0).
 3. **Iseseisev (lõks!):** kiir langeb tasapeeglile nii, et moodustab PINNAGA
-   35° nurga. Kui suur on peegeldumisnurk (normaali suhtes)? (vastus 55°,
+   35° nurga. Kui suur on peegeldumisnurk (ristsirge suhtes)? (vastus 55°,
    tolerants 0; vihje 1: „Kummast joonest mõõdetakse peegeldumisseaduse
-   nurki?"; vihje 2: „Normaali ja pinna vahel on 90°."; vale vastus 35 →
+   nurki?"; vihje 2: „Ristsirge ja pinna vahel on 90°."; vale vastus 35 →
    silt `nurk-pinna-suhtes`)
 4. **Iseseisev:** periskoobis on kaks peeglit 45° nurga all. Miks väljub kiir
    liikumissuunaga paralleelselt? (valikvastus kolme selgitusega)
 
 ### 8. exit – väljumispilet
 
-1. Peegeldumisnurka mõõdetakse … (a) peegli pinnast (b) **pinnanormaalist**
+1. Peegeldumisnurka mõõdetakse … (a) peegli pinnast (b) **pinna ristsirgest**
    (c) langemiskiirest
-2. Langemisnurk on 50° normaali suhtes. Peegeldumisnurk = ___° (50)
+2. Langemisnurk on 50° ristsirge suhtes. Peegeldumisnurk = ___° (50)
 3. „Ütle ühe lausega, mida sa täna õppisid ja mis jäi segaseks." (vabatekst)
 
 ## Väärarusaamad (teacher.ts + siltide selgitused)
 
 | Silt | Väärarusaam | Kuidas parandada |
 |---|---|---|
-| `nurk-pinna-suhtes` | nurki mõõdetakse peegli pinnast | normaali roll: joonista mõlemad nurgad ühele joonisele |
+| `nurk-pinna-suhtes` | nurki mõõdetakse peegli pinnast | ristsirge roll: joonista mõlemad nurgad ühele joonisele |
 | `ainult-peegel-peegeldab` | ainult läikivad kehad peegeldavad | mattpinna hajus peegeldumine: miks me üldse esemeid näeme |
 | `kujutis-peegli-pinnal` | kujutis asub peegli pinnal | tasapeegli kujutis on peegli TAGA sama kaugel (järgmine moodul) |
 
@@ -123,9 +123,9 @@ Võrdle oma ennustusega 3. sammust – kas pidid midagi ümber mõtlema?"
 ## Kordamiskaardid (reviewCards)
 
 1. mõiste: Millise joone suhtes mõõdetakse langemis- ja peegeldumisnurka?
-   (pinnanormaali suhtes)
-2. arvutus: Langemisnurk 35° normaali suhtes → peegeldumisnurk? (35°)
-3. arvutus-lõks: Kiir moodustab pinnaga 20° → peegeldumisnurk normaali
+   (pinna ristsirge suhtes)
+2. arvutus: Langemisnurk 35° ristsirge suhtes → peegeldumisnurk? (35°)
+3. arvutus-lõks: Kiir moodustab pinnaga 20° → peegeldumisnurk ristsirge
    suhtes? (70°)
 4. selgitus: Miks näeme matti seina igast suunast, aga peeglist ainult
    kindla nurga alt? (hajus vs peegelpeegeldus)

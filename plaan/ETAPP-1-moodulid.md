@@ -119,12 +119,13 @@ tekib ta kogemata kolme eri kohta.
 - *CodeRabbit:* fookus ei liikunud moodulit vahetades, sest `index` jäi
   nulli. Parandus: `moduleId` efekti sõltuvustesse.
 
-**Lahtine ots sammule 1.4:** `QuestionCard` oskab praegu ainult
-valikvastust. Kui mõnda moodulisse satuks enne 1.4 arvküsimus, jääks
-õpilane sammule lukku – seepärast tohib kuni 1.4-ni olla ainus küsimustega
-sisu arendusdemo `/m/test`. CodeRabbit pakkus lahenduseks skeemi piiramist
-valikvastusega – seda EI tehtud, sest see rikuks moodulilepingut ja tuleks
-1.4-s tagasi keerata.
+**Lahtine ots sammule 1.4 – SULETUD sammus 1.5.** Toona oskas `QuestionCard`
+ainult valikvastust ja arvküsimus oleks jätnud õpilase sammule lukku,
+seepärast tohtis ainus küsimustega sisu olla arendusdemo `/m/test`. Sammus
+1.5 lisandus arvvastuse sisestus; vabatekst ootab endiselt sammu 1.11 ja
+kuni selleni kehtib sama piirang vabatekstiga küsimustele. CodeRabbit
+pakkus toona lahenduseks skeemi piiramist valikvastusega – seda EI tehtud,
+sest see oleks rikkunud moodulilepingut ja tulnud tagasi keerata.
 
 ## 1.4 Checker: arvvastus
 
@@ -151,8 +152,61 @@ ei ole selle sammu ulatuses.
 > väärarusaama silt vale valiku küljes. Testid. Ühenda mõlemad checkerid
 > StepShelli demo-sammudega.
 
-- [ ] Demo-moodulis saab vastata arv- ja valikküsimusele ning saab tagasisidet
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] Demo-moodulis saab vastata arv- ja valikküsimusele ning saab tagasisidet
+      (src/checker/choice.ts + index.ts, src/ui/steps/NumericInput.tsx +
+      Feedback.tsx, demo /m/test kolme küsimusega, 2026-08-03)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03:
+      CodeRabbit 0 leidu koodis, Codex 1 päris viga + 1 stiilileid,
+      mõlemad parandatud – vt allpool)
+
+**Otsused (2026-08-03):**
+
+- **Checkeri tulemus on üks kuju kõigile küsimuseliikidele**
+  (`src/checker/types.ts` `CheckResult`) ja `correct` on
+  `true | false | null`. `null` = ei hinnata – vabatekst (reegel 3: AI ei
+  hinda) või vastus, mida ei saa küsimusega kokku viia. See on TÄPSELT
+  `responses.is_correct` veerg (docs/ANDMEMUDEL.md), seega sammus 1.6 ei
+  pea kuju ümber tegema. Hind: `!result.correct` on nüüd viga – kontrolli
+  alati `=== true` / `=== false`.
+- **Küsimuseliigid on checkeris REGISTER** (`questionCheckers`,
+  src/checker/index.ts), mitte switch – nii nõuab moodulileping
+  („Raudreeglid laiendamisel"). Test võrdleb registrit skeemi liikidega:
+  uus liik ilma checkerita kukutab testi, mitte ei jää vaikselt
+  kontrollimata.
+- **Katkine vastus ei ole vale vastus.** Kui vastuse liik ei klapi
+  küsimusega või valik viitab olematule variandile, tuleb `null`, mitte
+  `false`: see on meie, mitte õpilase viga. Tundmatut varianti EI jäeta
+  vaikselt kõrvale – muidu muutuks „õige + prügi" õigeks vastuseks.
+- **Õiget vastust me pärast valet vastust välja ei anna** – õpilane näeb
+  ainult oma valikut, checkeri lauset ja vihjeid. Nii jääb „Muuda vastust"
+  (1.6) mõttekaks.
+- **Vihjed näidatakse ainult vale vastuse juures.** Õige vastuse kõrval on
+  nad müra, hindamata vastuse juures eksitavad (seal ei ole „õiget").
+- **Arvvastuse väli on `type="text"` + `inputMode="decimal"`**, mitte
+  `type="number"`: number-väli keeldub Eesti komast ja kerimine muudaks
+  vastust kogemata. Tipitud tekst läheb checkerini muutmata (reegel 3).
+- **„Muuda vastust" ja `revised_count` lükkuvad sammu 1.6-sse** (sammu 1.3
+  märkus lubas neid siia). Põhjus: `revised_count` on salvestatud väli
+  (docs/ANDMEMUDEL.md) – ilma salvestuseta ehitaks ta kaks korda. Vihjed on
+  seni „mõtle veel", mitte „proovi uuesti".
+- **Demo `/m/test` sai kolm küsimust ÜHTE precheck-sammu** (valik, arv
+  lõksuga, mitu õiget). Uut sammutüüpi (practice) EI lisatud – see nõuaks
+  sammukomponenti, mis on 1.12 töö (reegel 7).
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** Üks päris viga:
+
+- *Codex:* vale vastuse tagasiside käskis „Proovi uuesti", aga esitatud
+  vastust ei saa muuta (see tuleb alles 1.6) – õpilane näeb käsku, mida
+  ekraanil täita ei saa, ja arvab, et rakendus on katki. Sama viga oli
+  kahes teises lauses („Kirjuta nt 2,5", „Vasta ühikus m"). Parandus:
+  kõik kolm lauset kirjeldavad nüüd olukorda, mitte ei anna käsku
+  (`src/checker/numeric.ts`), ja test hoiab piiri – kui 1.6 lisab vastuse
+  muutmise, TOHIB selle testi kaotada, aga teadlikult.
+- *Codex (stiil):* selle plaanifaili „lahtine ots" lõik ütles korraga, et
+  arvvastus on tehtud ja et seda ei ole. Parandatud.
+- *CodeRabbit:* ainus leid puudutas `sisu/ALLIKAD.md` rida, mis on
+  eelmisest sessioonist commit'imata ega kuulu selle sammu juurde – jäi
+  teadlikult puutumata (reegel 7).
 
 ## 1.6 Edenemise salvestus seadmesse (+ preview-režiim)
 
@@ -190,7 +244,7 @@ koht, kust tekib fantoomõpilane õpetaja klassivaates.
 ## 1.8 Simulatsiooni visuaal
 
 > **Prompt AI-le:** Loo Simulation.tsx: SVG spetsifikatsiooni „explore" osa
-> järgi (peegel, kiir, normaal, peegeldunud kiir; liugur 0–85°; nurgad
+> järgi (peegel, kiir, pinna ristsirge, peegeldunud kiir; liugur 0–85°; nurgad
 > suurelt). Ainult visuaal + liugur, ülesandeid veel mitte. Kasuta model.ts-i.
 
 - [ ] Liugur liigutab kiirt õigesti; töötab sõrmega telefonis
