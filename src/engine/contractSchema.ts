@@ -344,6 +344,20 @@ const featureSchema = z
     "Lisavõimaluse silt tohib sisaldada ainult väiketähti, numbreid ja sidekriipse",
   );
 
+/**
+ * Lahendatud näidis (practice-sammu ees).
+ *
+ * Vastus on omaette väli, mitte lahenduskäigu viimane rida: ekraanil peab
+ * kohe paistma, KUS lahendus lõpeb. Näidisel ei ole id-d ega tolerantsi –
+ * teda ei kontrollita kunagi, sest õpilane talle ei vasta.
+ */
+const workedExampleSchema = z.strictObject({
+  prompt: nonEmpty("Näidisülesande tekst"),
+  /** Lahenduskäik: üks mõttesamm rea kohta. */
+  solution: bodySchema,
+  answer: nonEmpty("Näidisülesande vastus"),
+});
+
 /** Iga sammu ühisosa. */
 const stepBase = {
   id: stepIdSchema,
@@ -441,6 +455,15 @@ export const stepSchemas = {
   practice: z.strictObject({
     type: z.literal("practice"),
     ...stepBase,
+    body: bodySchema.optional(),
+    /**
+     * Lahendatud näidis harjutamise ees (sisu/MOODUL-peegeldumisseadus.md
+     * „practice" p 1). Ta EI ole küsimus: õpilane ei vasta talle, seega ta ei
+     * lähe checkerini ega salvestusse. Kui näidis oleks lihtsalt `body`, ei
+     * saaks ekraan teda ülesandest eristada – ja terve mustri mõte on, et
+     * õpilane näeb enne oma katset ÜHT lahenduskäiku lõpuni.
+     */
+    worked: workedExampleSchema.optional(),
     questions: questionsSchema.min(1),
   }),
   /** Väljumispilet: 2–3 küsimust. Õpetajale nähtav. */

@@ -717,8 +717,88 @@ ekraanil ei paista midagi katki.** Just see on riskisammu määratlus.
 > ennustuse sammul on „see ei ole hinne" lause ja explain/exit sammudel
 > „Sinu vastust näeb õpetaja" märge (docs/DISAINIJUHIS.md „Turvatunne").
 
-- [ ] Lõksülesanne (35° pinna suhtes) annab vale vastuse korral õige vihje
-- [ ] Kokkuvõtteekraan kuvatakse; usalduslaused on õigetel sammudel
+- [x] Lõksülesanne (35° pinna suhtes) annab vale vastuse korral õige vihje
+      (brauseris üle kontrollitud 360 px ja 1280 px juures – vastus 35 annab
+      lõksu tagasiside „see on nurk pinna suhtes" + mõlemad vihjed, 2026-08-03)
+- [x] Kokkuvõtteekraan kuvatakse; usalduslaused on õigetel sammudel
+      (predict, explain, exit – brauseris üle vaadatud; kokkuvõte püsib ka
+      pärast lehe uuesti avamist ja eelvaates ei loeta läbitud käiku)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03):
+      puudutab `src/engine/**` (progress.ts, useModuleProgress.ts,
+      contractSchema.ts). CodeRabbit 1 leid (sisuline, parandatud),
+      Codex 0 päris viga – vt allpool
+
+**Otsused (2026-08-03):**
+
+- **Näidis on sammu väli (`worked`), mitte küsimus.** Lahendatud ülesandele ei
+  vastata: tal ei ole id-d, mille alla vastus salvestuks, ega tolerantsi, mida
+  checker vaataks. Küsimuseks tehtuna oleks ta „vastatud" nõude osa ja hoiaks
+  „Edasi" nuppu lukus, kuigi vastata pole midagi. Skeem hoiab kolme välja
+  lahus (`prompt`, `solution` ridadena, `answer`), et ekraan näitaks, KUS
+  lahendus lõpeb – lahenduskäigu viimasse ritta peidetud vastust ei leia
+  õpilane üles.
+- **`status: "completed"` tuleb nupuvajutusest, mitte viimasele sammule
+  jõudmisest.** Viimase sammu AVAMINE ei tähenda, et moodul on tehtud – muidu
+  läheks „läbitud" kirja igal, kes lihtsalt lõpuni kerib. Nupp „Lõpetan" on
+  viimasel sammul sama nupp mis mujal „Edasi": kaks eri nuppu tähendaks, et
+  õpilane peab mooduli lõpus otsima uue koha, kuhu vajutada.
+- **`withCompleted` on korduskindel:** teine lõpetamine tagastab sama objekti,
+  seega `finishedAt` ei nihku. Läbitud moodulit saab sirvida ja uuesti
+  lõpetada – kui iga kordusvaatamine kirjutaks uue lõpuaja, näitaks õpetaja
+  koondvaade (etapp 2.13) „kaua moodul võttis" täiesti vale numbri.
+- **Kokkuvõttelt sammudele naasmine on VAATE olek (`reviewing`), mitte
+  edenemise oma.** „Vaata samme uuesti" ei tohi moodulit lõpetamata teha –
+  muidu kaoks õpetaja koondvaatest „tehtud" märge iga kordusvaatamisega.
+  Salvestusse jõuab ainult see, mis on päriselt juhtunud; ekraanivalik jääb
+  komponenti ja kaob mooduli vahetusel.
+- **Kokkuvõte on läbitud mooduli VAIKEEKRAAN, ka järgmisel päeval.** Läbitud
+  moodulisse naasja näeb „Valmis!", mitte poolelijäänud sammu – ja sealt saab
+  ühe vajutusega sammud uuesti lahti. Tagasi sirvima minnes algame esimesest
+  sammust, sest „vaata samme uuesti" tähendab õpilase jaoks algusest.
+- **Kokkuvõttes ei ole ühtegi arvu** – ei punkte, protsente ega „5-st 4 õigesti"
+  (docs/DISAINIJUHIS.md „väike positiivne hetk ilma punktide ja edetabeliteta").
+  Vale vastus oli õppimise osa, mitte arve, mis lõpus esitatakse.
+- **Disainijuhise lauset „Kordamisküsimused lisatud sinu kordamisse" EI ole
+  praegu ekraanil.** Kordamismootor valmib etapis 3 ja `reviewCards` sünnivad
+  alles sammus 1.13 – täna ei lisataks mitte kuhugi mitte midagi. Lubadus,
+  mille taga ei ole tegu, õpetab õpilast ekraani mitte uskuma. Lause lisandub
+  koos kordamisega.
+- **Edasiviiv nupp tuleb app-kihist (`summaryAction`), mitte StepShellist.**
+  ui-kiht ei tea marsruutidest (docs/ARHITEKTUUR.md) ja „kuhu edasi" sõltub
+  sellest, kust õpilane tuli – demol kursusele, päris moodulil (1.13) sama,
+  klassikoodiga jagatud moodulil hiljem mujale.
+- **Usalduslaused on nüüd kõigil kolmel kohal täidetud** (predict, explain,
+  exit) ja tulevad `STEP_NOTES`-ist, mitte moodulilt. Precheck jäi meelega
+  ilma: „see ei ole hinne" iga sammu peal muutub tapeediks ja kaotab mõju
+  just seal, kus teda vaja on. Uus test (tests/steps.test.ts) valvab, et
+  laused ei kaoks – ühe rea muutmine kustutaks nad KÕIGIST moodulitest korraga.
+- **Luku lause järgib nuppu:** viimasel sammul „siis saad lõpetada", mujal
+  „siis saad edasi". Varem oli viimasel sammul „Edasi" alati lukus, seega
+  lause peideti ära – nüüd on seal päris nupp ja põhjus peab olema nähtav.
+- **Kokkuvõtte „Vaata samme uuesti" sai muu ikooni kui „Alusta uuesti"**
+  (silm, mitte ringnool): kaks kõrvuti nuppu sama ikooniga, millest üks avab
+  sammud ja teine kustutab kõik vastused, on eksitav ka koos tekstiga.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** Üks leid, sisuline
+(mitte koodiviga) ja parandatud. Leiud ei kattunud – ülevaatajad vaatasid eri
+asju: CodeRabbit ülesande SISU, Codex koodi ja piire.
+
+- *CodeRabbit, päris viga (sisus):* periskoobi ülesande õige vastus ütles
+  „kaks 90° pööret annavad algsuunaga PARALLEELSE kiire", aga küsimus küsis,
+  miks kiir väljub SAMAS SUUNAS. Paralleelne ei ole sama mis samasuunaline:
+  kaks samasuunalist 90° pööret annaksid vastassuuna. Vastus ei vastanud
+  seega küsimusele, mis küsiti. Parandatud: õige variant ütleb nüüd, et
+  pöörded käivad vastaspoolele ja kiir jääb samasuunaliseks, ainult kõrvale
+  nihkunuks. **CodeRabbiti soovitus jätta „45° nurga all" välja jäi tegemata:**
+  peeglid ON toru suhtes 45° all (nii ka sisu/MOODUL-peegeldumisseadus.md) –
+  täpsustus läks küsimusse („mõlemad toru suhtes"), mitte välja.
+- *Codex: päris viga ei leidnud.* Üks lahtine küsimus: plaanifail on muudetud.
+  See ON projekti töövoog – sama leid tuli sammudes 1.6, 1.8 ja 1.11.
+- *Codex ei saanud teste käivitada* (keskkonna poliitika blokeeris `npm run
+  test`); `npm run lint` jooksis tal roheliseks. Testid minu käes: 229 rohelist.
+- **Miks nii vähe leide:** see samm ei arvuta midagi. Uus loogika on
+  `withCompleted` (kolm rida, kolm testi) ja üks vaate lipp – ülejäänu on
+  ekraanid. Riskisammuks teeb ta `src/engine/**` puudutamise, mitte mahu.
 
 ## 1.13 Õpetajafail ja kursuselehe link
 

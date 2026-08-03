@@ -7,6 +7,7 @@ import {
   startProgress,
   toAnswers,
   withAnswer,
+  withCompleted,
   withCurrentStep,
   withModuleVersion,
   type ModuleProgress,
@@ -89,6 +90,36 @@ describe("withCurrentStep", () => {
   it("sama sammu peale ei tee uut objekti (ei salvestata asjata)", () => {
     const progress = fresh();
     expect(withCurrentStep(progress, "theory-1")).toBe(progress);
+  });
+});
+
+describe("withCompleted", () => {
+  it("märgib mooduli tehtuks ja jätab lõpuaja", () => {
+    const done = withCompleted(fresh(), new Date("2026-08-03T10:30:00Z"));
+
+    expect(done.status).toBe("completed");
+    expect(done.finishedAt).toBe("2026-08-03T10:30:00.000Z");
+  });
+
+  it("teine lõpetamine ei nihuta lõpuaega", () => {
+    // Läbitud moodulis saab samme uuesti sirvida ja lõpetada – aga õpetaja
+    // koondvaates ei tohi „kaua moodul võttis" iga vaatamisega kasvada.
+    const done = withCompleted(fresh(), new Date("2026-08-03T10:30:00Z"));
+    const again = withCompleted(done, new Date("2026-08-04T09:00:00Z"));
+
+    expect(again).toBe(done);
+  });
+
+  it("ei puuduta vastuseid ega pooleli sammu", () => {
+    const answered = withAnswer(withCurrentStep(fresh(), "precheck-1"), {
+      step: STEP,
+      questionId: "precheck-1",
+      payload: { kind: "choice", optionIds: ["oige"] },
+    });
+    const done = withCompleted(answered, new Date("2026-08-03T10:30:00Z"));
+
+    expect(done.currentStep).toBe("precheck-1");
+    expect(done.responses).toEqual(answered.responses);
   });
 });
 

@@ -1,9 +1,11 @@
 import type { StepType } from "../../engine/contract";
 import type { StepComponent } from "./types";
 import { CollectStep } from "./CollectStep";
+import { ExitStep } from "./ExitStep";
 import { ExplainStep } from "./ExplainStep";
 import { ExploreStep } from "./ExploreStep";
 import { HookStep } from "./HookStep";
+import { PracticeStep } from "./PracticeStep";
 import { PrecheckStep } from "./PrecheckStep";
 import { PredictStep } from "./PredictStep";
 import { TheoryStep } from "./TheoryStep";
@@ -17,9 +19,10 @@ import { TheoryStep } from "./TheoryStep";
  * viitavad neile.
  *
  * Tüüp `{ [T in StepType]?: StepComponent<T> }` seob võtme ja komponendi:
- * `theory: ExploreStep` ei kompileeru. Küsimärk on seepärast, et enamik
- * tüüpe alles valmib (sammud 1.4–1.12) – puuduva komponendi eest hoolitseb
- * StepShell.
+ * `theory: ExploreStep` ei kompileeru. Küsimärk jääb alles ka nüüd, kui kõigil
+ * üheksal tüübil on komponent: uus tüüp sünnib alati skeemis enne komponenti
+ * ja StepShell oskab puuduvat komponenti taluda. Kooskõla valvab test
+ * (tests/steps.test.ts), mitte tüübisüsteem.
  */
 export const stepRegistry: { [T in StepType]?: StepComponent<T> } = {
   theory: TheoryStep,
@@ -29,6 +32,8 @@ export const stepRegistry: { [T in StepType]?: StepComponent<T> } = {
   explore: ExploreStep,
   collect: CollectStep,
   explain: ExplainStep,
+  practice: PracticeStep,
+  exit: ExitStep,
 };
 
 /**
@@ -58,17 +63,22 @@ export const STEP_LABELS: Record<StepType, string | null> = {
  * teadma, kes tema vastust näeb ja kas teda hinnatakse: teadmata jäänud
  * publik paneb ta kirjutama seda, mis on ohutu, mitte seda, mida ta arvab.
  *
- * `null` = sellel sammul ei ole midagi lisada. Predict („see ei ole hinne")
- * ja exit lisanduvad sammus 1.12 koos exit-sammuga.
+ * `null` = sellel sammul ei ole midagi lisada. Kaks lauset on standardsed
+ * (docs/DISAINIJUHIS.md „Turvatunne") ja neid EI sõnastata moodulite kaupa
+ * ümber: õpilane peab tundma sama lauset ära igas moodulis.
+ *
+ * Precheck on meelega ilma lauseta, kuigi ka teda ei hinnata: „see ei ole
+ * hinne" iga sammu peal muutuks tapeediks ja kaotaks mõju just seal, kus
+ * teda päriselt vaja on (ennustus, mille õpilane pakub pimesi).
  */
 export const STEP_NOTES: Record<StepType, string | null> = {
   theory: null,
   hook: null,
   precheck: null,
-  predict: null,
+  predict: "See ei ole hinne. Vale pakkumine on õppimise kõige kasulikum osa.",
   explore: null,
   collect: null,
   explain: "Sinu vastust näeb õpetaja.",
   practice: null,
-  exit: null,
+  exit: "Sinu vastust näeb õpetaja.",
 };

@@ -58,8 +58,8 @@ export type ModuleProgress = {
    * vale sammu peale (üks samm juurde ja kõik nihkuvad); id on igavene ja
    * kadunud sammu puhul on tagasilangus nähtav – algame algusest.
    *
-   * `status: "completed"` ja `finishedAt` täidab mooduli kokkuvõtteekraan
-   * sammus 1.12 – siin neid veel keegi ei sea.
+   * `status: "completed"` ja `finishedAt` seab `withCompleted` – mooduli
+   * viimasel sammul vajutatud „Lõpetan".
    */
   currentStep: string;
   startedAt: string;
@@ -110,6 +110,26 @@ export function withCurrentStep(
 ): ModuleProgress {
   if (progress.currentStep === stepId) return progress;
   return { ...progress, currentStep: stepId };
+}
+
+/**
+ * Õpilane jõudis mooduli lõppu (vajutas viimasel sammul „Lõpetan").
+ *
+ * Teine kutse EI muuda midagi: `finishedAt` on hetk, mil moodul esimest korda
+ * läbi sai. Kui õpilane pärast kokkuvõtet samme uuesti sirvib ja lõpetab
+ * teist korda, näeks õpetaja muidu iga vaatamise järel uut lõpuaega ja
+ * „kaua moodul võttis" läheks paigast (docs/ANDMEMUDEL.md).
+ *
+ * Vastuseid see ei puuduta – lõpetatud moodulis saab vastust ikka muuta
+ * (`revisedCount` kasvab), ilma et käik uuesti „algaks".
+ */
+export function withCompleted(progress: ModuleProgress, now?: Date): ModuleProgress {
+  if (progress.status === "completed") return progress;
+  return {
+    ...progress,
+    status: "completed",
+    finishedAt: (now ?? new Date()).toISOString(),
+  };
 }
 
 /**

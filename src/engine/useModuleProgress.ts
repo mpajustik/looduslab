@@ -6,6 +6,7 @@ import {
   startProgress,
   toAnswers,
   withAnswer,
+  withCompleted,
   withCurrentStep,
   withModuleVersion,
   type ModuleProgress,
@@ -34,8 +35,12 @@ export type ModuleProgressHandle = {
   runId: number;
   /** Kas on midagi, mida nullida (ollakse edasi liikunud või vastatud). */
   hasProgress: boolean;
+  /** Kas moodul on läbi tehtud – siis kuulub ekraan kokkuvõttele. */
+  isCompleted: boolean;
   goToIndex: (index: number) => void;
   answer: (step: Step, questionId: string, payload: AnswerPayload) => void;
+  /** Viimase sammu „Lõpetan": märgib mooduli tehtuks (kordusvajutus ei muuda). */
+  finish: () => void;
   restart: () => void;
 };
 
@@ -98,12 +103,14 @@ export function useModuleProgress({
     answers,
     runId,
     hasProgress: index > 0 || Object.keys(progress.responses).length > 0,
+    isCompleted: progress.status === "completed",
     goToIndex: (target) => {
       const step = steps[target];
       if (step) commit((current) => withCurrentStep(current, step.id));
     },
     answer: (step, questionId, payload) =>
       commit((current) => withAnswer(current, { step, questionId, payload })),
+    finish: () => commit((current) => withCompleted(current)),
     restart: () => {
       store.clear(moduleId);
       setProgress(

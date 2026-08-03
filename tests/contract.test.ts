@@ -221,6 +221,69 @@ describe("sammutüüpide register", () => {
     expect(() => stepSchema.parse(exitStep(4))).toThrow();
   });
 
+  describe("harjutamise näidis", () => {
+    const withWorked = (worked: unknown) => ({
+      type: "practice",
+      id: "practice-1",
+      title: "Harjuta",
+      worked,
+      questions: [
+        {
+          kind: "numeric",
+          id: "practice-1",
+          prompt: "Kui suur on peegeldumisnurk?",
+          answer: 25,
+          unit: "°",
+          tolerance: { mode: "absolute", value: 0.5 },
+        },
+      ],
+    });
+
+    it("võtab vastu lahendatud näidise", () => {
+      expect(() =>
+        stepSchema.parse(
+          withWorked({
+            prompt: "Kiir langeb 40° ristsirge suhtes. Kui suur on peegeldumisnurk?",
+            solution: ["Nurki mõõdetakse ristsirgest.", "Peegeldumisnurk = langemisnurk."],
+            answer: "40°",
+          }),
+        ),
+      ).not.toThrow();
+    });
+
+    it("nõuab näidiselt vähemalt üht lahenduse rida", () => {
+      // Tühja lahenduskäiguga näidis ei näita midagi ette – siis on ta ainult
+      // veel üks ülesanne, mille vastus on juba antud.
+      expect(() =>
+        stepSchema.parse(
+          withWorked({ prompt: "Kui suur on peegeldumisnurk?", solution: [], answer: "40°" }),
+        ),
+      ).toThrow();
+    });
+
+    it("ei luba näidisel olla küsimus (id, tolerants)", () => {
+      // Näidisele ei vastata, seega tal ei ole id-d ega tolerantsi. Kui need
+      // vaikselt läbi läheksid, ootaks mooduli autor, et näidist ka
+      // kontrollitakse – aga ükski checker teda kunagi ei näe.
+      expect(() =>
+        stepSchema.parse(
+          withWorked({
+            id: "practice-0",
+            prompt: "Kui suur on peegeldumisnurk?",
+            solution: ["Peegeldumisnurk = langemisnurk."],
+            answer: "40°",
+          }),
+        ),
+      ).toThrow();
+    });
+
+    it("lubab harjutamist ka ilma näidiseta", () => {
+      const step: Record<string, unknown> = withWorked(undefined);
+      delete step.worked;
+      expect(() => stepSchema.parse(step)).not.toThrow();
+    });
+  });
+
   it("ei tunne tundmatut sammutüüpi", () => {
     expect(() =>
       stepSchema.parse({ type: "video", id: "video-1", title: "Video" }),
