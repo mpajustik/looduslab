@@ -104,3 +104,94 @@ export function reflectedDirection(incidenceAngleDeg: number): Vector2 {
   const radians = toRadians(reflectionAngle(incidenceAngleDeg));
   return { x: Math.sin(radians), y: Math.cos(radians) };
 }
+
+// ---------------------------------------------------------------------------
+// Mattpind – hajus peegeldumine
+// ---------------------------------------------------------------------------
+
+/**
+ * Mikrotahu suurim kalle pinna suhtes. Mattpind on lähedalt vaadates konarlik:
+ * iga pisike koht on veidi eri suunas. 30° on VALIK, mitte mõõdetud suurus –
+ * ta annab õpilasele nähtava laiali lahkuva kiirtekimbu, jäädes samas nii
+ * väikeseks, et kiired ei kao pinna sisse.
+ */
+const MAX_FACET_TILT_DEG = 30;
+
+/**
+ * Suurim nurk ristsirge suhtes, mille all hajunud kiir veel pinnalt lahkub.
+ *
+ * Füüsikaline piir on 90° (kiir libiseb piki pinda); 85° juures on ta pinnast
+ * veel eristatav. See EI ole sama otsus mis liuguri ülempiir Simulation.tsx-is
+ * – siin ei saa mikrotahk kiirt saata pinna sisse, seega piir kuulub mudelisse.
+ */
+const MAX_DIFFUSE_ANGLE_DEG = 85;
+
+/**
+ * Kordumatu, aga KORRATAV juhuslikkus (mulberry32).
+ *
+ * Mattpinna konarused on ebakorrapärased – ühtlaselt jaotatud kiired näeksid
+ * välja nagu korrapärane lehvik, mitte nagu hajumine. `Math.random` on
+ * moodulilepinguga keelatud (model.ts peab andma sama sisendi peal sama
+ * väljundi): sama seemnega tuleb alati sama pilt, seega ka test ja
+ * ekraanipilt on korratavad.
+ */
+function pseudoRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Hajunud kiirte suunad mattpinnalt (ühikvektorid, sama kokkulepe mis mujal).
+ *
+ * **Seadus ei muutu.** Iga mikrotahk peegeldab täpselt peegeldumisseaduse
+ * järgi, aga tema oma ristsirge on kaldu: kui tahk on pinna suhtes kaldu nurga
+ * α võrra, lahkub kiir ristsirge suhtes nurga all `langemisnurk + 2α`. Just
+ * seepärast lahkuvad kiired eri suundades, kuigi ükski neist seadust ei riku –
+ * see on mooduli väärarusaama `ainult-peegel-peegeldab` vastus.
+ *
+ * Kalded jäävad vahemikku, kus kiir ka päriselt pinnalt lahkub: suure
+ * langemisnurga juures on kimp seepärast asümmeetriline (rohkem ettepoole).
+ *
+ * @param seed fikseeritav seeme – sama seeme annab alati sama kimbu
+ */
+export function diffuseDirections(
+  incidenceAngleDeg: number,
+  rayCount: number,
+  seed: number,
+): Vector2[] {
+  const specularAngleDeg = reflectionAngle(incidenceAngleDeg);
+  if (!Number.isInteger(rayCount) || rayCount < 1) {
+    throw new RangeError(
+      `Kiirte arv peab olema positiivne täisarv, aga oli ${rayCount}`,
+    );
+  }
+  if (!Number.isInteger(seed)) {
+    throw new RangeError(`Seeme peab olema täisarv, aga oli ${seed}`);
+  }
+
+  // Lubatud kalded: mikrotahk ei tohi saata kiirt pinna sisse.
+  const minTiltDeg = Math.max(
+    -MAX_FACET_TILT_DEG,
+    (-MAX_DIFFUSE_ANGLE_DEG - specularAngleDeg) / 2,
+  );
+  const maxTiltDeg = Math.min(
+    MAX_FACET_TILT_DEG,
+    (MAX_DIFFUSE_ANGLE_DEG - specularAngleDeg) / 2,
+  );
+
+  const random = pseudoRandom(seed);
+  const directions: Vector2[] = [];
+  for (let index = 0; index < rayCount; index += 1) {
+    const tiltDeg = minTiltDeg + random() * (maxTiltDeg - minTiltDeg);
+    // Nurk on siin MÄRGIGA: negatiivne = ristsirgest teisel pool ehk tagasi
+    // sinnapoole, kust kiir tuli. Peegelpinnal seda juhtuda ei saa.
+    const radians = toRadians(specularAngleDeg + 2 * tiltDeg);
+    directions.push({ x: Math.sin(radians), y: Math.cos(radians) });
+  }
+  return directions;
+}

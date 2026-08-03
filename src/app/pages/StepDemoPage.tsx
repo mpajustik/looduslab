@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router";
 import type { Step } from "../../engine/contract";
+import { Simulation } from "../../modules/physics/peegeldumisseadus/Simulation";
 import { StepShell } from "../../ui/StepShell";
 
 /**
@@ -8,6 +9,12 @@ import { StepShell } from "../../ui/StepShell";
  * See EI ole päris moodul: ta ei ole registris ega kursusefailis ja
  * marsruut on App.tsx-is `import.meta.env.DEV` taga, seega toodangu buildi
  * ta ei jõua. Päris moodul tuleb sammus 1.13.
+ *
+ * `Simulation` on siin imporditud otse (see leht on app-kihis, mitte ui-s –
+ * docs/ARHITEKTUUR.md lubab appil moodulitest teada). Päris moodulis annab
+ * sama komponendi StepShellile ModulePage, kui ta registrist mooduli laadib
+ * (samm 1.13). /sim-test arendusleht (samm 1.8) kadus siit samm 1.9 –
+ * simulatsiooni saab nüüd katsuda otse explore-sammu sees.
  */
 const DEMO_STEPS: Step[] = [
   {
@@ -112,6 +119,44 @@ const DEMO_STEPS: Step[] = [
       },
     ],
   },
+  {
+    type: "explore",
+    id: "explore-1",
+    title: "Katseta simulatsiooniga",
+    body: [
+      "Liiguta liugurit ja jälgi, kuidas peegeldumisnurk langemisnurgaga kaasas käib.",
+    ],
+    questions: [
+      {
+        kind: "numeric",
+        id: "explore-1",
+        prompt: "Sea langemisnurk 30°. Mis on peegeldumisnurk?",
+        answer: 30,
+        unit: "°",
+        tolerance: { mode: "absolute", value: 1 },
+      },
+      {
+        kind: "numeric",
+        id: "explore-2",
+        prompt: "Leia nurk, mille korral kiir peegeldub otse tagasi.",
+        answer: 0,
+        unit: "°",
+        tolerance: { mode: "absolute", value: 1 },
+      },
+      {
+        kind: "numeric",
+        id: "explore-3",
+        prompt:
+          "Lülita sisse „Näita nurka pinna suhtes“. Sea langemisnurk ristsirge suhtes 60°. Mitu kraadi on see pinna suhtes?",
+        answer: 30,
+        unit: "°",
+        tolerance: { mode: "absolute", value: 1 },
+      },
+    ],
+    simulation: {
+      unlocks: [{ feature: "mattpind", afterQuestion: "explore-2" }],
+    },
+  },
 ];
 
 export default function StepDemoPage() {
@@ -130,6 +175,7 @@ export default function StepDemoPage() {
       moduleTitle="Näidistund (arendus)"
       steps={DEMO_STEPS}
       mode={mode}
+      Simulation={Simulation}
     />
   );
 }

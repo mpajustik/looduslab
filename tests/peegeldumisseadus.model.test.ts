@@ -4,6 +4,7 @@ import { manifest } from "../src/modules/physics/peegeldumisseadus/manifest";
 import {
   angleFromNormal,
   angleFromSurface,
+  diffuseDirections,
   incidentDirection,
   reflectedDirection,
   reflectionAngle,
@@ -151,6 +152,78 @@ describe("kiirte suunad tasandil", () => {
   it("väljaspool 0…90° viskavad mõlemad vea", () => {
     expect(() => incidentDirection(-5)).toThrow();
     expect(() => reflectedDirection(95)).toThrow();
+  });
+});
+
+describe("diffuseDirections – mattpinna hajus peegeldumine", () => {
+  /** Nurk ristsirge (0, 1) suhtes MÄRGIGA: negatiivne = kiire tulemise pool. */
+  const angleFromNormalDeg = (direction: { x: number; y: number }) =>
+    (Math.atan2(direction.x, direction.y) * 180) / Math.PI;
+
+  it("annab täpselt nii palju kiiri, kui küsiti", () => {
+    expect(diffuseDirections(30, 7, 1).length).toBe(7);
+    expect(diffuseDirections(30, 1, 1).length).toBe(1);
+  });
+
+  it("sama seeme annab alati sama kimbu (mudelis ei ole juhuslikkust)", () => {
+    expect(diffuseDirections(30, 7, 20260803)).toEqual(
+      diffuseDirections(30, 7, 20260803),
+    );
+  });
+
+  it("eri seeme annab eri kimbu", () => {
+    expect(diffuseDirections(30, 7, 1)).not.toEqual(diffuseDirections(30, 7, 2));
+  });
+
+  it("kõik suunad on ühikvektorid", () => {
+    for (const direction of diffuseDirections(30, 20, 7)) {
+      expect(Math.hypot(direction.x, direction.y)).toBeCloseTo(1, 10);
+    }
+  });
+
+  it("ükski kiir ei lähe pinna sisse (y > 0) ega libise piki pinda", () => {
+    for (const angle of [0, 10, 30, 45, 60, 85, 90]) {
+      for (const direction of diffuseDirections(angle, 30, 42)) {
+        expect(direction.y).toBeGreaterThan(0);
+        expect(Math.abs(angleFromNormalDeg(direction))).toBeLessThanOrEqual(85);
+      }
+    }
+  });
+
+  it("kiired hajuvad: nad ei ole kõik peegeldumisnurga peal", () => {
+    const angles = diffuseDirections(30, 12, 42).map(angleFromNormalDeg);
+    const spread = Math.max(...angles) - Math.min(...angles);
+    // Peeglil oleks hajumine 0° – mattpinnal peab vahe olema silmaga näha.
+    expect(spread).toBeGreaterThan(20);
+  });
+
+  it("hajumine jääb peegeldumisnurga ümber (kalle kuni ±30° → nurk ±60°)", () => {
+    for (const direction of diffuseDirections(30, 50, 5)) {
+      expect(Math.abs(angleFromNormalDeg(direction) - 30)).toBeLessThanOrEqual(60);
+    }
+  });
+
+  it("risti langev kiir hajub mõlemale poole ristsirget", () => {
+    const angles = diffuseDirections(0, 30, 3).map(angleFromNormalDeg);
+    expect(angles.some((angle) => angle < 0)).toBe(true);
+    expect(angles.some((angle) => angle > 0)).toBe(true);
+  });
+
+  it("libiseva langemise juures hajub kiir ainult ettepoole", () => {
+    // 85° juures ei saa ükski mikrotahk kiirt tagasi pinna sisse saata –
+    // kimp on asümmeetriline ja see ON õige, mitte kärbe.
+    for (const direction of diffuseDirections(85, 30, 3)) {
+      expect(angleFromNormalDeg(direction)).toBeGreaterThan(0);
+    }
+  });
+
+  it("vigane sisend viskab vea, mitte ei anna tühja kimpu", () => {
+    expect(() => diffuseDirections(95, 7, 1)).toThrow(RangeError);
+    expect(() => diffuseDirections(Number.NaN, 7, 1)).toThrow(RangeError);
+    expect(() => diffuseDirections(30, 0, 1)).toThrow(RangeError);
+    expect(() => diffuseDirections(30, -3, 1)).toThrow(RangeError);
+    expect(() => diffuseDirections(30, 2.5, 1)).toThrow(RangeError);
+    expect(() => diffuseDirections(30, 7, 1.5)).toThrow(RangeError);
   });
 });
 

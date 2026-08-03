@@ -1,8 +1,9 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ComponentType } from "react";
 import { ArrowLeft, ArrowRight, Lock, RotateCcw } from "lucide-react";
 import { isStepAnswered } from "../engine/answers";
 import { stepQuestions, type Step, type StepType } from "../engine/contract";
 import type { ProgressMode } from "../engine/progress";
+import type { SimulationProps } from "../engine/simulationFeatures";
 import { useModuleProgress } from "../engine/useModuleProgress";
 import { Button } from "./Button";
 import { STEP_LABELS, stepRegistry } from "./steps/registry";
@@ -26,6 +27,7 @@ export function StepShell({
   moduleTitle,
   steps,
   mode = "persist",
+  Simulation,
 }: {
   /**
    * Mooduli id (või demo puhul mõni püsiv silt). Muutumine tähendab: õpilane
@@ -42,6 +44,12 @@ export function StepShell({
   steps: Step[];
   /** `preview` ei salvesta mitte kuhugi. Tuleb marsruudilt, mitte moodulist. */
   mode?: ProgressMode;
+  /**
+   * Mooduli simulatsioonikomponent (explore-sammu jaoks). StepShell ise ei
+   * tea moodulitest (docs/ARHITEKTUUR.md) – kutsuja (app-kiht, kes registrist
+   * mooduli laadis) annab selle propsina kaasa.
+   */
+  Simulation?: ComponentType<SimulationProps>;
 }) {
   const progress = useModuleProgress({ moduleId, moduleVersion, steps, mode });
   const [askRestart, setAskRestart] = useState(false);
@@ -150,6 +158,7 @@ export function StepShell({
             step={step}
             answers={answers}
             onAnswer={(questionId, payload) => progress.answer(step, questionId, payload)}
+            Simulation={Simulation}
           />
         ) : (
           // Seda ei tohiks õpilane kunagi näha – aga tühi valge ekraan oleks

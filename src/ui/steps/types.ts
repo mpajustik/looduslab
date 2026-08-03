@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { Answers, AnswerPayload } from "../../engine/answers";
 import type { Step, StepType } from "../../engine/contract";
+import type { SimulationProps } from "../../engine/simulationFeatures";
 
 /**
  * Sammukomponentide ühised tüübid.
@@ -22,6 +23,12 @@ export type StepOfType<T extends StepType> = Extract<Step, { type: T }>;
  * ei hoia esitatud vastust enda sees. Nii jääb sammus 1.6 salvestuse
  * lisamiseks üks koht – StepShell –, mitte iga sammutüüp eraldi.
  * Vastuseta sammud (TheoryStep) võivad need propsid lihtsalt ära jätta.
+ *
+ * `Simulation` on siin AINULT explore-sammu jaoks: StepShell ise ei tea
+ * moodulitest (docs/ARHITEKTUUR.md), seega saab ta mooduli enda
+ * Simulation.tsx propsina väljastpoolt (app-kihist, kes registrist mooduli
+ * laadis) ja kannab ta läbi kõigile sammutüüpidele. Teised sammutüübid
+ * jätavad selle propsi lihtsalt kasutamata.
  */
 export type StepComponent<T extends StepType> = ComponentType<{
   step: StepOfType<T>;
@@ -29,4 +36,6 @@ export type StepComponent<T extends StepType> = ComponentType<{
   answers: Answers;
   /** Kutsu, kui õpilane esitab ühe küsimuse vastuse. */
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
+  /** Mooduli simulatsioonikomponent, kui moodulil üks on. */
+  Simulation?: ComponentType<SimulationProps>;
 }>;

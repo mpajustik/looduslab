@@ -7,7 +7,6 @@ import ModulePage from "./pages/ModulePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProgressPage from "./pages/ProgressPage";
 import ReviewPage from "./pages/ReviewPage";
-import SimDemoPage from "./pages/SimDemoPage";
 import StepDemoPage from "./pages/StepDemoPage";
 import TeacherPage from "./pages/TeacherPage";
 
@@ -32,11 +31,6 @@ export default function App() {
               <Route path="m/test" element={<StepDemoPage />} />
             )}
             <Route path="m/:slug" element={<ModulePage />} />
-            {/* Ainult arenduses: simulatsiooni visuaal ilma sammuraamita
-                (samm 1.8). Kaob, kui explore-samm valmib (1.9). */}
-            {import.meta.env.DEV && (
-              <Route path="sim-test" element={<SimDemoPage />} />
-            )}
             <Route path="kordamine" element={<ReviewPage />} />
             <Route path="edenemine" element={<ProgressPage />} />
             <Route path="opetaja" element={<TeacherPage />} />

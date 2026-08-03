@@ -211,6 +211,20 @@ const stepIdSchema = z
   .string()
   .regex(/^[a-z]+-[1-9][0-9]*$/, "Sammu id kuju on <tüüp>-<number>, nt explore-1");
 
+/**
+ * Simulatsiooni lisavõimaluse silt, nt `mattpind`.
+ *
+ * Sildi tähendust teab ainult sama mooduli Simulation.tsx – engine kannab teda
+ * edasi, aga ei tõlgenda. Kuju on sama mis slugil, et ta oleks loetav ja
+ * kirjavea korral silmatorkav.
+ */
+const featureSchema = z
+  .string()
+  .regex(
+    /^[a-z0-9]+(-[a-z0-9]+)*$/,
+    "Lisavõimaluse silt tohib sisaldada ainult väiketähti, numbreid ja sidekriipse",
+  );
+
 /** Iga sammu ühisosa. */
 const stepBase = {
   id: stepIdSchema,
@@ -245,16 +259,38 @@ export const stepSchemas = {
     questions: questionsSchema.min(1),
   }),
   /**
-   * Simulatsioon ülesandega. Simulatsioonikomponent ise on olemas (samm 1.8,
-   * modules/physics/<moodul>/Simulation.tsx), aga sammu külge ühendav väli
-   * lisandub koos explore-sammu ülesannetega sammus 1.9 – valikulise väljana
-   * (vt laiendamise raudreeglid).
+   * Simulatsioon ülesandega.
+   *
+   * Simulatsioonikomponent ise EI ole siin: moodulil on täpselt üks
+   * `Simulation.tsx` (moodulileping) ja ta jõuab sammuni mooduli, mitte
+   * sammuandmete kaudu – nii jääb activities.ts puhtaks andmeks, mida saab
+   * zod-iga valideerida ja hiljem andmebaasi kanda. Siin on ainult see, mida
+   * SAMM simulatsioonilt tahab: mis lisavõimalus millise ülesande järel avaneb.
    */
   explore: z.strictObject({
     type: z.literal("explore"),
     ...stepBase,
     body: bodySchema.optional(),
-    questions: questionsSchema,
+    questions: questionsSchema.min(1),
+    simulation: z
+      .strictObject({
+        /**
+         * Lisavõimalus avaneb alles siis, kui nimetatud küsimus on vastatud
+         * (sisu/MOODUL-peegeldumisseadus.md: mattpinna lüliti avaneb pärast
+         * ülesannet 2). Nii ei pea Simulation.tsx teadma ülesannetest midagi
+         * ja samm ei pea teadma, mida lüliti teeb.
+         */
+        unlocks: z
+          .array(
+            z.strictObject({
+              /** Sildi tunneb ära mooduli enda Simulation.tsx, nt "mattpind". */
+              feature: featureSchema,
+              afterQuestion: questionIdSchema,
+            }),
+          )
+          .min(1),
+      })
+      .optional(),
   }),
   /** Mõõtetabel: veerud ja ridade arv. Ridade kontroll lisandub sammus 1.11. */
   collect: z.strictObject({
@@ -353,6 +389,29 @@ export const activitiesSchema = z
           message: `Sammu "${step.id}" id peab algama tüübiga "${step.type}-"`,
         });
       }
+      // Simulatsiooni lisavõimalus avaneb küsimuse järel – kui see küsimus on
+      // ümber nimetatud või kustutatud, ei avaneks lüliti KUNAGI ja seda ei
+      // paneks keegi brauseris tähele. Seepärast valvab seda skeem.
+      if (step.type === "explore" && step.simulation) {
+        const ownQuestionIds = new Set(step.questions.map((question) => question.id));
+        const features: string[] = [];
+        for (const unlock of step.simulation.unlocks) {
+          features.push(unlock.feature);
+          if (!ownQuestionIds.has(unlock.afterQuestion)) {
+            ctx.addIssue({
+              code: "custom",
+              message: `Sammus "${step.id}" avaneb "${unlock.feature}" küsimuse "${unlock.afterQuestion}" järel, aga sellist küsimust selles sammus ei ole`,
+            });
+          }
+        }
+        for (const feature of duplicates(features)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Sammus "${step.id}" on lisavõimalus "${feature}" kaks korda`,
+          });
+        }
+      }
+
       for (const question of stepQuestions(step)) {
         questionIds.push(question.id);
         // Sama reegel küsimusel – nii on vastuste tabelis kohe näha,

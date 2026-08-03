@@ -1,5 +1,6 @@
 import type { StepType } from "../../engine/contract";
 import type { StepComponent } from "./types";
+import { ExploreStep } from "./ExploreStep";
 import { PrecheckStep } from "./PrecheckStep";
 import { TheoryStep } from "./TheoryStep";
 
@@ -19,6 +20,7 @@ import { TheoryStep } from "./TheoryStep";
 export const stepRegistry: { [T in StepType]?: StepComponent<T> } = {
   theory: TheoryStep,
   precheck: PrecheckStep,
+  explore: ExploreStep,
 };
 
 /**

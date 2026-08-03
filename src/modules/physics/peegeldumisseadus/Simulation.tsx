@@ -1,7 +1,10 @@
 import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
+import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
 import {
+  angleFromSurface,
+  diffuseDirections,
   incidentDirection,
   reflectedDirection,
   reflectionAngle,
@@ -12,12 +15,15 @@ import {
  * Peegeldumise simulatsioon – ainult VAADE (sisu/MOODUL-peegeldumisseadus.md,
  * samm „explore"; docs/MOODULILEPING.md „Simulation.tsx – reeglid").
  *
- * Siin ei ole ühtegi `Math.sin`-i ega nurgaarvutust: kõik suunad ja
- * peegeldumisnurga tulevad `model.ts`-ist (CLAUDE.md reegel 1). Selles failis
- * on ainult PAIGUTUS – SVG y-telje pööramine, kaarte raadiused ja sildid.
+ * Siin ei ole ühtegi `Math.sin`-i ega nurgaarvutust: kõik suunad,
+ * peegeldumisnurk ja hajunud kiirte suunad tulevad `model.ts`-ist
+ * (CLAUDE.md reegel 1). Selles failis on ainult PAIGUTUS – SVG y-telje
+ * pööramine, kaarte raadiused ja sildid.
  *
- * Ülesanded, mattpinna lüliti ja lisavaade „nurk pinna suhtes" tulevad
- * sammus 1.9; siin saab kiirt ainult liigutada.
+ * `unlockedFeatures` tuleb explore-sammult (`ExploreStep` →
+ * `unlockedSimulationFeatures`): SEE fail on ainus koht, mis teab, mida silt
+ * „mattpind" tähendab – engine ja samm kannavad teda edasi teadmata, mis see
+ * on (docs/ARHITEKTUUR.md „ui/ ei tohi teada moodulitest").
  */
 
 /** Liuguri piirid. 85°, mitte 90° – vt model.ts päis (piirjuht näeks katki). */
@@ -48,6 +54,25 @@ const NORMAL_DIRECTION: Vector2 = { x: 0, y: 1 };
  * nurga juures ei tee ta midagi: silt on siis niikuinii kaugemal.
  */
 const MIN_LABEL_OFFSET = 20;
+
+/**
+ * Mattpinna hajunud kiirte arv ja seeme.
+ *
+ * Seeme on FIKSEERITUD (mitte nt praeguse ajaga), et sama nurk näitaks alati
+ * sama kimpu – korratavus on siin tähtsam kui „elavam" juhuslikkus
+ * (CLAUDE.md reegel 1: model.ts ei tohi anda kaht eri tulemust samale
+ * sisendile, ja siin peab ka vaade jääma stabiilseks). Kiiri on siin
+ * dekoratiivselt (loetavuse pärast) 9 – täpne arv ei ole füüsika, vaid
+ * paras hulk hajumise NÄGEMISEKS ilma joonist ummistamata.
+ */
+const MATTE_RAY_COUNT = 9;
+const MATTE_SEED = 20260803;
+/** Hajunud kiired on lühemad ja peenemad kui peegli enda kiired – muidu
+ * jookseks joonis kokku üheksa võrdselt tugeva joonega. */
+const MATTE_RAY_LENGTH = RAY_LENGTH * 0.6;
+
+/** Feature-silt, mida see fail explore-sammu `unlockedFeatures` seast otsib. */
+const MATTE_FEATURE = "mattpind";
 
 /** Viirutus peegli taga – näitab, kummal pool on „klaasi tagune" pool. */
 const HATCH_XS = Array.from(
@@ -134,9 +159,19 @@ function rayPath(
   return `M ${from.x} ${from.y} L ${arrow.x} ${arrow.y} L ${to.x} ${to.y}`;
 }
 
-export function Simulation() {
+export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationProps> = {}) {
   const [angleDeg, setAngleDeg] = useState(DEFAULT_ANGLE_DEG);
+  const [matteEnabled, setMatteEnabled] = useState(false);
+  const [showSurfaceAngle, setShowSurfaceAngle] = useState(false);
   const sliderId = useId();
+  const matteToggleId = useId();
+  const surfaceAngleToggleId = useId();
+
+  // Lisalüliti avaneb pärast ülesannet 2 (sisu/MOODUL-peegeldumisseadus.md) –
+  // ExploreStep otsustab, millal küsimusele on vastatud; see fail ainult
+  // otsib oma sildi selle hulgast.
+  const matteAvailable = unlockedFeatures.has(MATTE_FEATURE);
+  const matteVisible = matteAvailable && matteEnabled;
 
   // Peegeldumisnurk EI ole `angleDeg` koopia: seaduse ütleb mudel. Kui seadus
   // kunagi muutub (nt murdumine), muutub ta ühes kohas.
@@ -154,6 +189,16 @@ export function Simulation() {
   const incidentLabel = angleLabelPoint(incidentUp, -1);
   const reflectedLabel = angleLabelPoint(reflectedUp, 1);
 
+  // Mattpinna hajunud kiired: iga mikrotahk peegeldab ikka seaduse järgi,
+  // ainult natuke teise kaldega pinnaga – vt model.ts. Suunad tulevad juba
+  // langemispunktist VÄLJA (sama kokkulepe mis `reflectedDirection`-il),
+  // seega ei ole siin `opposite()`-i vaja.
+  const diffuseRays = matteVisible
+    ? diffuseDirections(angleDeg, MATTE_RAY_COUNT, MATTE_SEED).map((direction) =>
+        pointAt(direction, MATTE_RAY_LENGTH),
+      )
+    : [];
+
   return (
     <div className="flex flex-col gap-5">
       <svg
@@ -161,8 +206,15 @@ export function Simulation() {
         role="img"
         // Nurgad ise on siltides joonise all – ekraanilugeja saab nad sealt.
         // Kirjeldus jääb liuguri liigutamisel samaks, muidu loeks ta iga
-        // kraadi juures terve lause uuesti ette.
-        aria-label="Joonis: valguskiir langeb tasapeeglile, joonisel on ka pinna ristsirge ja peegeldunud kiir."
+        // kraadi juures terve lause uuesti ette – aga mattpinna lülitist
+        // (harv, mitte liuguri-sarnane sündmus) PEAB kirjeldus muutuma, sest
+        // ekraanil ei ole enam üks peegeldunud kiir, vaid hajunud kimp
+        // (ülevaatus 2026-08-03, CodeRabbit).
+        aria-label={
+          matteVisible
+            ? "Joonis: valguskiir langeb mattpinnale, joonisel on ka pinna ristsirge ja hajunud peegeldunud kiirte kimp."
+            : "Joonis: valguskiir langeb tasapeeglile, joonisel on ka pinna ristsirge ja peegeldunud kiir."
+        }
         className="w-full rounded-2xl border border-line bg-white"
       >
         <defs>
@@ -226,17 +278,21 @@ export function Simulation() {
           strokeWidth={2}
           strokeDasharray="6 5"
         />
-        {/* Nurgakaared ristsirgest mõlema kiireni */}
+        {/* Nurgakaared ristsirgest mõlema kiireni. Peegeldumisnurga kaar ja
+            kiir kaovad mattpinnal – üks kindel nurk ei kehti enam, tema
+            asemel tuleb allpool hajunud kiirte kimp. */}
         <path
           d={arcPath(NORMAL_DIRECTION, incidentUp, 0)}
           className="fill-none stroke-brand"
           strokeWidth={2}
         />
-        <path
-          d={arcPath(NORMAL_DIRECTION, reflectedUp, 1)}
-          className="fill-none stroke-info"
-          strokeWidth={2}
-        />
+        {matteVisible ? null : (
+          <path
+            d={arcPath(NORMAL_DIRECTION, reflectedUp, 1)}
+            className="fill-none stroke-info"
+            strokeWidth={2}
+          />
+        )}
         {/* Kiired kaarte peal, et kaared ja katkendjoon neid ei lõikaks */}
         <path
           d={rayPath(source, ORIGIN, INCIDENT_ARROW_AT)}
@@ -245,13 +301,24 @@ export function Simulation() {
           strokeLinecap="round"
           markerMid="url(#ray-arrow-incident)"
         />
-        <path
-          d={rayPath(ORIGIN, target, REFLECTED_ARROW_AT)}
-          className="fill-none stroke-info"
-          strokeWidth={3}
-          strokeLinecap="round"
-          markerMid="url(#ray-arrow-reflected)"
-        />
+        {matteVisible ? (
+          // Hajus peegeldumine: iga mikrotahk ikka sama seaduse järgi (vt
+          // model.ts diffuseDirections), ainult veidi teise suunaga – seepärast
+          // lahkuvad kiired erinevalt, mitte ühe joonena.
+          <g className="stroke-info/50" strokeWidth={1.5} strokeLinecap="round">
+            {diffuseRays.map((point, index) => (
+              <line key={index} x1={ORIGIN.x} y1={ORIGIN.y} x2={point.x} y2={point.y} />
+            ))}
+          </g>
+        ) : (
+          <path
+            d={rayPath(ORIGIN, target, REFLECTED_ARROW_AT)}
+            className="fill-none stroke-info"
+            strokeWidth={3}
+            strokeLinecap="round"
+            markerMid="url(#ray-arrow-reflected)"
+          />
+        )}
         <circle cx={ORIGIN.x} cy={ORIGIN.y} r={4} className="fill-ink" />
 
         {/* Sildid kõige viimasena ja valge äärisega (`paint-order: stroke`):
@@ -272,17 +339,19 @@ export function Simulation() {
           >
             {angleDeg}°
           </text>
-          <text
-            x={reflectedLabel.x}
-            y={reflectedLabel.y}
-            className="fill-info"
-            fontSize={17}
-            fontWeight={600}
-            textAnchor="middle"
-            dominantBaseline="middle"
-          >
-            {reflectionDeg}°
-          </text>
+          {matteVisible ? null : (
+            <text
+              x={reflectedLabel.x}
+              y={reflectedLabel.y}
+              className="fill-info"
+              fontSize={17}
+              fontWeight={600}
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {reflectionDeg}°
+            </text>
+          )}
         </g>
       </svg>
 
@@ -296,8 +365,32 @@ export function Simulation() {
           veergu. Nurgad jäävad mõlemal juhul kõrvuti võrreldavaks. */}
       <div className="grid gap-3 sm:grid-cols-2">
         <AngleReadout label="Langemisnurk" value={angleDeg} tone="incident" />
-        <AngleReadout label="Peegeldumisnurk" value={reflectionDeg} tone="reflected" />
+        <AngleReadout
+          label="Peegeldumisnurk"
+          value={reflectionDeg}
+          tone="reflected"
+          display={matteVisible ? "hajub" : undefined}
+        />
       </div>
+
+      {/* Lisavaade „nurk pinna suhtes" (ülesanne 3): SAMAD nurgad, aga teisest
+          joonest mõõdetuna – vt model.ts angleFromSurface. Pole gate'itud,
+          sest miski ülesanne ei nõua teda kindlas järjekorras avanema. */}
+      {showSurfaceAngle ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <AngleReadout
+            label="Langemisnurk (pinna suhtes)"
+            value={angleFromSurface(angleDeg)}
+            tone="incident"
+          />
+          <AngleReadout
+            label="Peegeldumisnurk (pinna suhtes)"
+            value={angleFromSurface(reflectionDeg)}
+            tone="reflected"
+            display={matteVisible ? "hajub" : undefined}
+          />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <label htmlFor={sliderId} className="text-base font-medium text-ink">
@@ -321,8 +414,54 @@ export function Simulation() {
         </div>
       </div>
 
+      {/* Lisavõimalused: väiksemad märkeruudud, mitte peanupud – need on
+          vaate valikud, mitte füüsikaline suurus (DISAINIJUHIS „max 2
+          muudetavat suurust"). */}
+      <div className="flex flex-col gap-3 border-t border-line pt-4">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-ink">
+          <input
+            id={surfaceAngleToggleId}
+            type="checkbox"
+            checked={showSurfaceAngle}
+            onChange={(event) => setShowSurfaceAngle(event.target.checked)}
+            className="size-5 shrink-0 accent-[var(--color-brand)]"
+          />
+          Näita nurka pinna suhtes
+        </label>
+
+        {matteAvailable ? (
+          <>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-ink">
+              <input
+                id={matteToggleId}
+                type="checkbox"
+                checked={matteEnabled}
+                onChange={(event) => setMatteEnabled(event.target.checked)}
+                className="size-5 shrink-0 accent-[var(--color-brand)]"
+              />
+              Mattpind
+            </label>
+            {matteVisible ? (
+              <p className="text-base leading-relaxed text-ink-soft">
+                Mattpinnal ei jää valgus paigale ega peegeldu üheks korrapäraseks
+                kiireks – pind on lähedalt vaadates konarlik ja iga pisike koht
+                saadab oma kiire pisut teise suunda. Igaüks neist siiski järgib
+                sama peegeldumisseadust, ainult oma pisikeselt kaldu pinnaga.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+
       <div className="flex justify-center">
-        <Button variant="ghost" onClick={() => setAngleDeg(DEFAULT_ANGLE_DEG)}>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setAngleDeg(DEFAULT_ANGLE_DEG);
+            setMatteEnabled(false);
+            setShowSurfaceAngle(false);
+          }}
+        >
           <RotateCcw aria-hidden="true" className="size-4" />
           Alusta uuesti
         </Button>
@@ -349,10 +488,13 @@ function AngleReadout({
   label,
   value,
   tone,
+  display,
 }: {
   label: string;
   value: number;
   tone: "incident" | "reflected";
+  /** Mattpinnal ei ole peegeldumisnurgal üht väärtust – "hajub" number-ekraani asemel. */
+  display?: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-line p-3 sm:flex-col sm:items-start sm:gap-1">
@@ -365,7 +507,7 @@ function AngleReadout({
         />
         <span className="text-sm font-medium text-ink-soft">{label}</span>
       </div>
-      <p className="text-3xl font-semibold tabular-nums text-ink">{value}°</p>
+      <p className="text-3xl font-semibold tabular-nums text-ink">{display ?? `${value}°`}</p>
     </div>
   );
 }

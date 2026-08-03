@@ -152,6 +152,12 @@ describe("küsimused", () => {
     ).toThrow();
   });
 
+  it("nõuab explore-sammult vähemalt üht ülesannet", () => {
+    expect(() =>
+      stepSchema.parse({ type: "explore", id: "explore-1", title: "Katseta", questions: [] }),
+    ).toThrow();
+  });
+
   it("nõuab tolerantsilt positiivset väärtust", () => {
     expect(() =>
       stepSchema.parse({
@@ -328,6 +334,63 @@ describe("activitiesSchema", () => {
       activitiesSchema.parse({
         steps: [theoryStep],
         reviewCards: [card(1), card(2), { ...card(3), id: "rc-1" }],
+      }),
+    ).toThrow();
+  });
+
+  const exploreStep = (unlocks: unknown) => ({
+    type: "explore",
+    id: "explore-1",
+    title: "Katseta",
+    questions: [
+      {
+        kind: "numeric",
+        id: "explore-1",
+        prompt: "Sea langemisnurk 30°. Mis on peegeldumisnurk?",
+        answer: 30,
+        unit: "°",
+        tolerance: { mode: "absolute", value: 1 },
+      },
+      {
+        kind: "numeric",
+        id: "explore-2",
+        prompt: "Leia nurk, mille korral kiir peegeldub otse tagasi.",
+        answer: 0,
+        unit: "°",
+        tolerance: { mode: "absolute", value: 1 },
+      },
+    ],
+    simulation: { unlocks },
+  });
+
+  it("lubab lisavõimalusel avaneda sama sammu küsimuse järel", () => {
+    expect(() =>
+      activitiesSchema.parse({
+        steps: [exploreStep([{ feature: "mattpind", afterQuestion: "explore-2" }])],
+        reviewCards,
+      }),
+    ).not.toThrow();
+  });
+
+  it("ei luba lisavõimalust avaneda küsimuse järel, mida sammus ei ole", () => {
+    expect(() =>
+      activitiesSchema.parse({
+        steps: [exploreStep([{ feature: "mattpind", afterQuestion: "explore-9" }])],
+        reviewCards,
+      }),
+    ).toThrow();
+  });
+
+  it("ei luba sama lisavõimalust kahe unlock-kirjena", () => {
+    expect(() =>
+      activitiesSchema.parse({
+        steps: [
+          exploreStep([
+            { feature: "mattpind", afterQuestion: "explore-1" },
+            { feature: "mattpind", afterQuestion: "explore-2" },
+          ]),
+        ],
+        reviewCards,
       }),
     ).toThrow();
   });

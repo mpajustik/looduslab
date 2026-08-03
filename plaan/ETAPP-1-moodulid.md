@@ -477,7 +477,76 @@ mille pealt ülevaatus märkamatult ära jääb.
 > **Prompt AI-le:** Lisa explore-sammu 3 ülesannet ja mattpinna lisalüliti
 > spetsifikatsiooni järgi.
 
-- [ ] Ülesanded järjest läbitavad, vastused kontrollitakse
+- [x] Ülesanded järjest läbitavad, vastused kontrollitakse
+      (brauseris üle kontrollitud 360 px ja 1280 px juures, kõik kolm
+      ülesannet + mõlemad lülitid, 2026-08-03)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03):
+      model.ts sai uue füüsika (diffuseDirections)
+
+**Otsused (2026-08-03):**
+
+- **`ui/steps/ExploreStep` ei impordi Simulation.tsx-i otse.** ExploreStep
+  elab `ui/`-s, mis ei tohi teada moodulitest (docs/ARHITEKTUUR.md). Mooduli
+  Simulation-komponent tuleb propsina läbi `StepShell`-i (uus valikuline
+  prop `Simulation`), mille annab kaasa app-kiht, kes registrist mooduli
+  laadis (StepDemoPage täna, ModulePage sammus 1.13). Teised sammutüübid
+  jätavad selle propsi lihtsalt kasutamata.
+- **Simulatsiooni lisavõimalused (`mattpind`) on läbipaistmatu string, mitte
+  enum.** `contractSchema.ts` `explore.simulation.unlocks` kirjeldab ainult
+  "milline silt avaneb millise küsimuse järel" ja uus
+  `engine/simulationFeatures.ts` (`unlockedSimulationFeatures`) arvutab
+  avatud siltide hulga vastustest – KUMBKI ei tea, mida silt „mattpind"
+  tähendab. Ainult mooduli enda Simulation.tsx tõlgendab silti. Nii saab
+  iga tulevane moodul oma lisavõimalusi ilma engine'i muutmata.
+- **Explore-sammu 3 ülesannet on tavalised numbrivastusega küsimused**
+  (checker, nagu precheck'is), mitte simulatsiooni „sündmused". Õpilane
+  loeb liugurilt väärtuse ja tipib selle – see on lihtsam ja taaskasutab
+  1.4–1.5 checkerit, mitte ei ehita eraldi sündmuste-põhist kontrolli.
+  Ülesanne 2 („leia nurk, mille korral kiir peegeldub otse tagasi") on
+  samamoodi tüübitud vastus (0°), mitte automaattuvastus.
+- **Mattpinna lüliti avaneb `simulation.unlocks` andmete järgi
+  (`afterQuestion: "explore-2"`), mitte kõvasti koodis.** Skeem valvab, et
+  `afterQuestion` osutab sama sammu olemasolevale küsimusele – ümbernimetatud
+  või kustutatud küsimus ei jätaks lülitit vaikselt igaveseks kinni, vaid
+  test punaseks.
+- **Mattpinna hajumine on model.ts-is `diffuseDirections`** (mulberry32
+  fikseeritud seemnega, MITTE `Math.random` – CLAUDE.md reegel 1). Iga
+  mikrotahk peegeldab ikka täpselt peegeldumisseaduse järgi, ainult natuke
+  kaldu ristsirge suhtes (`langemisnurk + 2×kalle`) – see ON vastus
+  väärarusaamale `ainult-peegel-peegeldab`: matt pind ei riku seadust, ta
+  lihtsalt koosneb paljudest mikroskoopilistest peeglitest.
+- **Mattpinna kiirte arv (9) ja seeme on kunstlikud konstandid
+  Simulation.tsx-is, mitte füüsika.** Sama seeme igal renderdusel → sama
+  kimp sama nurga juures, muidu näeks liugurit liigutades kiired kaootiliselt
+  ringi hüppavat.
+- **„Mattpind" toggle PEIDAB, mitte ei keela**, kui lukus (enne ülesannet 2
+  vastamist) – lülitit pole üldse näha, mitte disabled checkbox. Nii ei pea
+  õpilane mõistma, MIKS miski on halli värvi.
+- **„Nurk pinna suhtes" lisavaade ei ole gate'itud** – erinevalt mattpinnast
+  ei nõua spetsifikatsioon talle kindlat avanemishetke, seega on ta lihtne
+  märkeruut algusest peale.
+- **`/sim-test` arendusleht kaotati** (lubati juba sammus 1.8): simulatsiooni
+  saab nüüd katsuda otse `/m/test` explore-sammu sees, koos päris
+  ülesannetega.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** Mõlemad ülevaatajad
+leidsid SAMA päris vea eri kohast koodis – see tõstis kindlust, et tegu on
+päris veaga, mitte ühe ülevaataja maitsega:
+
+- *CodeRabbit (major) + Codex, sama viga:* kõik 3 ülesannet renderdusid
+  korraga, seega sai ülesande 1 vahele jätta ja vastata kohe ülesandele 2 –
+  „Mattpind" (mis peab avanema alles ülesande 2 järel) ilmus liiga vara.
+  Spetsifikatsioon ütleb otse „(järjest)". Parandus: `ExploreStep` näitab
+  küsimusi järjest – järgmine ilmub alles pärast eelmisele vastamist.
+- *CodeRabbit (minor):* SVG `aria-label` kirjeldas alati „peegeldunud kiir",
+  ka siis, kui mattpind on sees ja ekraanil on hajunud kiirte kimp –
+  ekraanilugeja kasutaja sai vale kirjelduse. Parandus: kirjeldus muutub
+  mattpinna sisse-välja lülitamisel (harv, diskreetne sündmus, mitte
+  liuguri-sarnane pidev muutus – vt olemasolev kommentaar samas kohas).
+- *Codex (stiil):* selle plokis oli platvormisõna `TODO_REVIEW_FINDINGS`,
+  kuni ülevaatus valmis – nüüd täidetud päris sisuga.
+- Kõrvalist ei leitud: uut npm-paketti, migratsiooni, `dangerouslySetInnerHTML`
+  kasutust ega id/slug/question_id muutust kumbki ei tuvastanud.
 
 ## 1.10 Sammud enne simulatsiooni (hook, precheck, predict)
 
