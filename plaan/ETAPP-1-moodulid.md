@@ -319,8 +319,64 @@ teadlikult lahtiseks jäetud (vt eelmine punkt), kolm vale leidu:
 > manifest.ts spetsifikatsiooni „Füüsika" osa järgi. Testid kõigi
 > spetsifikatsioonis loetletud väärtustega. Ei mingit UI-d.
 
-- [ ] Testid rohelised; **loe model.ts ise läbi ja kontrolli füüsikat**
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [ ] Testid rohelised (160 testi, 2026-08-03); **loe model.ts ise läbi ja
+      kontrolli füüsikat** – see pool on veel tegemata, ootab kasutajat
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03:
+      CodeRabbit 1 leid + Codex 2 leidu, model.ts ise sai puhta lehe)
+
+**Otsused (2026-08-03):**
+
+- **Nurgafunktsioone on kaks, kuigi arvutus on üks.** `angleFromSurface`
+  (ristsirge → pind) ja `angleFromNormal` (pind → ristsirge) teevad mõlemad
+  `90 − x`, sest see on iseenda pöördfunktsioon. Kaks nime on TAHTLIK: kogu
+  mooduli väärarusaam (`nurk-pinna-suhtes`) on just see, et õpilane ei tea,
+  kummast joonest mõõdetakse. Harjutus 3 ja kordamiskaart 3 lähevad pinna
+  poolt ristsirge poole – ühe nimega peaks kutsuja peas ümber pöörama ja
+  täpselt seal tekiks vaikne viga. Ülevaataja näeb siin duplikaati; see on
+  vastus.
+- **Suunad tulevad ühikvektoritena, mitte joonise punktidena.** Model.ts
+  annab `incidentDirection`/`reflectedDirection` matemaatilistes
+  koordinaatides (peegel x-teljel, ristsirge +y, y kasvab ÜLES). Kiire
+  algus- ja lõpp-punkt ning SVG y-telje pööramine on paigutus, mitte
+  füüsika – need jäävad sammu 1.8 komponendile. Nii ei satu ükski `Math.sin`
+  Simulation.tsx-i (reegel 1) ega ükski SVG-koordinaat mudelisse.
+- **Väljaspool 0…90° visatakse `RangeError`, mitte ei klammerdata.** Vaikne
+  parandus peidaks vea kutsuvas koodis (nt liuguri vale ülempiir) ja
+  õpilane näeks õiget arvu vale sisendi pealt. Kontrollitakse ka `NaN`-i ja
+  `Infinity`-t – tühjast sisendiväljast tuleb `NaN`, mis muidu lipsaks
+  igast võrdlusest läbi.
+- **90° on mudelis lubatud, liuguril mitte.** Matemaatiliselt on piirjuht
+  korrektne (kiir libiseb piki pinda) ja tema väljajätmine teeks mudelisse
+  seletamatu augu. Liugur lõpeb 85° juures (samm 1.8), sest ekraanil näeks
+  90° välja nagu viga.
+- **Mattpinna hajus peegeldumine EI ole veel mudelis.** Spetsifikatsiooni
+  „Füüsika" osa teda ei nimeta ja lüliti ise tuleb sammus 1.9 – siis lisandub
+  ka tema füüsika (fikseeritava seemnega, ilma `Math.random`-ita).
+- **Manifesti valvab test.** `manifestSchema.parse(manifest)` jookseb
+  tests/peegeldumisseadus.model.test.ts-is, sest rakendus ise zod-i ei
+  jooksuta (contract.ts kommentaar) – katkine manifest paistaks muidu välja
+  alles brauseris.
+- **Registrisse moodulit veel EI panda** – see on sammu 1.13 rida. Seni ei
+  kasva ka esilehe bundle (reegel 13).
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** Kolm leidu, ükski
+mitte `model.ts`-i kohta – Codex ütles otse, et valemid ja piirjuhud on
+spetsiga kooskõlas. Leiud ei kattunud: ülevaatajad vaatasid eri faile.
+
+- *CodeRabbit, vale leid, aga õige põhjus:* nõudis manifestile
+  tolerantsivälja. `manifestSchema` on `strictObject` ilma selleta ja
+  tolerants elab küsimuse juures (`activities.ts`), kust checker ta ka
+  loeb. Ülevaataja luges siiski õigesti CLAUDE.md reeglit 3, mis väitis
+  „tolerants manifest'is" – see rida oli docs/MOODULILEPING.md-ga vastuolus
+  ja sai parandatud omaette commit'iga. Vale leid võib osutada päris veale
+  hoopis dokumendis.
+- *Codex, päris viga (töövoog):* `sisu/ALLIKAD.md` oli teist sammu järjest
+  commit'imata ja oleks läinud füüsikamudeli commit'i kaasa. Sai omaette
+  commit'i, nagu reegel 7 nõuab. Sama fail oli sammu 1.5 leidudes juba
+  kirjas – lahtine ots ei kao sellest, et ta on plaani üles märgitud.
+- *Codex, stiil, aga faktiliselt õige:* ALLIKAD.md koondkirje viitas
+  „Erkki Tempeli oma allpool", kuigi see rida on tabelis ülalpool.
+  Parandatud sama commit'iga.
 
 ## 1.8 Simulatsiooni visuaal
 
