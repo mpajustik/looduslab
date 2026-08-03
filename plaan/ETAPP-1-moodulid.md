@@ -319,8 +319,10 @@ teadlikult lahtiseks jäetud (vt eelmine punkt), kolm vale leidu:
 > manifest.ts spetsifikatsiooni „Füüsika" osa järgi. Testid kõigi
 > spetsifikatsioonis loetletud väärtustega. Ei mingit UI-d.
 
-- [ ] Testid rohelised (160 testi, 2026-08-03); **loe model.ts ise läbi ja
-      kontrolli füüsikat** – see pool on veel tegemata, ootab kasutajat
+- [x] Testid rohelised (160 testi, 2026-08-03); **kasutaja luges model.ts ise
+      läbi ja kinnitas füüsika** (2026-08-03): nurgad ristsirge suhtes, kaks
+      teisendusfunktsiooni, suunavektorid, 0…90° piirid erindiga, hajus
+      peegeldumine ja ±1° lugemistolerants jäävad hilisematesse sammudesse
 - [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03:
       CodeRabbit 1 leid + Codex 2 leidu, model.ts ise sai puhta lehe)
 
