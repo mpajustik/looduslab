@@ -245,8 +245,10 @@ export const stepSchemas = {
     questions: questionsSchema.min(1),
   }),
   /**
-   * Simulatsioon ülesandega. Simulatsioonikomponendi väli lisandub sammus 1.8
-   * (valikulise väljana – vt laiendamise raudreeglid).
+   * Simulatsioon ülesandega. Simulatsioonikomponent ise on olemas (samm 1.8,
+   * modules/physics/<moodul>/Simulation.tsx), aga sammu külge ühendav väli
+   * lisandub koos explore-sammu ülesannetega sammus 1.9 – valikulise väljana
+   * (vt laiendamise raudreeglid).
    */
   explore: z.strictObject({
     type: z.literal("explore"),

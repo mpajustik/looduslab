@@ -386,7 +386,91 @@ spetsiga kooskõlas. Leiud ei kattunud: ülevaatajad vaatasid eri faile.
 > järgi (peegel, kiir, pinna ristsirge, peegeldunud kiir; liugur 0–85°; nurgad
 > suurelt). Ainult visuaal + liugur, ülesandeid veel mitte. Kasuta model.ts-i.
 
-- [ ] Liugur liigutab kiirt õigesti; töötab sõrmega telefonis
+- [x] Liugur liigutab kiirt õigesti; töötab sõrmega telefonis
+      (src/modules/physics/peegeldumisseadus/Simulation.tsx, arendusleht
+      `/sim-test`; brauseris üle vaadatud 360 px ja 1280 px juures:
+      0°, 8°, 60°, 85°, klaviatuur, „Alusta uuesti" – 2026-08-03)
+
+**Otsused (2026-08-03):**
+
+- **Simulatsioon ei ole veel ühegi sammu sees.** Teda näeb ainult
+  arenduslehelt `/sim-test` (marsruut `import.meta.env.DEV` taga, nagu
+  `/m/test`). Explore-sammu külge ühendav väli tuleb sammus 1.9 KOOS
+  ülesannetega – siis on näha, mida samm simulatsioonilt päriselt küsib
+  (nt „sea 30°"), ja liides ei sünni oletuse peale. `contractSchema.ts`
+  kommentaar lubas seda välja juba sammus 1.8 – rida on parandatud, sest
+  plaan ja kood ei tohi lahku minna. Arendusleht kaob sammus 1.9.
+- **Komponendis ei ole ühtegi `Math.sin`-i** (CLAUDE.md reegel 1, sammu 1.7
+  otsus). Kõik suunad tulevad `model.ts`-ist ühikvektoritena; `pointAt` on
+  AINUS koht, kus matemaatiline y (üles) muutub SVG y-ks (alla). Ka
+  nurgasildi koht tuleb vektorite poolitajast (liitmine + pikkusega
+  jagamine), mitte poolnurga siinusest – nii ei teki komponenti teist
+  füüsikaarvutust.
+- **Peegeldumisnurk tuleb `reflectionAngle`-ist, mitte muutuja koopiast.**
+  Täna on nad võrdsed; seadus peab elama ühes kohas.
+- **Nooled ei ole kiirte keskel, vaid eri kaugusel ja väljaspool siltide
+  ringi.** 0° juures langevad mõlemad kiired ristsirgele kokku (see ON õige –
+  kiir tuleb tagasi sama teed) ja keskel olevad nooled kataksid teineteist:
+  õpilane näeks üht joont ühe noolega. Sama koht on sammu 1.9 ülesanne 2
+  („leia nurk, mille korral kiir peegeldub otse tagasi"), seega pidi see kohe
+  töötama. Sildiringist väljas on nad seepärast, et 20° juures sattus nool
+  muidu otse numbri peale.
+- **Nurgasilt on kaare keskel (suundade poolitajal), aga mitte lähemal kui
+  20 px ristsirgest.** Poolitaja hoiab sildi kaare sisse, seega kiir ei jookse
+  temast läbi; miinimumkaugus hoiab kaks numbrit väikese nurga juures kõrvuti.
+  Kaks vahepealset katset olid halvemad ja on siia kirja pandud, et neid ei
+  proovitaks uuesti: (a) siltide peitmine alla 6° – 8° juures olid numbrid
+  ikka koos ja peitmine jättis õpilase infota; (b) siltide lükkamine ristsirge
+  eri pooltele – siis jooksis kiir 30° juures sildist läbi.
+- **Tekstid joonistatakse kõige viimasena, valge äärisega**
+  (`paint-order: stroke`). Väikese nurga juures möödub kiir siltidest napilt;
+  ilma selleta jooksis sinine kiir sõnast „ristsirge" läbi. Nüüd näib kiir
+  mööduvat teksti tagant.
+- **Numbrid on ka joonise all suurelt** – 17 px SVG-silti ei loe projektori
+  tagumisest reast keegi. Telefonis on need kaks rida, sm-ist alates kaks
+  veergu: sõna „Peegeldumisnurk" ei mahu 360 px juures kahte veergu ja
+  lühendada teda ei tohi, sest just see mõiste on siin õpitav.
+- **Liugur on natiivne `<input type="range">`** – 44 px kõrge, töötab sõrme,
+  klaviatuuri ja ekraanilugejaga (`aria-valuetext` ütleb „kraadi", muidu
+  loeks ta paljast arvu). Oma lohistusloogikat ei kirjutatud.
+- **Vaade ei anna mudelile kahtlast väärtust.** `clampAngle` kärbib liuguri
+  väärtuse 0…85° vahele, sest mudel viskab vahemikust väljas vea (tahtlik,
+  vt model.ts). Liugur ise juba hoiab piire – see on odav turvaklapp valge
+  ekraani vastu.
+- **SVG-l on `role="img"` ja püsiv kirjeldus** – nurgad ise loeb ekraanilugeja
+  siltidelt joonise all. Liuguri liigutamisel muutuv kirjeldus loeks iga
+  kraadi juures terve lause uuesti ette.
+- **`mode` ja `onEvent` propse (moodulileping) veel EI ole.** Sündmustel ei
+  ole enne sammu 1.9 ühtegi tarbijat; kasutamata prop on kood, mida keegi ei
+  kontrolli (reegel 7). Nad tulevad koos ülesannetega.
+- **Mattpinna lüliti ja lisavaade „nurk pinna suhtes" jäävad sammu 1.9-sse**,
+  nagu spetsifikatsioon ette näeb.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** See EI ole riskisamm,
+aga Codex jooksis siiski: `/ulevaatus` otsustab failiteede järgi ja diff
+puudutas `src/engine/contractSchema.ts` (ainult kommentaari parandus). Reegel
+on failipõhine meelega – „see on ju ainult kommentaar" on täpselt see hinnang,
+mille pealt ülevaatus märkamatult ära jääb.
+
+- *Codex, päris viga:* 360 px juures ei mahtunud sõna „Peegeldumisnurk" oma
+  kaardile (117 px teksti, 85 px ruumi) ja jooksis üle serva. Mõõtsin
+  brauseris järele – leid pidas paika. **Ühtlasi tuli välja, et mu enda
+  varasem „360 px" kontroll oli tegelikult 485 px:** Windowsi aken ei lähe
+  alla ~500 px, seega tuleb kasutada seadme emuleerimist
+  (`emulate viewport 360x740x2,mobile,touch`), mitte akna suurust. Parandus:
+  kitsal ekraanil kaks rida, sm-ist alates kaks veergu.
+- *Codex, mitte päris viga, vaid teadlik otsus:* komponent ei võta veel
+  moodulilepingu propse `mode` ja `onEvent`. Täna ei ole neil ühtegi kutsujat
+  ega tarbijat ning `onEvent` kuju selgub alles siis, kui sammus 1.9 on teada,
+  mida ülesanne simulatsioonilt küsib. Kasutamata prop oleks kood, mida ükski
+  test ei kontrolli (reegel 7). Lisandub sammus 1.9.
+- *CodeRabbit, stiiliküsimus:* soovitas lisada sammu alla eraldi linnukesed
+  „build ja test rohelised" ning „CodeRabbiti ülevaatus tehtud". Ei võtnud:
+  mõlemad kehtivad CLAUDE.md „Definition of done" kaudu igal sammul ja plaanis
+  on eraldi rida ainult erandi kohta (Codexi ülevaatus riskisammul).
+- *Codex, kõrvaline muudatus:* märkis, et plaanifail on muudetud. See ON
+  projekti töövoog (iga samm dokumenteerib oma otsused siia) – sama leid tuli
+  ka sammus 1.6.
 
 ## 1.9 Simulatsiooni ülesanded ja mattpinna lüliti
 
