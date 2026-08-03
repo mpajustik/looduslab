@@ -133,8 +133,17 @@ valikvastusega – seda EI tehtud, sest see rikuks moodulilepingut ja tuleks
 > mm/cm/m ja Pa/kPa). Tagastab {correct, feedback}. Vitest testid: õiged,
 > valed, piiripealsed, ühikuvahetusega, koma-vastused.
 
-- [ ] Testid rohelised; proovi ise 5 imelikku sisendit (tühik, „2,5m", …)
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] Testid rohelised; proovi ise 5 imelikku sisendit (tühik, „2,5m", …)
+      (src/checker/numeric.ts, tests/numeric.test.ts, 2026-08-03)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`, 2026-08-03,
+      CodeRabbit 2 leidu parandatud + Codex 1 lahtine küsimus
+      contractSchema nulltolerantsi kohta, vt allpool)
+
+**Lahtine küsimus (Codex, 2026-08-03):** `contractSchema.ts` nõuab
+`tolerance.value` positiivsust, seega täpset vastet (nulltolerants) ei saa
+praegu ükski moodul kirja panna. Kui mõni küsimus (nt "peegeldumisnurk =
+langemisnurk") vajab tulevikus täpset vastet, tuleb see otsustada eraldi –
+ei ole selle sammu ulatuses.
 
 ## 1.5 Checker: valikvastused
 
