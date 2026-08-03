@@ -36,8 +36,45 @@ const DEMO_STEPS: Step[] = [
       "Sellest ühest kokkuleppest sõltub kogu peegeldumisseadus. Pinna suhtes mõõtes saad hoopis teise arvu: see täiendab normaalist mõõdetud nurga 90 kraadini.",
     ],
   },
+  {
+    type: "precheck",
+    id: "precheck-1",
+    title: "Kontrolli, kas jäi meelde",
+    questions: [
+      {
+        kind: "choice",
+        id: "precheck-1",
+        prompt: "Millise joone suhtes mõõdetakse valguskiire langemisnurka?",
+        options: [
+          {
+            id: "pind",
+            text: "Peegli pinna suhtes",
+            correct: false,
+            misconception: "nurk-pinna-suhtes",
+          },
+          {
+            id: "normaal",
+            text: "Normaali suhtes – joone suhtes, mis on peegli pinnaga risti",
+            correct: true,
+          },
+          {
+            id: "kiir",
+            text: "Peegeldunud kiire suhtes",
+            correct: false,
+            misconception: "nurk-kiirte-vahel",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export default function StepDemoPage() {
-  return <StepShell moduleTitle="Näidistund (arendus)" steps={DEMO_STEPS} />;
+  return (
+    <StepShell
+      moduleId="demo"
+      moduleTitle="Näidistund (arendus)"
+      steps={DEMO_STEPS}
+    />
+  );
 }

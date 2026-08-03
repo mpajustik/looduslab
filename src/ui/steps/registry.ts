@@ -1,5 +1,6 @@
 import type { StepType } from "../../engine/contract";
 import type { StepComponent } from "./types";
+import { PrecheckStep } from "./PrecheckStep";
 import { TheoryStep } from "./TheoryStep";
 
 /**
@@ -12,11 +13,12 @@ import { TheoryStep } from "./TheoryStep";
  *
  * Tüüp `{ [T in StepType]?: StepComponent<T> }` seob võtme ja komponendi:
  * `theory: ExploreStep` ei kompileeru. Küsimärk on seepärast, et enamik
- * tüüpe alles valmib (sammud 1.3–1.12) – puuduva komponendi eest hoolitseb
+ * tüüpe alles valmib (sammud 1.4–1.12) – puuduva komponendi eest hoolitseb
  * StepShell.
  */
 export const stepRegistry: { [T in StepType]?: StepComponent<T> } = {
   theory: TheoryStep,
+  precheck: PrecheckStep,
 };
 
 /**

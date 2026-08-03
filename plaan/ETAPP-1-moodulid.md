@@ -68,7 +68,8 @@ tekib ta kogemata kolme eri kohta.
 > stepRegistry kaudu (MITTE switch-lausega) – alusta ainult theory-tüübi
 > komponendiga. Demo-marsruut /m/test kolme theory-sammuga.
 
-- [ ] Sammude vahel liikumine töötab telefonis (360 px)
+- [x] Sammude vahel liikumine töötab telefonis (360 px) (src/ui/StepShell.tsx
+      + src/ui/steps/, demo /m/test, 2026-08-02)
 
 ## 1.3 StepShell: vastuse lukk
 
@@ -76,7 +77,54 @@ tekib ta kogemata kolme eri kohta.
 > lukus kuni vastuse esitamiseni. Esitatud sammule tagasi minnes on vastus
 > nähtav. Demo-marsruudile üks valikvastusega samm.
 
-- [ ] Lukk töötab; tagasi/edasi ei kaota vastust
+- [x] Lukk töötab; tagasi/edasi ei kaota vastust (2026-08-03)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`). See rida
+      puudus algses plaanis, aga samm lisas `src/engine/answers.ts` –
+      failiteed ja plaan ei tohi lahku minna, seepärast on ta nüüd siin.
+
+**Otsused (2026-08-03):**
+
+- **Vastuse kuju (`AnswerPayload`) elab engine'is, mitte UI-s** –
+  `src/engine/answers.ts`. Kuju on juba täpselt see, mis läheb sammus 1.6
+  localStorage'i ja etapis 2 `responses.payload` jsonb-veergu
+  (docs/ANDMEMUDEL.md). `numeric.raw` on TEKST, mitte arv: „2,5 m" peab
+  jõudma checkerini muutmata, sest ühiku ja koma lugemine on checkeri töö
+  (reegel 3).
+- **Esitamine on küsimuse, mitte sammu kaupa.** Nii saab checker sammus
+  1.4–1.5 anda tagasisidet ühe küsimuse kohta ja andmebaasi läheb üks rida
+  küsimuse kohta. Pooleli valik elab sisestuskomponendi mustandiolekus ega
+  jõua kunagi ülespoole – muidu avaks poolik klõps luku.
+- **Lukk hoiab kinni vastamata, mitte valesti vastatud sammu.** Vale
+  vastusega saab edasi. Kinni jäämine karistaks eksimise eest.
+- **Esitatud vastust ei saa praegu muuta.** „Muuda vastust" tuleb koos
+  checkeriga (1.4–1.5): ilma tagasisideta ei ole muutmiseks põhjust, ja
+  koos muutmisega tuleb ka `revised_count`.
+- **StepShell võtab `moduleId` propsi ja lähtestab selle muutumisel
+  sammu + vastused.** Küsimuste id-d (`precheck-1`) korduvad moodulite
+  vahel ja `/m/:slug` renderdab kõigil moodulitel SAMA komponenti – ilma
+  lähtestamiseta kanduks eelmise mooduli vastus üle.
+- **Lukus „Edasi" kõrval on alati nähtav põhjus** („Vasta küsimusele, siis
+  saad edasi") – lukus nupp ilma põhjenduseta on õpilase jaoks lihtsalt
+  katkine nupp.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-03).** Kolm parandatud:
+
+- *Codex:* sammukomponendi POOLELI olek (tehtud, aga esitamata valik)
+  kandus üle moodulivahetusel – React taaskasutas instantsi, sest
+  küsimuste id-d korduvad moodulite vahel. Parandus: `key` StepContentil.
+  Lukk oleks muidu avanenud vastusega, mida õpilane ei andnud.
+- *CodeRabbit:* tundmatu sammutüüp andis korraga teate „ei oska näidata"
+  JA lukus „Edasi" – umbtee. Parandus: kui sammu ei osata näidata, ei
+  nõuta ka vastust.
+- *CodeRabbit:* fookus ei liikunud moodulit vahetades, sest `index` jäi
+  nulli. Parandus: `moduleId` efekti sõltuvustesse.
+
+**Lahtine ots sammule 1.4:** `QuestionCard` oskab praegu ainult
+valikvastust. Kui mõnda moodulisse satuks enne 1.4 arvküsimus, jääks
+õpilane sammule lukku – seepärast tohib kuni 1.4-ni olla ainus küsimustega
+sisu arendusdemo `/m/test`. CodeRabbit pakkus lahenduseks skeemi piiramist
+valikvastusega – seda EI tehtud, sest see rikuks moodulilepingut ja tuleks
+1.4-s tagasi keerata.
 
 ## 1.4 Checker: arvvastus
 
