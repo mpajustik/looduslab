@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/ulevaatus-meeldetuletus.js"],
+            "timeout": 10,
+            "statusMessage": "Kontrollin, kas ülevaatus on tehtud"
+          }
+        ]
+      }
+    ]
+  }
+}
