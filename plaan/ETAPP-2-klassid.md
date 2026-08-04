@@ -66,9 +66,12 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 
 ## 2.4 Migratsioon: RLS
 
-> **Prompt AI-le:** Kirjuta 002_rls.sql: luba RLS IGAL tabelil (ka
-> join_attempts – tema puhul: mitte keegi ei loe, kirjutab ainult service
-> role) ja loo reeglid docs/ANDMEMUDEL.md tabeli järgi. Selgita mulle iga
+> **Prompt AI-le:** Kirjuta 002_rls.sql: loo reeglid docs/ANDMEMUDEL.md
+> tabeli järgi. `enable row level security` ise on juba 001-s iga tabeli
+> juures (ülevaatuse leid sammus 2.3: 001 ja 002 vahele võib jääda päevi
+> ja seni oli baas lukustamata) – siin jäävad ainult poliitikad. Kontrolli
+> siiski üle, et ükski tabel ei ole lukustamata, ka join_attempts
+> (tema puhul: mitte keegi ei loe, kirjutab ainult service role). Selgita mulle iga
 > reeglit ühe lausega. Ära käivita enne minu kinnitust.
 
 - [ ] Lugesid iga reegli läbi ja said aru → käivita dev-projektis
