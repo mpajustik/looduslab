@@ -1,7 +1,9 @@
 import {
   diffuseDirections,
   incidentDirection,
+  reflectDirection,
   reflectedDirection,
+  surfaceNormal,
   type Vector2,
 } from "./model";
 
@@ -694,6 +696,164 @@ export function MariFlashlightFigure() {
 
       <figcaption className="text-base leading-relaxed text-ink-soft">
         Sinine täpp näitab, kuhu kiir praegu seinal jõuab – märklauast allapoole.
+      </figcaption>
+    </figure>
+  );
+}
+
+// --- Joonis: periskoop -----------------------------------------------------
+
+/**
+ * Periskoobi skeem (practice-3 küsimuse juurde).
+ *
+ * Kiire tee EI ole siin kõvasti kirjutatud, kuigi ta on telgedega kohakuti:
+ * mõlemad pöörded arvutab `model.ts` (`reflectDirection` kaldu peeglilt).
+ * Ainus sisend on peeglite kalle – kui see kunagi muutub, muutub joonis
+ * kaasa. Nii ei saa joonis väita füüsikat, mida ükski test ei valva
+ * (Codexi ülevaatuse leid 2026-08-04, CLAUDE.md reegel 1).
+ *
+ * MIKS kiir samas suunas väljub, joonis ei ütle – just seda küsib küsimus.
+ */
+const PERISCOPE_VIEW = { minX: 30, minY: 50, width: 300, height: 220 };
+/** Peeglite kalle toru suhtes. Miinus = ekraanil „\" (ülalt vasakult alla). */
+const PERISCOPE_MIRROR_TILT_DEG = -45;
+/** Ülemine peegel; alumise koha annab kiire enda tee. */
+const PERISCOPE_TOP_MIRROR: Point = { x: 180, y: 100 };
+/** Kiire tee ülemiselt peeglilt alumiseni ehk toru pikkus. */
+const PERISCOPE_TUBE_RUN = 110;
+const PERISCOPE_ENTRY = 120;
+/** Toru pool-laius ja otsad kiirte ümber. */
+const PERISCOPE_TUBE_HALF = 30;
+const PERISCOPE_TUBE_END = 30;
+/** Peegli poolpikkus MÖÖDA peeglit – 45° all katab ta toru servast servani. */
+const PERISCOPE_MIRROR_HALF = 42;
+/** Ava toru seinas, kust kiir sisse ja välja käib. */
+const PERISCOPE_GAP = 12;
+
+export function PeriscopeFigure() {
+  // Mõlemad pöörded tulevad mudelist. Kiir siseneb paremale liikudes.
+  const normal = surfaceNormal(PERISCOPE_MIRROR_TILT_DEG);
+  const enterDirection: Vector2 = { x: 1, y: 0 };
+  // Ainult ESIMENE pööre: teine on see, mille õpilane ise välja mõtleb.
+  const downDirection = reflectDirection(enterDirection, normal);
+  /** Peegli enda siht: risti ristsirgega. */
+  const along: Vector2 = { x: normal.y, y: -normal.x };
+
+  const top = PERISCOPE_TOP_MIRROR;
+  const bottom = pointAt(top, downDirection, PERISCOPE_TUBE_RUN);
+  const entryStart = pointAt(top, opposite(enterDirection), PERISCOPE_ENTRY);
+  const tube = {
+    left: top.x - PERISCOPE_TUBE_HALF,
+    right: top.x + PERISCOPE_TUBE_HALF,
+    top: top.y - PERISCOPE_TUBE_END,
+    bottom: bottom.y + PERISCOPE_TUBE_END,
+  };
+  const mirrorEnds = (center: Point) => ({
+    from: pointAt(center, opposite(along), PERISCOPE_MIRROR_HALF),
+    to: pointAt(center, along, PERISCOPE_MIRROR_HALF),
+  });
+  const topMirror = mirrorEnds(top);
+  const bottomMirror = mirrorEnds(bottom);
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`${PERISCOPE_VIEW.minX} ${PERISCOPE_VIEW.minY} ${PERISCOPE_VIEW.width} ${PERISCOPE_VIEW.height}`}
+        role="img"
+        aria-label="Skeem: periskoop on püstine toru, mille mõlemas otsas on peegel 45 kraadi nurga all. Ülemine peegel on toru ülemises otsas, alumine alumises otsas ja nad on teineteisega paralleelsed. Valgus siseneb vasakult toru ülaossa ja jõuab ülemise peeglini. Kuhu ta sealt edasi läheb, on selle ülesande küsimus."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+
+        {/* Toru seinad, avadega kiire sisse- ja väljapääsuks */}
+        <g className="stroke-ink-soft" strokeWidth={2.5} strokeLinecap="round">
+          <line x1={tube.left} y1={tube.top} x2={tube.left} y2={top.y - PERISCOPE_GAP} />
+          <line x1={tube.left} y1={top.y + PERISCOPE_GAP} x2={tube.left} y2={tube.bottom} />
+          <line x1={tube.right} y1={tube.top} x2={tube.right} y2={bottom.y - PERISCOPE_GAP} />
+          <line
+            x1={tube.right}
+            y1={bottom.y + PERISCOPE_GAP}
+            x2={tube.right}
+            y2={tube.bottom}
+          />
+          <line x1={tube.left} y1={tube.top} x2={tube.right} y2={tube.top} />
+          <line x1={tube.left} y1={tube.bottom} x2={tube.right} y2={tube.bottom} />
+        </g>
+
+        {/* Kaks peeglit, mõlemad toru suhtes 45° all ja teineteisega paralleelsed */}
+        <g className="stroke-ink" strokeWidth={4} strokeLinecap="round">
+          <line
+            x1={topMirror.from.x}
+            y1={topMirror.from.y}
+            x2={topMirror.to.x}
+            y2={topMirror.to.y}
+          />
+          <line
+            x1={bottomMirror.from.x}
+            y1={bottomMirror.from.y}
+            x2={bottomMirror.to.x}
+            y2={bottomMirror.to.y}
+          />
+        </g>
+
+        {/* AINULT sisenev kiir. Ülejäänud tee peab õpilane ise välja mõtlema –
+            see ongi küsimuse mõte (vihje: „mitu korda kiir pöördub"). Terve
+            tee joonisel välistaks silmaga kaks valevastust ja ülesandest jääks
+            järele lugemisharjutus (ülevaatuse leid 2026-08-04, CodeRabbit;
+            kasutaja otsustas). Suund tuleb ikka mudelist. */}
+        <path
+          d={rayPath(entryStart, top, 0.6)}
+          className="fill-none stroke-brand"
+          strokeWidth={3}
+          strokeLinecap="round"
+          markerMid={`url(#${ARROW_INCIDENT})`}
+        />
+
+        <g className="stroke-white" strokeWidth={4} paintOrder="stroke">
+          <text x={entryStart.x - 2} y={top.y - 12} className="fill-brand" fontSize={13} fontWeight={600}>
+            valgus siseneb
+          </text>
+          {/* Väljumiskoha juures on ainult küsimärk: ava on olemas, aga kuhu
+              kiir läheb, ei ütle joonis ette. */}
+          <text
+            x={tube.right + 14}
+            y={bottom.y + 5}
+            className="fill-ink-soft"
+            fontSize={20}
+            fontWeight={600}
+          >
+            ?
+          </text>
+          <text x={tube.right + 8} y={top.y - 4} className="fill-ink" fontSize={13} fontWeight={600}>
+            peegel 45°
+          </text>
+          <text
+            x={tube.left - 10}
+            y={bottom.y + 26}
+            className="fill-ink"
+            fontSize={13}
+            fontWeight={600}
+            textAnchor="end"
+          >
+            peegel 45°
+          </text>
+          {/* „toru" käib toru alla keskele: vasakul on juba alumise peegli
+              silt ja kaks silti kohakuti ei ütle kummastki midagi. */}
+          <text
+            x={top.x}
+            y={tube.bottom + 20}
+            className="fill-ink-soft"
+            fontSize={13}
+            textAnchor="middle"
+          >
+            toru
+          </text>
+        </g>
+      </svg>
+
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Periskoop on toru kahe peegliga. Sellega saab vaadata üle takistuse –
+        näiteks allveelaevast veepinna kohale või rahvamurrust ette.
       </figcaption>
     </figure>
   );

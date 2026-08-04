@@ -330,6 +330,10 @@ const steps: Step[] = [
         prompt:
           "Periskoobis on kaks peeglit, mõlemad toru suhtes 45° nurga all. Miks väljub kiir samas suunas, kuhu ta sisenes?",
         hints: ["Mõtle, mitu korda kiir pöördub ja kummale poole kumbki pööre käib."],
+        // Ilma pildita ei tea 8. klassi õpilane, mis asi periskoop üldse on, ja
+        // küsimus mõõdab siis sõnavara, mitte peegeldumise mõistmist
+        // (katsetus 2026-08-04). Skeem näitab ehitust, mitte vastust.
+        figure: "periskoop",
         options: [
           {
             // Vastus peab ütlema, miks suund jääb SAMAKS – „paralleelne" üksi ei

@@ -34,7 +34,8 @@ export const manifest = defineModule({
   // 1.1.1: teooriasammu mõistejoonis – visuaal on patch.
   // 1.1.2: sile pind vs mattpind joonis – samuti visuaal.
   // 1.1.3: Mari joonis avasammul – samuti visuaal.
+  // 1.1.4: periskoobi skeem practice-3 juures – samuti visuaal.
   // Reeglid: docs/MOODULILEPING.md „Versioonimine".
-  version: "1.1.3",
+  version: "1.1.4",
   status: "active",
 });

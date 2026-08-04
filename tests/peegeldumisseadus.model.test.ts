@@ -6,8 +6,10 @@ import {
   angleFromSurface,
   diffuseDirections,
   incidentDirection,
+  reflectDirection,
   reflectedDirection,
   reflectionAngle,
+  surfaceNormal,
 } from "../src/modules/physics/peegeldumisseadus/model";
 
 /**
@@ -152,6 +154,86 @@ describe("kiirte suunad tasandil", () => {
   it("väljaspool 0…90° viskavad mõlemad vea", () => {
     expect(() => incidentDirection(-5)).toThrow();
     expect(() => reflectedDirection(95)).toThrow();
+  });
+});
+
+describe("surfaceNormal – kaldu pinna ristsirge", () => {
+  it("kalde 0 juures osutab ristsirge üles", () => {
+    expect(surfaceNormal(0).x).toBeCloseTo(0, 10);
+    expect(surfaceNormal(0).y).toBeCloseTo(1, 10);
+  });
+
+  it("45° kalde juures on mõlemad komponendid √2/2", () => {
+    const half = Math.SQRT1_2;
+    expect(surfaceNormal(45).x).toBeCloseTo(-half, 10);
+    expect(surfaceNormal(45).y).toBeCloseTo(half, 10);
+  });
+
+  it("on alati ühikvektor", () => {
+    for (const tilt of [-90, -45, 0, 30, 45, 90, 135]) {
+      const normal = surfaceNormal(tilt);
+      expect(Math.hypot(normal.x, normal.y)).toBeCloseTo(1, 10);
+    }
+  });
+});
+
+describe("reflectDirection – peegeldumine kaldu pinnalt", () => {
+  /** Periskoobi peegel: toru suhtes 45°, kiir tuleb paremale. */
+  const RIGHT = { x: 1, y: 0 };
+
+  it("horisontaalselt pinnalt annab sama, mis reflectedDirection", () => {
+    // Kaks eri teed samale vastusele: kui nad lahku lähevad, on üks katki.
+    const normal = surfaceNormal(0);
+    for (const angle of [0, 15, 30, 45, 60, 85]) {
+      const reflected = reflectDirection(incidentDirection(angle), normal);
+      expect(reflected.x).toBeCloseTo(reflectedDirection(angle).x, 10);
+      expect(reflected.y).toBeCloseTo(reflectedDirection(angle).y, 10);
+    }
+  });
+
+  it("45° peegel pöörab paremale liikuva kiire otse alla", () => {
+    // Just see väide seisab periskoobi joonise taga (practice-3).
+    const reflected = reflectDirection(RIGHT, surfaceNormal(-45));
+    expect(reflected.x).toBeCloseTo(0, 10);
+    expect(reflected.y).toBeCloseTo(-1, 10);
+  });
+
+  it("teine samasugune peegel pöörab alla liikuva kiire jälle paremale", () => {
+    // Kaks pööret kokku: suund on sama, mis alguses – kiir on ainult
+    // kõrvale nihkunud. Periskoobi vastus (practice-3) tuleb siit.
+    const down = reflectDirection(RIGHT, surfaceNormal(-45));
+    const out = reflectDirection(down, surfaceNormal(-45));
+    expect(out.x).toBeCloseTo(RIGHT.x, 10);
+    expect(out.y).toBeCloseTo(RIGHT.y, 10);
+  });
+
+  it("peegeldunud kiir jääb ühikvektoriks", () => {
+    for (const tilt of [-60, -45, 0, 30, 45]) {
+      const reflected = reflectDirection(incidentDirection(30), surfaceNormal(tilt));
+      expect(Math.hypot(reflected.x, reflected.y)).toBeCloseTo(1, 10);
+    }
+  });
+
+  it("ristsirge kummagi otsa valik ei muuda tulemust", () => {
+    const normal = surfaceNormal(30);
+    const flipped = { x: -normal.x, y: -normal.y };
+    const a = reflectDirection(incidentDirection(40), normal);
+    const b = reflectDirection(incidentDirection(40), flipped);
+    expect(a.x).toBeCloseTo(b.x, 10);
+    expect(a.y).toBeCloseTo(b.y, 10);
+  });
+
+  it("kaks korda peegeldamine sama pinna vastu annab algse suuna", () => {
+    const normal = surfaceNormal(20);
+    const incoming = incidentDirection(35);
+    const back = reflectDirection(reflectDirection(incoming, normal), normal);
+    expect(back.x).toBeCloseTo(incoming.x, 10);
+    expect(back.y).toBeCloseTo(incoming.y, 10);
+  });
+
+  it("mitteühikvektor viskab vea – vaikselt vale pikkus oleks hullem", () => {
+    expect(() => reflectDirection({ x: 2, y: 0 }, surfaceNormal(0))).toThrow();
+    expect(() => reflectDirection(RIGHT, { x: 0, y: 3 })).toThrow();
   });
 });
 

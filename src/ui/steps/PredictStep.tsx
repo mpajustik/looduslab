@@ -1,5 +1,7 @@
 import type { AnswerPayload, Answers } from "../../engine/answers";
+import type { ModuleFigures } from "../../engine/figures";
 import { ChoiceInput } from "./ChoiceInput";
+import { Figure } from "./Figure";
 import type { StepOfType } from "./types";
 
 /**
@@ -19,10 +21,13 @@ export function PredictStep({
   step,
   answers,
   onAnswer,
+  figures,
 }: {
   step: StepOfType<"predict">;
   answers: Answers;
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
+  /** Mooduli joonised – küsimus võib ühele neist sildiga viidata. */
+  figures?: ModuleFigures;
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -43,6 +48,8 @@ export function PredictStep({
             >
               {question.prompt}
             </p>
+            {/* Sama koht mis QuestionCardis: küsimuse ja vastuse vahel. */}
+            <Figure figures={figures} id={question.figure} />
             <ChoiceInput
               question={question}
               answer={answers[question.id]}

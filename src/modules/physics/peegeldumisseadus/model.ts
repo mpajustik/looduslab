@@ -106,6 +106,63 @@ export function reflectedDirection(incidenceAngleDeg: number): Vector2 {
 }
 
 // ---------------------------------------------------------------------------
+// Kaldu peegel – peegeldumine suvalise suunaga pinnalt
+// ---------------------------------------------------------------------------
+
+/**
+ * Peegeldunud kiire suund SUVALISE kaldega peeglilt.
+ *
+ * Ülalpool olevad `incidentDirection` ja `reflectedDirection` eeldavad, et
+ * peegel on x-teljel ja ristsirge osutab üles. See funktsioon seda ei eelda:
+ * ristsirge antakse ette, seega saab peegel olla ka kaldu (periskoobi peeglid
+ * on toru suhtes 45° all).
+ *
+ * Valem on peegeldumisseadus vektorkujul: `d − 2(d·n)n`. Ta ütleb sama, mida
+ * `reflectionAngle`: kiir jääb ristsirgega samasse tasandisse ja lahkub
+ * ristsirge suhtes sama nurga all, kui ta tuli. Test kontrollib, et need kaks
+ * teed annavad sama vastuse.
+ *
+ * @param incoming kiire liikumissuund PINNA POOLE (ühikvektor)
+ * @param normal pinna ristsirge suund (ühikvektor, kummale poole – ükskõik)
+ */
+export function reflectDirection(incoming: Vector2, normal: Vector2): Vector2 {
+  assertUnitVector(incoming, "Langeva kiire suund");
+  assertUnitVector(normal, "Pinna ristsirge suund");
+
+  const projection = incoming.x * normal.x + incoming.y * normal.y;
+  return {
+    x: incoming.x - 2 * projection * normal.x,
+    y: incoming.y - 2 * projection * normal.y,
+  };
+}
+
+/**
+ * Pinna ristsirge suund, kui pind ise on horisontaali suhtes kaldu.
+ *
+ * Kalde 0 juures osutab ristsirge üles (0, 1) – sama kokkulepe, mis mujal
+ * selles failis. Positiivne kalle pöörab pinda (ja koos sellega ristsirget)
+ * vastupäeva.
+ */
+export function surfaceNormal(surfaceTiltDeg: number): Vector2 {
+  if (!Number.isFinite(surfaceTiltDeg)) {
+    throw new RangeError(`Pinna kalle peab olema arv, aga oli ${surfaceTiltDeg}`);
+  }
+  const radians = toRadians(surfaceTiltDeg);
+  return { x: -Math.sin(radians), y: Math.cos(radians) };
+}
+
+/**
+ * Ühikvektori nõue on programmeerija asi, mitte õpilase oma (vt faili päis):
+ * mitteühikvektor annaks vaikselt vale pikkusega tulemuse.
+ */
+function assertUnitVector(vector: Vector2, what: string): void {
+  const length = Math.hypot(vector.x, vector.y);
+  if (!Number.isFinite(length) || Math.abs(length - 1) > 1e-9) {
+    throw new RangeError(`${what} peab olema ühikvektor, aga pikkus oli ${length}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Mattpind – hajus peegeldumine
 // ---------------------------------------------------------------------------
 

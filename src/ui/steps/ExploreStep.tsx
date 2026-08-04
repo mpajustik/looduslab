@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { AnswerPayload, Answers } from "../../engine/answers";
+import type { ModuleFigures } from "../../engine/figures";
 import type { SimulationProps } from "../../engine/simulationFeatures";
 import { unlockedSimulationFeatures } from "../../engine/simulationFeatures";
 import { QuestionCard } from "./QuestionCard";
@@ -29,11 +30,14 @@ export function ExploreStep({
   step,
   answers,
   onAnswer,
+  figures,
   Simulation,
 }: {
   step: StepOfType<"explore">;
   answers: Answers;
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
+  /** Mooduli joonised – küsimus võib ühele neist sildiga viidata. */
+  figures?: ModuleFigures;
   Simulation?: ComponentType<SimulationProps>;
 }) {
   const unlockedFeatures = unlockedSimulationFeatures(step, answers);
@@ -68,6 +72,7 @@ export function ExploreStep({
             question={question}
             answer={answers[question.id]}
             onAnswer={onAnswer}
+            figures={figures}
           />
         ))}
       </div>

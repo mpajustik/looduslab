@@ -116,6 +116,25 @@ const questionIdSchema = z
 const hintsSchema = z.array(nonEmpty("Vihje")).min(1).max(2);
 
 /**
+ * Joonise silt, nt `peegeldumise-moisted`.
+ *
+ * Sama muster mis `featureSchema`-l: sildi tähendust teab ainult sama mooduli
+ * figures.tsx – engine kannab teda edasi, aga ei tea, mida ta joonistab
+ * (src/engine/figures.ts). Kuju on sama mis slugil, et kirjaviga oleks
+ * silmatorkav; kooskõla registriga valvab test.
+ *
+ * Seisab siin (mitte sammude juures), sest teda kasutavad NII küsimused kui
+ * ka sammud – ja `const` ei ole hoisted: allpool defineerituna oleks ta
+ * küsimuseskeemide jaoks veel olematu.
+ */
+const figureIdSchema = z
+  .string()
+  .regex(
+    /^[a-z0-9]+(-[a-z0-9]+)*$/,
+    "Joonise silt tohib sisaldada ainult väiketähti, numbreid ja sidekriipse",
+  );
+
+/**
  * Lubatud viga: kas protsent vastusest või absoluutne samas ühikus.
  * Tolerants elab ALATI küsimuse juures, mitte manifest'is
  * (docs/MOODULILEPING.md) – sama kuju kasutab ka mõõtetabeli rea reegel.
@@ -130,6 +149,8 @@ const numericQuestionSchema = z.strictObject({
   id: questionIdSchema,
   prompt: nonEmpty("Küsimus"),
   hints: hintsSchema.optional(),
+  /** Mooduli joonise silt – joonis ilmub küsimuse teksti ja vastuse vahele. */
+  figure: figureIdSchema.optional(),
   /** Õige vastus arvuna, ühikus `unit`. */
   answer: z.number(),
   /** Nt "kPa", "°". Puudub, kui suurus on ühikuta. */
@@ -168,6 +189,8 @@ const choiceQuestionSchema = z
     id: questionIdSchema,
     prompt: nonEmpty("Küsimus"),
     hints: hintsSchema.optional(),
+    /** Mooduli joonise silt – joonis ilmub küsimuse teksti ja vastuse vahele. */
+    figure: figureIdSchema.optional(),
     options: z.array(choiceOptionSchema).min(2),
     /** true = mitu õiget vastust. Puudu või false = täpselt üks õige. */
     multiple: z.boolean().optional(),
@@ -198,6 +221,8 @@ const textQuestionSchema = z.strictObject({
   id: questionIdSchema,
   prompt: nonEmpty("Küsimus"),
   hints: hintsSchema.optional(),
+  /** Mooduli joonise silt – joonis ilmub küsimuse teksti ja vastuse vahele. */
+  figure: figureIdSchema.optional(),
   /** Nt 15 – vabatekst, mida ei hinnata, aga mille pikkust ootame. */
   minWords: z.number().int().positive().optional(),
 });
@@ -264,6 +289,8 @@ const tableQuestionSchema = z
     id: questionIdSchema,
     prompt: nonEmpty("Küsimus"),
     hints: hintsSchema.optional(),
+    /** Mooduli joonise silt – joonis ilmub küsimuse teksti ja vastuse vahele. */
+    figure: figureIdSchema.optional(),
     columns: z.array(columnSchema).min(2),
     /** Mitu rida õpilane täidab. */
     rows: z.number().int().positive(),
@@ -342,21 +369,6 @@ const featureSchema = z
   .regex(
     /^[a-z0-9]+(-[a-z0-9]+)*$/,
     "Lisavõimaluse silt tohib sisaldada ainult väiketähti, numbreid ja sidekriipse",
-  );
-
-/**
- * Joonise silt, nt `peegeldumise-moisted`.
- *
- * Sama muster mis `featureSchema`-l: sildi tähendust teab ainult sama mooduli
- * figures.tsx – engine kannab teda edasi, aga ei tea, mida ta joonistab
- * (src/engine/figures.ts). Kuju on sama mis slugil, et kirjaviga oleks
- * silmatorkav; kooskõla registriga valvab test.
- */
-const figureIdSchema = z
-  .string()
-  .regex(
-    /^[a-z0-9]+(-[a-z0-9]+)*$/,
-    "Joonise silt tohib sisaldada ainult väiketähti, numbreid ja sidekriipse",
   );
 
 /**

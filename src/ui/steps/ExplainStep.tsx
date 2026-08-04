@@ -1,4 +1,5 @@
 import type { AnswerPayload, Answers } from "../../engine/answers";
+import type { ModuleFigures } from "../../engine/figures";
 import type { RecalledAnswer } from "../../engine/recall";
 import { QuestionCard } from "./QuestionCard";
 import type { StepOfType } from "./types";
@@ -19,11 +20,14 @@ export function ExplainStep({
   step,
   answers,
   onAnswer,
+  figures,
   recall,
 }: {
   step: StepOfType<"explain">;
   answers: Answers;
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
+  /** Mooduli joonised – küsimus võib ühele neist sildiga viidata. */
+  figures?: ModuleFigures;
   recall?: (questionId: string) => RecalledAnswer | null;
 }) {
   const recalled = step.recallQuestion ? (recall?.(step.recallQuestion) ?? null) : null;
@@ -55,6 +59,7 @@ export function ExplainStep({
             question={question}
             answer={answers[question.id]}
             onAnswer={onAnswer}
+            figures={figures}
           />
         ))}
       </div>

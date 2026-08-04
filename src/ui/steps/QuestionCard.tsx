@@ -2,8 +2,10 @@ import { useId } from "react";
 import { checkAnswer } from "../../checker";
 import type { AnswerPayload } from "../../engine/answers";
 import type { Question } from "../../engine/contract";
+import type { ModuleFigures } from "../../engine/figures";
 import { ChoiceInput } from "./ChoiceInput";
 import { Feedback } from "./Feedback";
+import { Figure } from "./Figure";
 import { NumericInput } from "./NumericInput";
 import { TableInput } from "./TableInput";
 import { TextInput } from "./TextInput";
@@ -25,10 +27,13 @@ export function QuestionCard({
   question,
   answer,
   onAnswer,
+  figures,
 }: {
   question: Question;
   answer: AnswerPayload | undefined;
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
+  /** Mooduli joonised – küsimus võib ühele neist sildiga viidata. */
+  figures?: ModuleFigures;
 }) {
   const promptId = useId();
   const result = answer ? checkAnswer(question, answer) : undefined;
@@ -38,6 +43,10 @@ export function QuestionCard({
       <p id={promptId} className="text-lg font-medium leading-relaxed text-ink">
         {question.prompt}
       </p>
+
+      {/* Joonis küsimuse ja vastuse VAHEL: õpilane loeb küsimuse, vaatab
+          joonist ja alles siis vastab. */}
+      <Figure figures={figures} id={question.figure} />
 
       {question.kind === "choice" ? (
         <ChoiceInput

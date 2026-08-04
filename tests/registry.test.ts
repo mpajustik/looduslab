@@ -12,6 +12,7 @@ import {
   activitiesSchema,
   manifestSchema,
 } from "../src/engine/contractSchema";
+import { stepQuestions } from "../src/engine/contract";
 
 /** Laadija, mida ei kutsuta – indeksi ehitamine vaatab ainult võtmeid. */
 const stub: ModuleLoader = () => {
@@ -87,6 +88,15 @@ describe("moodulite register", () => {
             Object.keys(figures),
             `sammu "${step.id}" joonis "${step.figure}" puudub registrist`,
           ).toContain(step.figure);
+        }
+        // Joonis võib olla ka üksiku küsimuse juures (nt periskoop).
+        for (const question of stepQuestions(step)) {
+          if (question.figure !== undefined) {
+            expect(
+              Object.keys(figures),
+              `küsimuse "${question.id}" joonis "${question.figure}" puudub registrist`,
+            ).toContain(question.figure);
+          }
         }
       }
     },

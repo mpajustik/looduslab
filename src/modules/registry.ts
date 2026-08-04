@@ -90,6 +90,11 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.MariFlashlightFigure,
       })),
     ),
+    periskoop: lazy(() =>
+      import("./physics/peegeldumisseadus/figures").then((module) => ({
+        default: module.PeriscopeFigure,
+      })),
+    ),
   },
 };
 

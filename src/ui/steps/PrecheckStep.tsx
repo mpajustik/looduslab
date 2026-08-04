@@ -1,4 +1,5 @@
 import type { AnswerPayload, Answers } from "../../engine/answers";
+import type { ModuleFigures } from "../../engine/figures";
 import { QuestionCard } from "./QuestionCard";
 import type { StepOfType } from "./types";
 
@@ -13,10 +14,13 @@ export function PrecheckStep({
   step,
   answers,
   onAnswer,
+  figures,
 }: {
   step: StepOfType<"precheck">;
   answers: Answers;
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
+  /** Mooduli joonised – küsimus võib ühele neist sildiga viidata. */
+  figures?: ModuleFigures;
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -26,6 +30,7 @@ export function PrecheckStep({
           question={question}
           answer={answers[question.id]}
           onAnswer={onAnswer}
+          figures={figures}
         />
       ))}
     </div>

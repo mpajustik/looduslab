@@ -1,4 +1,5 @@
 import type { ModuleFigures } from "../../engine/figures";
+import { Figure } from "./Figure";
 import type { StepOfType } from "./types";
 
 /**
@@ -16,8 +17,6 @@ export function HookStep({
   step: StepOfType<"hook">;
   figures?: ModuleFigures;
 }) {
-  const Figure = step.figure ? figures?.[step.figure] : undefined;
-
   return (
     <div className="flex max-w-prose flex-col gap-4 text-lg leading-relaxed text-ink">
       {step.body.map((paragraph, index) => (
@@ -26,7 +25,7 @@ export function HookStep({
         <p key={index}>{paragraph}</p>
       ))}
 
-      {Figure ? <Figure /> : null}
+      <Figure figures={figures} id={step.figure} />
     </div>
   );
 }
