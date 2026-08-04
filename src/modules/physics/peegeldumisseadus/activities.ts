@@ -53,6 +53,9 @@ const steps: Step[] = [
       "Praegu läheb kiir peeglilt hoopis mööda märklauast. Kuhupoole peab Mari peeglit keerama, et kiir tabaks märklauda?",
       "Täna õpid ennustama, kuhu valguskiir peegeldub – ja miks see nii juhtub.",
     ],
+    // Olukord pildis: ilma selleta pidi õpilane kolme lause järgi ise stseeni
+    // ette kujutama (katsetus 2026-08-04).
+    figure: "mari-taskulambiga",
   },
   {
     type: "precheck",

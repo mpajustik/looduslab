@@ -85,6 +85,11 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.SurfaceComparisonFigure,
       })),
     ),
+    "mari-taskulambiga": lazy(() =>
+      import("./physics/peegeldumisseadus/figures").then((module) => ({
+        default: module.MariFlashlightFigure,
+      })),
+    ),
   },
 };
 

@@ -507,3 +507,194 @@ export function SurfaceComparisonFigure() {
     </figure>
   );
 }
+
+// --- Joonis: Mari taskulambiga (hook) --------------------------------------
+
+/**
+ * Langemisnurk Mari joonisel. 55° on VALIK, aga mitte suvaline: selle juures
+ * jõuab peegeldunud kiir seinani märklauast tublisti allapoole, nii et
+ * „läheb mööda" on jooniselt kohe näha ega vaja seletust.
+ *
+ * Peab jääma vahemikku 0 < nurk < 90: 0° juures tuleks kiir otse tagasi üles
+ * ega jõuaks kunagi seinani (maandumispunkti arvutus jagaks nulliga).
+ */
+const MARI_ANGLE_DEG = 55;
+
+const MARI_VIEW = { minX: 10, minY: 40, width: 350, height: 230 };
+/** Põrand, millel peegel lebab, ja sein, millel on märklaud. */
+const MARI_FLOOR_Y = 230;
+const MARI_WALL_X = 318;
+const MARI_HIT = { x: 170, y: MARI_FLOOR_Y };
+const MARI_MIRROR_HALF = 42;
+const MARI_INCIDENT_RAY = 115;
+const MARI_NORMAL_UP = 80;
+const MARI_NORMAL_DOWN = 12;
+/** Märklaud seinal – ringid, sest edestvaates on ta äratuntav (õpiku moodi). */
+const MARI_TARGET = { x: MARI_WALL_X, y: 88 };
+
+/**
+ * Mooduli avaküsimus pildis: Mari suunab taskulambi kiire peeglile, aga kiir
+ * jõuab seinal märklauast mööda.
+ *
+ * Kriipsujuku on TAHTLIKULT lihtne: joonise mõte on kiirte tee, mitte Mari.
+ * Nimi on siltides, sest ülesande tekst räägib temast.
+ *
+ * Kuhu kiir seinal jõuab, EI ole siin kõvasti kirjutatud: suund tuleb
+ * `model.ts`-ist ja maandumispunkt arvutatakse seina kauguse järgi. Kui nurk
+ * kunagi muutub, liigub märk ise õigesse kohta.
+ */
+export function MariFlashlightFigure() {
+  const incidentUp = opposite(incidentDirection(MARI_ANGLE_DEG));
+  const reflectedUp = reflectedDirection(MARI_ANGLE_DEG);
+
+  const source = pointAt(MARI_HIT, incidentUp, MARI_INCIDENT_RAY);
+  // Kaugus seinani mööda peegeldunud kiirt: nii jõuab kiir täpselt seinale,
+  // mitte sellest läbi ega poole peale.
+  const landing = pointAt(
+    MARI_HIT,
+    reflectedUp,
+    (MARI_WALL_X - MARI_HIT.x) / reflectedUp.x,
+  );
+  const normalTop = pointAt(MARI_HIT, NORMAL_DIRECTION, MARI_NORMAL_UP);
+  const normalBottom = pointAt(MARI_HIT, opposite(NORMAL_DIRECTION), MARI_NORMAL_DOWN);
+
+  // Kiire kalle EKRAANIL, kraadides – siltide ja taskulambi pööramiseks.
+  // `pointAt` pöörab y-telje, seega mudeli suunast (y üles) saab ekraanisuuna
+  // y-komponendi märki vahetades. Langev kiir liigub langemispunkti POOLE,
+  // seega tema ekraanisuund on (-incidentUp.x, +incidentUp.y).
+  const incidentTilt = (Math.atan2(incidentUp.y, -incidentUp.x) * 180) / Math.PI;
+  const reflectedTilt = (Math.atan2(-reflectedUp.y, reflectedUp.x) * 180) / Math.PI;
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`${MARI_VIEW.minX} ${MARI_VIEW.minY} ${MARI_VIEW.width} ${MARI_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: Mari seisab vasakul ja suunab taskulambi kiire põrandal lebavale peeglile. Peeglilt peegeldub kiir üles paremale seina poole, aga jõuab seinal märklauast tükk maad allapoole – möödas."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+
+        {/* Põrand ja sein – ruumi raam, õhemad jooned kui peegel */}
+        <line
+          x1={MARI_VIEW.minX + 6}
+          y1={MARI_FLOOR_Y}
+          x2={MARI_WALL_X}
+          y2={MARI_FLOOR_Y}
+          className="stroke-ink-soft"
+          strokeWidth={2}
+        />
+        <line
+          x1={MARI_WALL_X}
+          y1={MARI_VIEW.minY + 6}
+          x2={MARI_WALL_X}
+          y2={MARI_FLOOR_Y}
+          className="stroke-ink-soft"
+          strokeWidth={2}
+        />
+
+        {/* Peegel põrandal */}
+        <FlatSurface
+          left={MARI_HIT.x - MARI_MIRROR_HALF}
+          right={MARI_HIT.x + MARI_MIRROR_HALF}
+          y={MARI_FLOOR_Y}
+        />
+
+        {/* Pinna ristsirge – katkendjoon, sest ta ei ole valguskiir */}
+        <line
+          x1={normalBottom.x}
+          y1={normalBottom.y}
+          x2={normalTop.x}
+          y2={normalTop.y}
+          className="stroke-ink-soft"
+          strokeWidth={2}
+          strokeDasharray="6 5"
+        />
+
+        {/* Märklaud seinal */}
+        <g className="fill-none stroke-ink" strokeWidth={2}>
+          <circle cx={MARI_TARGET.x} cy={MARI_TARGET.y} r={14} />
+          <circle cx={MARI_TARGET.x} cy={MARI_TARGET.y} r={8} />
+        </g>
+        <circle cx={MARI_TARGET.x} cy={MARI_TARGET.y} r={3} className="fill-ink" />
+
+        {/* Mari: kriipsujuku taskulambiga */}
+        <g className="stroke-ink" strokeWidth={2.5} strokeLinecap="round" fill="none">
+          <circle cx={46} cy={142} r={11} />
+          <line x1={46} y1={153} x2={46} y2={197} />
+          <line x1={46} y1={160} x2={57} y2={151} />
+          <line x1={46} y1={197} x2={34} y2={MARI_FLOOR_Y} />
+          <line x1={46} y1={197} x2={58} y2={MARI_FLOOR_Y} />
+        </g>
+        {/* Taskulamp osutab piki langevat kiirt – pööre tuleb kiire kaldest */}
+        <g transform={`translate(${source.x} ${source.y}) rotate(${incidentTilt})`}>
+          <rect x={-24} y={-6} width={24} height={12} rx={2} className="fill-ink-soft" />
+          <rect x={-5} y={-5} width={7} height={10} rx={1} className="fill-brand" />
+        </g>
+
+        {/* Kiired */}
+        <path
+          d={rayPath(source, MARI_HIT, 0.6)}
+          className="fill-none stroke-brand"
+          strokeWidth={3}
+          strokeLinecap="round"
+          markerMid={`url(#${ARROW_INCIDENT})`}
+        />
+        <path
+          d={rayPath(MARI_HIT, landing, 0.85)}
+          className="fill-none stroke-info"
+          strokeWidth={3}
+          strokeLinecap="round"
+          markerMid={`url(#${ARROW_REFLECTED})`}
+        />
+        <circle cx={MARI_HIT.x} cy={MARI_HIT.y} r={4} className="fill-ink" />
+        {/* Koht, kuhu kiir seinal jõuab – märklauast allpool */}
+        <circle cx={landing.x} cy={landing.y} r={5} className="fill-info" />
+
+        {/* Sildid viimasena ja valge äärisega, et jooned neist läbi ei jookseks */}
+        <g className="stroke-white" strokeWidth={4} paintOrder="stroke">
+          <text x={46} y={252} className="fill-ink" fontSize={14} textAnchor="middle" fontWeight={600}>
+            Mari
+          </text>
+          <text x={MARI_HIT.x} y={252} className="fill-ink-soft" fontSize={14} textAnchor="middle">
+            peegel
+          </text>
+          <text x={normalTop.x} y={normalTop.y - 8} className="fill-ink-soft" fontSize={13} textAnchor="middle">
+            pinna ristsirge
+          </text>
+          <text x={MARI_TARGET.x - 22} y={58} className="fill-ink" fontSize={14} textAnchor="end" fontWeight={600}>
+            märklaud
+          </text>
+          {/* Kiirte sildid on pööratud piki kiirt – muidu ei mahuks nad
+              kuhugi, kus nad kiirt ise ei lõikaks. */}
+          <text
+            x={125}
+            y={186}
+            className="fill-brand"
+            fontSize={13}
+            fontWeight={600}
+            textAnchor="middle"
+            transform={`rotate(${incidentTilt} 125 186)`}
+          >
+            langev kiir
+          </text>
+          <text
+            x={246}
+            y={162}
+            className="fill-info"
+            fontSize={13}
+            fontWeight={600}
+            textAnchor="middle"
+            transform={`rotate(${reflectedTilt} 246 162)`}
+          >
+            peegeldunud kiir
+          </text>
+        </g>
+      </svg>
+
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Sinine täpp näitab, kuhu kiir praegu seinal jõuab – märklauast allapoole.
+      </figcaption>
+    </figure>
+  );
+}
