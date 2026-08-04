@@ -989,7 +989,8 @@ Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
       läbitud telefonivaates (360 px) ja töölaual (2026-08-04)
 - [x] 1.17 explore ülesanded + anuma kuju lisavaade – läbitud telefonivaates
       (360 px) ja töölaual ajutise dev-marsruudi kaudu (2026-08-04)
-- [ ] 1.18 hook + precheck + predict
+- [x] 1.18 hook + precheck + predict – jooniseta (kasutaja otsus 2026-08-04:
+      joonised lisatakse hiljem eraldi sammuna, nagu peegeldumisseadus tegi)
 - [ ] 1.19 collect (graafik – punktid langevad TÄPSELT sirgele, sim on
       ideaalne) + explain
 - [ ] 1.20 practice + exit
