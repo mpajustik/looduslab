@@ -106,6 +106,8 @@ sügavamal, seda rohkem vett on sinu kohal." + võrdlus ennustusega sammust 3
 | `rohk-ainult-alla` | rõhk mõjub ainult allapoole | küljeaugust purskuv vesi; kõrvavalu igas asendis |
 | `cm-m-teisendus` | sügavus jäetakse sentimeetritesse | ühikukontroll harjutuses 4 |
 | `g-unustatud` | p = ρ·h (g unustatud) | näidislahenduses g esile tõstetud |
+| `tihedus-vale-suund` | kergem vedelik (õli) annab samal sügavusel suurema rõhu kui vesi | explore ülesanne 2: õli vs vesi samal sügavusel, õige suund on „kahanes" |
+| `rohk-ei-solju-tihedusest` | vedeliku vahetus ei muuda rõhku samal sügavusel | explore ülesanne 2, sama koht |
 
 ## Õpetajale (teacher.ts)
 
