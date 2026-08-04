@@ -35,7 +35,12 @@ export const manifest = defineModule({
   // 1.1.2: sile pind vs mattpind joonis – samuti visuaal.
   // 1.1.3: Mari joonis avasammul – samuti visuaal.
   // 1.1.4: periskoobi skeem practice-3 juures – samuti visuaal.
+  // 1.1.5: valikvastuste järjekord segatakse (predict-1 jääb `shuffle: false`).
+  //        Küsimus, õige vastus ega variandi id ei muutu – seega patch.
+  // 2.0.0: neljal arvküsimusel (precheck-2, practice-1, practice-2, exit-2) on
+  //        nüüd arvuvariandid. Õige vastus sõltub loositud variandist, seega
+  //        vana `is_correct` EI ole uuega võrreldav – MAJOR.
   // Reeglid: docs/MOODULILEPING.md „Versioonimine".
-  version: "1.1.4",
+  version: "2.0.0",
   status: "active",
 });

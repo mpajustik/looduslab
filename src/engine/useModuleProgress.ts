@@ -2,6 +2,12 @@ import { useMemo, useState } from "react";
 import type { AnswerPayload, Answers } from "./answers";
 import type { Step } from "./contract";
 import {
+  answeredVariants,
+  answersForCurrentVariants,
+  attemptSeed,
+  resolveSteps,
+} from "./resolve";
+import {
   createProgressStore,
   startProgress,
   toAnswers,
@@ -25,6 +31,13 @@ import {
 export type ModuleProgressHandle = {
   /** Mitmes samm on lahti (0-põhine). */
   index: number;
+  /**
+   * Sammud SELLISEL kujul, nagu õpilane neid selles käigus näeb: valikvastuste
+   * järjekord segatud ja arvuvariant valitud (src/engine/resolve.ts). Vaade
+   * peab kasutama just neid, mitte omaenda propsi – checker saab vastuse
+   * kõrvale sama kuju ja ekraanil ei saa olla teine küsimus kui kontrollis.
+   */
+  steps: Step[];
   /** Esitatud vastused question_id kaupa – sellisel kujul, nagu vaade ootab. */
   answers: Answers;
   /**
@@ -73,7 +86,26 @@ export function useModuleProgress({
     setRunId((current) => current + 1);
   }
 
-  const answers = useMemo(() => toAnswers(progress), [progress]);
+  const stored = useMemo(() => toAnswers(progress), [progress]);
+
+  // Seeme tuleb käigu algusajast, seega ta on kogu käigu vältel sama ja
+  // vahetub täpselt „Alusta uuesti" peale (vt resolve.ts). Sammude kuju
+  // arvutatakse üks kord, mitte igal renderdusel – muidu hüppaks valikute
+  // järjekord iga klõpsu peale.
+  //
+  // Juba vastatud küsimused lähevad loosi sisendisse: nende variant on
+  // vastuse sees kirjas ja seda EI loosita uuesti (Codexi ülevaatuse leid).
+  const resolved = useMemo(
+    () => resolveSteps(steps, attemptSeed(progress.startedAt), answeredVariants(stored)),
+    [steps, progress.startedAt, stored],
+  );
+
+  // Vastus, mille variant enam ei kehti (autor eemaldas variandi), ei kuulu
+  // ekraanil oleva küsimuse juurde – vaade käitub nii, nagu vastust ei oleks.
+  const answers = useMemo(
+    () => answersForCurrentVariants(stored, resolved.variantIds),
+    [stored, resolved],
+  );
 
   // Pooleli samm on salvestatud ID-na. Kui seda sammu enam ei ole (moodul
   // muutus), alustame algusest – nähtav tagasilangus on parem kui vaikselt
@@ -100,6 +132,7 @@ export function useModuleProgress({
 
   return {
     index,
+    steps: resolved.steps,
     answers,
     runId,
     hasProgress: index > 0 || Object.keys(progress.responses).length > 0,
@@ -109,7 +142,16 @@ export function useModuleProgress({
       if (step) commit((current) => withCurrentStep(current, step.id));
     },
     answer: (step, questionId, payload) =>
-      commit((current) => withAnswer(current, { step, questionId, payload })),
+      commit((current) =>
+        // Variandi id tuleb siit, mitte vaatest: vaade näeb ainult valmis
+        // küsimust ja ei tea, milline variant talle loositi.
+        withAnswer(current, {
+          step,
+          questionId,
+          payload,
+          variantId: resolved.variantIds[questionId],
+        }),
+      ),
     finish: () => commit((current) => withCompleted(current)),
     restart: () => {
       store.clear(moduleId);

@@ -408,3 +408,85 @@ describe("parseProgressFile", () => {
     expect(store.read("physics.demo")).toEqual(valid);
   });
 });
+
+describe("variandi id vastuse juures", () => {
+  /**
+   * Variantidega küsimusel peab vastus kandma infot, MILLISELE küsimusele ta
+   * anti (docs/MOODULILEPING.md „Juhuslikkus"). Ilma selleta on „55" õpetaja
+   * koondvaates mõttetu arv: ta on õige ühe variandi ja vale teise juures.
+   */
+  it("salvestab valitud variandi vastuse payload'i sisse", () => {
+    const progress = withAnswer(fresh(), {
+      step: STEP,
+      questionId: "precheck-2",
+      payload: { kind: "numeric", raw: "55" },
+      variantId: "p35",
+    });
+
+    expect(progress.responses["precheck-2"]?.payload).toEqual({
+      kind: "numeric",
+      raw: "55",
+      variantId: "p35",
+    });
+  });
+
+  it("variandita küsimusel ei teki tühja silti", () => {
+    const progress = withAnswer(fresh(), {
+      step: STEP,
+      questionId: "precheck-2",
+      payload: { kind: "numeric", raw: "55" },
+    });
+
+    expect(progress.responses["precheck-2"]?.payload).not.toHaveProperty("variantId");
+  });
+
+  it("loeb variandi salvestusest tagasi, aga viskab vigase kõrvale", () => {
+    const withVariant = parseProgressFile(
+      JSON.stringify({
+        version: 1,
+        modules: {
+          "physics.demo": {
+            ...fresh(),
+            responses: {
+              "precheck-2": {
+                step: "precheck-1",
+                questionId: "precheck-2",
+                moduleVersion: "1.0.0",
+                payload: { kind: "numeric", raw: "55", variantId: "p35" },
+                isCorrect: true,
+                revisedCount: 0,
+                createdAt: "2026-08-03T10:05:00.000Z",
+              },
+            },
+          },
+        },
+      }),
+    );
+    expect(
+      withVariant.modules["physics.demo"]?.responses["precheck-2"]?.payload,
+    ).toHaveProperty("variantId", "p35");
+
+    const broken = parseProgressFile(
+      JSON.stringify({
+        version: 1,
+        modules: {
+          "physics.demo": {
+            ...fresh(),
+            responses: {
+              "precheck-2": {
+                step: "precheck-1",
+                questionId: "precheck-2",
+                moduleVersion: "1.0.0",
+                payload: { kind: "numeric", raw: "55", variantId: 7 },
+                isCorrect: true,
+                revisedCount: 0,
+                createdAt: "2026-08-03T10:05:00.000Z",
+              },
+            },
+          },
+        },
+      }),
+    );
+    expect(broken.modules["physics.demo"]).toBeUndefined();
+  });
+});

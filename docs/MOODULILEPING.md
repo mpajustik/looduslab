@@ -90,8 +90,8 @@ tähendaks, on reegel:
 | Muudatus | Versioon | Miks |
 |---|---|---|
 | trükiviga, sõnastus, vihje täpsustus, visuaal | **patch** (1.0.0 → 1.0.1) | vana vastus jääb võrreldavaks – sama küsimus, sama õige vastus |
-| uus samm või uus küsimus juurde | **minor** (1.0.0 → 1.1.0) | vanadel vastustel lihtsalt puudub uus küsimus |
-| õige vastus, tolerants või ühik muutub; küsimus eemaldatakse | **major** (1.0.0 → 2.0.0) | vana `is_correct` EI ole enam uuega võrreldav |
+| uus samm, uus küsimus või uus arvuvariant olemasolevate kõrvale | **minor** (1.0.0 → 1.1.0) | vanadel vastustel lihtsalt puudub uus küsimus või variant; vana variant jääb alles |
+| õige vastus, tolerants või ühik muutub; küsimus eemaldatakse; küsimus saab ESIMEST korda variandid; variant eemaldatakse | **major** (1.0.0 → 2.0.0) | vana `is_correct` EI ole enam uuega võrreldav |
 
 Õpetaja koondvaade (etapp 2.13) tohib liita kokku ainult sama major-versiooni
 vastuseid. Patch- ja minor-muudatus ei lõhu koondit.
@@ -170,6 +170,75 @@ Raudreeglid laiendamisel:
 Iga küsimuse juures: `id` (igavene, vt „Versioonimine"), õige vastus, lubatud
 viga (tolerants), ühik, kuni 2 vihjet ja väärarusaama silt (misconception id),
 kui vale vastus sellele viitab.
+
+## Juhuslikkus: valikvastuste järjekord ja arvuvariandid
+
+Kordamisel jääb meelde JÄRJEKORD ja ARV, mitte sisu („õige oli teine
+variant", „vastus oli 55"). Seepärast valib engine enne ekraanile andmist
+valikvastuste järjekorra ja arvküsimuse variandi (`src/engine/resolve.ts`).
+Moodul kirjutab võimalused, engine loosib ühe.
+
+**Ühine seeme:** moodulikäigu algusaeg (`attempts.started_at`). Seega on kogu
+käigu vältel kõik püsiv ja uus loos tuleb ainult „Alusta uuesti" peale.
+
+### Valikvastuste järjekord
+
+Moodul kirjutab variandid ühes järjekorras ja saab need ekraanile teises.
+
+- **Vaikimisi sees.** Autor ei pea midagi meeles pidama.
+- **Välja lülitab `shuffle: false`** seal, kus järjekord ise kannab tähendust:
+  arvud kasvavas reas (15°, 30°, 60°) või „kõik eelnevad" viimasel real.
+- **Variandi `id` ei muutu kunagi** – vastus salvestab id, mitte positsiooni,
+  seega checker ja õpetaja koondvaade segamist ei näegi (CLAUDE.md reegel 11).
+
+Segamine on **patch-muudatus**: küsimus, õige vastus ega id ei muutu.
+
+### Arvuvariandid
+
+Arvküsimus võib olla MALL: tekstis on kohahoidja `{nurk}` ja iga variant annab
+sellele väärtuse koos oma õige vastusega.
+
+```ts
+{
+  kind: "numeric",
+  id: "practice-2",                       // igavene, üks kõigi variantide peale
+  prompt: "Kiir moodustab pinnaga {pinnanurk}° nurga. Kui suur on peegeldumisnurk?",
+  unit: "°",
+  tolerance: { mode: "absolute", value: 0.5 },
+  variants: [                             // vähemalt 2
+    { id: "p25", values: { pinnanurk: 25 }, answer: 65,
+      traps: [{ answer: 25, misconception: "nurk-pinna-suhtes", feedback: "…" }] },
+    { id: "p40", values: { pinnanurk: 40 }, answer: 50, traps: [/* … */] },
+  ],
+}
+```
+
+- **Vastus on kirjas, mitte arvutatud.** Valemit sisufaili ei panda – füüsika
+  elab `model.ts`-is (CLAUDE.md reegel 1). Iga variandi arvud loeb üle test,
+  kes küsib vastuse mudelilt (`tests/<moodul>.model.test.ts`).
+- **`answer` ja `variants` on teineteist välistavad.** Küsimusel on kas oma
+  vastus või variandid – kaks tõe allikat läheksid ühel päeval lahku.
+- **Lõksud käivad variandi juurde**, sest lõksuvastus sõltub antud arvust.
+- **Kohahoidjad peavad klappima.** Skeem nõuab, et iga variant katab täpselt
+  need nimed, mis tekstis (ka vihjetes) on – ja et kohahoidjaga küsimusel on
+  variandid olemas. Muidu jõuaks õpilase ekraanile tekst „{pinnanurk}°".
+- **Variandi `id` on igavene** (CLAUDE.md reegel 11): ta salvestub vastuse
+  juurde (`payload.variantId`), sest „55" on õige ühe variandi ja vale teise
+  juures. Õpetaja koondvaade loeb variandi sealt.
+- **Vastatud küsimus ei loosi uuesti.** Loos käib loendi indeksi järgi, seega
+  uus variant nihutaks sama seemne mujale. Engine annab salvestatud variandile
+  eesõiguse: kui õpilane on juba vastanud, jääb ekraanile TEMA ülesanne, ka
+  siis kui moodul vahepeal uueneb. Eemaldatud variandi puhul ei ole midagi
+  taastada – siis loetakse vana vastus selle küsimuse jaoks olematuks.
+- **Lõks ei tohi mahtuda õige vastuse tolerantsi sisse.** Checker vaatab enne
+  õigsust ja alles siis lõkse – nii lähedane lõks ei jõuaks kunagi tööle.
+- **Versioon kolme sammuna** (vt „Versioonimine"):
+
+| Mida sa teed | Versioon |
+|---|---|
+| küsimus saab ESIMEST korda variandid (`answer` → `variants`) | **major** – õige vastus sõltub nüüd loosist |
+| uus variant olemasolevate kõrvale | **minor** – vanad vastused jäävad kehtima, nende variant on salvestatud |
+| olemasoleva variandi arv või vastus muutub; variant eemaldatakse | **major** – vana `is_correct` ei ole enam võrreldav |
 
 ## activities.ts – kordamiskaardid
 

@@ -178,6 +178,160 @@ describe("küsimused", () => {
   });
 });
 
+/**
+ * Arvuvariandid (docs/MOODULILEPING.md „Juhuslikkus").
+ *
+ * Iga siinne reegel valvab viga, mida BRAUSERIS ei paistaks: kohahoidja
+ * jõuaks õpilase ekraanile tekstina, variandi vastus jääks vaikselt
+ * kasutamata või kaks tõe allikat läheksid lahku. Skeemi jooksutab ainult
+ * test (src/engine/contract.ts), seega on see siin ainus valvur.
+ */
+describe("arvküsimuse variandid", () => {
+  const numericStep = (question: Record<string, unknown>) => ({
+    type: "practice",
+    id: "practice-1",
+    title: "Harjuta",
+    questions: [
+      {
+        kind: "numeric",
+        id: "practice-1",
+        unit: "°",
+        tolerance: { mode: "absolute", value: 0.5 },
+        ...question,
+      },
+    ],
+  });
+
+  const twoVariants = [
+    { id: "p35", values: { pinnanurk: 35 }, answer: 55 },
+    { id: "p20", values: { pinnanurk: 20 }, answer: 70 },
+  ];
+  const templatePrompt = "Kiir moodustab pinnaga {pinnanurk}° nurga. Kui suur on nurk?";
+
+  it("võtab vastu korras variantküsimuse", () => {
+    expect(() =>
+      stepSchema.parse(numericStep({ prompt: templatePrompt, variants: twoVariants })),
+    ).not.toThrow();
+  });
+
+  it("nõuab kas vastust või variante", () => {
+    expect(() => stepSchema.parse(numericStep({ prompt: "Kui suur on nurk?" }))).toThrow();
+  });
+
+  it("ei luba korraga oma vastust ja variante", () => {
+    expect(() =>
+      stepSchema.parse(
+        numericStep({ prompt: templatePrompt, answer: 55, variants: twoVariants }),
+      ),
+    ).toThrow();
+  });
+
+  it("ei luba lõkse küsimuse juures, kui variandid on olemas", () => {
+    expect(() =>
+      stepSchema.parse(
+        numericStep({
+          prompt: templatePrompt,
+          variants: twoVariants,
+          traps: [{ answer: 35, misconception: "nurk-pinna-suhtes", feedback: "Ei." }],
+        }),
+      ),
+    ).toThrow();
+  });
+
+  it("ei luba kohahoidjat ilma variantideta", () => {
+    // Muidu näeks õpilane ekraanil teksti „{pinnanurk}°".
+    expect(() =>
+      stepSchema.parse(numericStep({ prompt: templatePrompt, answer: 55 })),
+    ).toThrow();
+  });
+
+  it("nõuab variantidega küsimuselt vähemalt üht kohahoidjat", () => {
+    expect(() =>
+      stepSchema.parse(numericStep({ prompt: "Kui suur on nurk?", variants: twoVariants })),
+    ).toThrow();
+  });
+
+  it("nõuab igalt variandilt väärtust igale kohahoidjale", () => {
+    // Väärtused on tühjad, mitte „vale nimega": nii kukub test AINULT puuduva
+    // kohahoidja pärast (CodeRabbiti ülevaatuse leid 2026-08-04).
+    expect(() =>
+      stepSchema.parse(
+        numericStep({
+          prompt: templatePrompt,
+          variants: [twoVariants[0], { id: "p20", values: {}, answer: 70 }],
+        }),
+      ),
+    ).toThrow();
+  });
+
+  it("ei luba väärtust, mida ükski kohahoidja ei kasuta", () => {
+    expect(() =>
+      stepSchema.parse(
+        numericStep({
+          prompt: templatePrompt,
+          variants: [
+            twoVariants[0],
+            { id: "p20", values: { pinnanurk: 20, lisa: 5 }, answer: 70 },
+          ],
+        }),
+      ),
+    ).toThrow();
+  });
+
+  it("ei luba kaht sama id-ga varianti", () => {
+    // Variandi id salvestub vastuse juurde – kaks sama id-ga varianti
+    // tähendaks õpetaja koondvaates kaht eri ülesannet ühe sildi all.
+    expect(() =>
+      stepSchema.parse(
+        numericStep({
+          prompt: templatePrompt,
+          variants: [twoVariants[0], { ...twoVariants[1], id: "p35" }],
+        }),
+      ),
+    ).toThrow();
+  });
+
+  it("nõuab vähemalt kaht varianti", () => {
+    expect(() =>
+      stepSchema.parse(numericStep({ prompt: templatePrompt, variants: [twoVariants[0]] })),
+    ).toThrow();
+  });
+
+  it("ei luba lõksu, mis mahub õige vastuse tolerantsi sisse", () => {
+    // Checker vaatab enne õiget vastust ja alles siis lõkse: sellise lõksuni
+    // ta ei jõuaks kunagi ja väärarusaama tagasiside jääks andmata.
+    expect(() =>
+      stepSchema.parse(
+        numericStep({
+          prompt: templatePrompt,
+          variants: [
+            {
+              id: "p35",
+              values: { pinnanurk: 35 },
+              answer: 55,
+              traps: [{ answer: 55.2, misconception: "nurk-pinna-suhtes", feedback: "Ei." }],
+            },
+            twoVariants[1],
+          ],
+        }),
+      ),
+    ).toThrow();
+  });
+
+  it("nõuab vihjelt sama katet mis küsimuselt", () => {
+    // Vihje on samuti õpilase ekraanil – tema kohahoidja peab olema kaetud.
+    expect(() =>
+      stepSchema.parse(
+        numericStep({
+          prompt: templatePrompt,
+          hints: ["Sinu nurk on {muunurk}°."],
+          variants: twoVariants,
+        }),
+      ),
+    ).toThrow();
+  });
+});
+
 describe("sammutüüpide register", () => {
   it("iga registri tüüp on ka sammu skeemis", () => {
     // Kui lisad tüübi stepSchemas-i, aga unustad stepSchema loendist, ei

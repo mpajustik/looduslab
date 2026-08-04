@@ -904,7 +904,7 @@ build` genereerib `activities-*.js` ja `Simulation-*.js` eraldi chunkidena.
       (2026-08-04, kasutaja katsetas ise)
 - [x] Paranda kolm kõige suuremat konarust (igaüks eraldi commit)
 
-Leitud konarusi oli üheksa. Parandatud kuue commit'iga:
+Leitud konarusi oli üheksa. Parandatud seitsme commit'iga:
 
 1. **Pooleli vastus kadus sammu vahetusel** – selgitust kirjutades ja
    mõõtmisi üle vaatamas käies kadus kirjutatu. Sama viga oli ka pooleli
@@ -915,10 +915,65 @@ Leitud konarusi oli üheksa. Parandatud kuue commit'iga:
 3. **Neli joonist** (`figures.tsx`, uus valikuline kuues moodulifail):
    mõistejoonis, sile pind vs mattpind, Mari taskulambiga, periskoop.
 
-**Lahtised leiud (järgmisesse sessiooni):** arvude ja valikvastuste
-järjekorra juhuslikkus kordamisel. See on riskisamm (checker + leping):
-küsimuse arvväärtus peab muutuma parameetriks ja vastus salvestama, MILLINE
-variant õpilasel oli – muidu ei tea õpetaja koondvaade, millele vastati.
+4. **Arvude ja valikvastuste juhuslikkus kordamisel** (riskisamm: checker +
+   leping + engine). Uus fail `src/engine/resolve.ts` valib enne ekraanile
+   andmist valikvastuste järjekorra ja arvküsimuse variandi. Kasutaja otsused
+   (2026-08-04):
+
+   - **Loos vahetub ainult „Alusta uuesti" peale.** Seeme tuleb moodulikäigu
+     algusajast (`startedAt`), mis on juba salvestatud – uut välja ega hiljem
+     uut veergu vaja ei ole. Lehe värskendamine, sammude vahel liikumine ega
+     järgmisel päeval jätkamine ei vaheta küsimust. See oli tähtsaim otsus:
+     keset käiku muutuv arv tähendaks, et õpilane vastab ühele küsimusele ja
+     checker kontrollib teist.
+   - **Segamine on vaikimisi sees**, `shuffle: false` lülitab välja. Moodulis
+     ainult predict-1 (variandid 15°, 30°, 60° on kasvavas reas).
+   - **Variandid neljal arvküsimusel:** precheck-2, practice-1, practice-2,
+     exit-2 (igal neli varianti). Explore-sammu ülesanded jäid puutumata –
+     nende arv on seotud liuguri ja ekraanil nähtavaga.
+
+   Lepingu pool: `prompt` on mall (`{pinnanurk}`), variant annab väärtused +
+   oma `answer` ja oma lõksud. Valem sisufaili EI läinud (reegel 1) – variandi
+   arvud loeb üle test, kes küsib vastuse `model.ts`-ilt. Vastuse juurde
+   salvestub `payload.variantId`, muidu ei tea õpetaja koondvaade, millele
+   vastati („55" on õige ühe variandi ja vale teise juures). Moodul 2.0.0 –
+   major, sest õige vastus sõltub nüüd loosist.
+
+   Kaks kohta, kus valvab test, mitte brauser: kohahoidja ilma variantideta
+   (jõuaks ekraanile tekstina „{pinnanurk}°") ja variant, mille arvud ei käi
+   mudeliga kokku.
+
+   **Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-04).** Riskisamm, seega
+   mõlemad. Codex: 1 päris viga + 1 stiiliküsimus; CodeRabbit: 5 leidu.
+   Kaks leidu langesid kokku.
+
+   - *Päris viga (Codex, parandatud):* loos käis variantide loendi INDEKSI
+     järgi. Uue variandi lisamine (minor!) oleks nihutanud sama seemne teise
+     variandi peale ja õpilase juba antud vastus oleks rippunud teise arvuga
+     küsimuse küljes – ekraanile ilmuks punane rist ülesande eest, mida ta ei
+     näinudki. Nüüd võidab salvestatud `variantId` alati loosi
+     (`resolveSteps(steps, seed, answeredVariants)`); eemaldatud variandi
+     puhul jäetakse vana vastus selle küsimuse jaoks kõrvale
+     (`answersForCurrentVariants`). Test „ilma paranduseta NIHKUKS loos"
+     hoiab ohtu nähtavana.
+   - *Päris viga (CodeRabbit, parandatud):* `String(5e-7)` annab „5e-7", seega
+     teadusliku kuju arv oleks küsimuses ümardunud nulliks. Valguse
+     lainepikkus on optikamoodulis päris võimalik arv – nüüd loeb
+     `decimalsOf` eksponendi välja.
+   - *Päris viga (CodeRabbit, parandatud):* lõks, mis mahub õige vastuse
+     tolerantsi sisse, ei jõua kunagi tööle (checker vaatab enne õigsust).
+     Skeem lükkab sellise nüüd tagasi.
+   - *Mõlema leid (parandatud):* moodulilepingu versioonireegel rääkis
+     variantide kohta iseendale vastu. Nüüd on kolmerealine tabel.
+   - *Väiksem parandus (CodeRabbit):* üks skeemitest kukkus kahel põhjusel
+     korraga – nüüd testib ta ainult puuduvat kohahoidjat.
+   - *Vale leid (CodeRabbit):* soovitas vihjetesti ümber kirjutada nii, et
+     vihjes on vähem kohahoidjaid kui küsimuses. See ON lubatud (vihje ei pea
+     kõiki arve kordama), seega soovitatud test oleks ise katki.
+   - *Minu enda leid (parandatud):* kohahoidja muster `{nurk}` oli kahes
+     failis eraldi kirjas – skeem oleks kontrollinud üht ja engine asendanud
+     teist. Nüüd üks fail (`src/engine/placeholders.ts`), sest zod ei tohi
+     jõuda brauseri bundle'isse (reegel 13).
 
 **Valmis, kui:** järgmine katsetaja läbib mooduli ilma sinu abita.
 

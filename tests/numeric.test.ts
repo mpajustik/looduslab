@@ -199,3 +199,29 @@ describe("checkNumericAnswer – imelikud sisendid", () => {
     expect(checkNumericAnswer(lengthQuestion, "   0,25   m   ").correct).toBe(true);
   });
 });
+
+describe("valimata variant", () => {
+  /**
+   * Variantidega küsimus, mis EI ole läbinud engine'i valikut
+   * (src/engine/resolve.ts) – õiget vastust ei ole veel olemas.
+   */
+  const unresolved: NumericQuestion = {
+    kind: "numeric",
+    id: "practice-5",
+    prompt: "Kiir moodustab pinnaga {pinnanurk}° nurga. Kui suur on nurk ristsirgest?",
+    unit: "°",
+    tolerance: { mode: "absolute", value: 0.5 },
+    variants: [
+      { id: "p35", values: { pinnanurk: 35 }, answer: 55 },
+      { id: "p20", values: { pinnanurk: 20 }, answer: 70 },
+    ],
+  };
+
+  it("ei hinda vastust, kui küsimusel ei ole õiget vastust", () => {
+    // See on MEIE viga (küsimus jõudis checkerini poolikuna), mitte õpilase
+    // oma – seega `null`, mitte `false`. Vale vastuse eest ei karistata
+    // kedagi, kelle küsimus jäi meie käe läbi valimata.
+    expect(checkNumericAnswer(unresolved, "55").correct).toBeNull();
+    expect(checkNumericAnswer(unresolved, "70").correct).toBeNull();
+  });
+});

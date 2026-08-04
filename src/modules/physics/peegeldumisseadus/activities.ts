@@ -90,27 +90,74 @@ const steps: Step[] = [
         ],
       },
       {
-        // Arvvastus koos lõksuga: 35° on nurk PINNA suhtes, õige vastus on
-        // 55° ristsirge suhtes (sisu/MOODUL-peegeldumisseadus.md, practice 3).
+        // Arvvastus koos lõksuga: antud nurk on PINNA suhtes, õige vastus
+        // ristsirge suhtes (sisu/MOODUL-peegeldumisseadus.md, practice 3).
+        // Neli varianti, et kordamisel ei saaks vastust pähe õppida – lõks
+        // käib variandi juurde, sest ta on alati just see antud arv.
         kind: "numeric",
         id: "precheck-2",
         prompt:
-          "Kiir langeb tasapeeglile nii, et moodustab peegli PINNAGA 35° nurga. Kui suur on peegeldumisnurk pinna ristsirge suhtes?",
+          "Kiir langeb tasapeeglile nii, et moodustab peegli PINNAGA {pinnanurk}° nurga. Kui suur on peegeldumisnurk pinna ristsirge suhtes?",
         hints: [
           "Kummast joonest mõõdetakse peegeldumisseaduse nurki?",
           "Ristsirge ja pinna vahel on 90°.",
         ],
-        answer: 55,
         unit: "°",
         // Tolerants peab olema positiivne (contractSchema) – 0,5° on siin
         // sisuliselt „täpne vastus", vt plaani lahtist küsimust sammu 1.4 all.
         tolerance: { mode: "absolute", value: 0.5 },
-        traps: [
+        variants: [
           {
-            answer: 35,
-            misconception: "nurk-pinna-suhtes",
-            feedback:
-              "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+            id: "p35",
+            values: { pinnanurk: 35 },
+            answer: 55,
+            traps: [
+              {
+                answer: 35,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
+          },
+          {
+            id: "p20",
+            values: { pinnanurk: 20 },
+            answer: 70,
+            traps: [
+              {
+                answer: 20,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
+          },
+          {
+            id: "p50",
+            values: { pinnanurk: 50 },
+            answer: 40,
+            traps: [
+              {
+                answer: 50,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
+          },
+          {
+            id: "p65",
+            values: { pinnanurk: 65 },
+            answer: 25,
+            traps: [
+              {
+                answer: 65,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
           },
         ],
       },
@@ -144,6 +191,10 @@ const steps: Step[] = [
         kind: "choice",
         id: "predict-1",
         prompt: "Kui suure nurga all ristsirge suhtes lahkub peegeldunud kiir?",
+        // Ainus küsimus, mille variandid EI lähe segamisse: arvud on kasvavas
+        // reas ja „sõltub materjalist" kuulub lõppu. Segatud kraadid näeksid
+        // välja nagu trükiviga (vt contractSchema `shuffle`).
+        shuffle: false,
         options: [
           { id: "15", text: "15°", correct: false },
           { id: "30", text: "30°", correct: true },
@@ -295,32 +346,87 @@ const steps: Step[] = [
         kind: "numeric",
         id: "practice-1",
         prompt:
-          "Nüüd sina: valguskiir langeb peeglile 25° nurga all pinna ristsirge suhtes. Kui suur on peegeldumisnurk?",
-        answer: 25,
+          "Nüüd sina: valguskiir langeb peeglile {nurk}° nurga all pinna ristsirge suhtes. Kui suur on peegeldumisnurk?",
         unit: "°",
         // Sama kokkulepe mis mujal: tolerants peab olema positiivne, seega
         // 0,5° tähendab siin „täpne vastus" (vt plaani samm 1.4).
         tolerance: { mode: "absolute", value: 0.5 },
+        // Ükski variant ei ole 40° – see on näidisülesande arv kohe ülalpool.
+        // Sama arv tähendaks, et vastuse saab maha kirjutada, mitte arvutada.
+        variants: [
+          { id: "n25", values: { nurk: 25 }, answer: 25 },
+          { id: "n35", values: { nurk: 35 }, answer: 35 },
+          { id: "n55", values: { nurk: 55 }, answer: 55 },
+          { id: "n70", values: { nurk: 70 }, answer: 70 },
+        ],
       },
       {
         // Lõksülesanne: nurk on antud PINNA, mitte ristsirge suhtes.
+        // Variandiarvud on teised kui precheck-2-l, et sama tunni sees ei
+        // korduks sama arv kaks korda (variandi loos on küsimuste vahel
+        // sõltumatu – vt src/engine/resolve.ts).
         kind: "numeric",
         id: "practice-2",
         prompt:
-          "Kiir langeb tasapeeglile nii, et moodustab peegli PINNAGA 35° nurga. Kui suur on peegeldumisnurk pinna ristsirge suhtes?",
+          "Kiir langeb tasapeeglile nii, et moodustab peegli PINNAGA {pinnanurk}° nurga. Kui suur on peegeldumisnurk pinna ristsirge suhtes?",
         hints: [
           "Kummast joonest mõõdetakse peegeldumisseaduse nurki?",
           "Ristsirge ja pinna vahel on 90°.",
         ],
-        answer: 55,
         unit: "°",
         tolerance: { mode: "absolute", value: 0.5 },
-        traps: [
+        variants: [
           {
-            answer: 35,
-            misconception: "nurk-pinna-suhtes",
-            feedback:
-              "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+            id: "p25",
+            values: { pinnanurk: 25 },
+            answer: 65,
+            traps: [
+              {
+                answer: 25,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
+          },
+          {
+            id: "p40",
+            values: { pinnanurk: 40 },
+            answer: 50,
+            traps: [
+              {
+                answer: 40,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
+          },
+          {
+            id: "p60",
+            values: { pinnanurk: 60 },
+            answer: 30,
+            traps: [
+              {
+                answer: 60,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
+          },
+          {
+            id: "p15",
+            values: { pinnanurk: 15 },
+            answer: 75,
+            traps: [
+              {
+                answer: 15,
+                misconception: "nurk-pinna-suhtes",
+                feedback:
+                  "See on nurk pinna suhtes. Nurki mõõdetakse pinna ristsirgest ja ristsirge ning pinna vahele jääb 90°.",
+              },
+            ],
           },
         ],
       },
@@ -388,10 +494,17 @@ const steps: Step[] = [
         kind: "numeric",
         id: "exit-2",
         prompt:
-          "Langemisnurk on 50° pinna ristsirge suhtes. Kui suur on peegeldumisnurk?",
-        answer: 50,
+          "Langemisnurk on {nurk}° pinna ristsirge suhtes. Kui suur on peegeldumisnurk?",
         unit: "°",
         tolerance: { mode: "absolute", value: 0.5 },
+        // Teised arvud kui practice-1-l: väljumispilet küsib sama oskust, aga
+        // ei tohi olla sama ülesanne, mille õpilane just lahendas.
+        variants: [
+          { id: "n20", values: { nurk: 20 }, answer: 20 },
+          { id: "n38", values: { nurk: 38 }, answer: 38 },
+          { id: "n50", values: { nurk: 50 }, answer: 50 },
+          { id: "n62", values: { nurk: 62 }, answer: 62 },
+        ],
       },
       {
         kind: "text",

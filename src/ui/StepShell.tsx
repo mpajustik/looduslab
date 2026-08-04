@@ -37,7 +37,7 @@ export function StepShell({
   moduleVersion,
   moduleTitle,
   moduleGoal,
-  steps,
+  steps: moduleSteps,
   mode = "persist",
   Simulation,
   figures,
@@ -78,7 +78,19 @@ export function StepShell({
    */
   summaryAction?: ReactNode;
 }) {
-  const progress = useModuleProgress({ moduleId, moduleVersion, steps, mode });
+  const progress = useModuleProgress({
+    moduleId,
+    moduleVersion,
+    steps: moduleSteps,
+    mode,
+  });
+  /**
+   * Sammud engine'ist, MITTE propsist: valikvastuste järjekord on selle
+   * moodulikäigu oma (src/engine/resolve.ts). Kui vaade joonistaks propsi ja
+   * salvestaks engine'i sammuga, vastaks õpilane ühele järjekorrale ja
+   * checker kontrolliks teist.
+   */
+  const steps = progress.steps;
   // Pooleli mustandid kaovad koos vastustega: teise moodulisse minnes või
   // „Alusta uuesti" järel (runId vahetub).
   const drafts = useDraftStore(`${moduleId}:${progress.runId}`);

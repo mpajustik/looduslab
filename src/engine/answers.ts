@@ -14,7 +14,22 @@ import { stepQuestions } from "./contract";
  * checkerini muutmata, sest just tema teab, kuidas koma ja ühikut lugeda
  * (CLAUDE.md reegel 3 – õigsust ei otsusta kunagi vaade).
  */
-export type AnswerPayload =
+export type AnswerPayload = AnswerValue & {
+  /**
+   * MILLISE variandiga küsimusele see vastus anti (`activities.ts` `variants`,
+   * valiku teeb src/engine/resolve.ts). Puudub, kui küsimusel variante ei ole.
+   *
+   * Ilma selleta ei tea õpetaja koondvaade, mille kohta vastus käib: „55" on
+   * õige 35-kraadise variandi juures ja vale 20-kraadise juures. Salvestuses
+   * elab ta `payload`-i sees, mitte omaette veerus – `responses.payload` on
+   * just selle jaoks jsonb (docs/ANDMEMUDEL.md „küsimuste struktuur muutub,
+   * tabel mitte").
+   */
+  variantId?: string;
+};
+
+/** Vastuse sisu liigi kaupa – see osa käib küsimuse `kind`-iga kokku. */
+type AnswerValue =
   | { kind: "numeric"; raw: string }
   | { kind: "choice"; optionIds: string[] }
   | { kind: "text"; text: string }

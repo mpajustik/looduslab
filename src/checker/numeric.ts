@@ -1,6 +1,6 @@
 import type { NumericQuestion } from "../engine/contract";
 import { maxDelta, parseRaw, readNumber, withinTolerance } from "./number";
-import type { CheckResult } from "./types";
+import { NOT_CHECKABLE, type CheckResult } from "./types";
 
 /**
  * Arvvastuse kontroll (CLAUDE.md reegel 3: õigsust ei otsusta kunagi vaade).
@@ -10,11 +10,18 @@ import type { CheckResult } from "./types";
  * käivad ./number.ts-is, mitte vaates. Sama lugemist kasutab mõõtetabeli
  * checker (./table.ts), et „2,5" tähendaks mõlemas kohas sama asja.
  *
- * Tulemuse kuju on ühine kõigi checkeritega (./types) – arvvastus jõuab
- * `correct: null`-ini ainult sissepääsu (./index) kaudu, siin on vastus alati
- * kas õige või vale.
+ * Tulemuse kuju on ühine kõigi checkeritega (./types). `correct: null` tuleb
+ * siit ainult siis, kui küsimusel EI OLE õiget vastust – see tähendab
+ * resolveerimata variantküsimust (vt allpool), mitte õpilase viga.
  */
 export function checkNumericAnswer(question: NumericQuestion, raw: string): CheckResult {
+  // Variantidega küsimusel elab vastus variandi sees ja engine valib variandi
+  // enne ekraanile andmist (src/engine/resolve.ts). Kui vastust siin ei ole,
+  // on küsimus meieni jõudnud resolveerimata – see on meie, mitte õpilase
+  // viga, seega EI HINDA (sama loogika mis NOT_CHECKABLE mujal). Vale vastuse
+  // eest ei tohi karistada kedagi, kelle küsimus jäi meie käe läbi poolikuks.
+  if (question.answer === undefined) return NOT_CHECKABLE;
+
   const expectedUnit = question.unit ?? "";
 
   // Kaks eri viga, kaks eri lauset: „ei ole arv" ja „vale ühik". Ühine

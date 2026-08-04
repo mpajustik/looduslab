@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { stepQuestions } from "../src/engine/contract";
 import { manifestSchema } from "../src/engine/contractSchema";
+import { activities } from "../src/modules/physics/peegeldumisseadus/activities";
 import { manifest } from "../src/modules/physics/peegeldumisseadus/manifest";
 import {
   angleFromNormal,
@@ -317,5 +319,66 @@ describe("manifest", () => {
   it("viitab ainekava õpitulemusele ja praktilisele tööle", () => {
     expect(manifest.outcomes).toContain("P1-T2");
     expect(manifest.practicalWork).toContain("P1-PT3");
+  });
+});
+
+/**
+ * Arvuvariantide füüsika (docs/MOODULILEPING.md „Juhuslikkus").
+ *
+ * `activities.ts` on ANDMED: variandi vastus on seal käsitsi kirjas, sest
+ * valem ei tohi elada sisufailis (CLAUDE.md reegel 1). Just seepärast peab
+ * keegi need arvud üle lugema – ja see keegi on siin test, kes küsib vastuse
+ * `model.ts`-ilt. Ilma selleta läheks üks näpuvea saanud variant tunnis
+ * õpilase peale välja.
+ */
+describe("arvuvariandid käivad mudeliga kokku", () => {
+  const variantsOf = (questionId: string) => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "numeric") {
+          return question.variants ?? [];
+        }
+      }
+    }
+    throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  // Kaks küsimust, kaks eri teekonda mudelis – seepärast eraldi loendid.
+  const fromSurface = ["precheck-2", "practice-2"];
+  const fromNormal = ["practice-1", "exit-2"];
+
+  it.each(fromSurface)("%s: vastus on pinnanurgast ristsirge suhtes", (questionId) => {
+    const variants = variantsOf(questionId);
+    expect(variants.length).toBeGreaterThanOrEqual(2);
+    for (const variant of variants) {
+      expect(variant.answer).toBeCloseTo(angleFromNormal(variant.values.pinnanurk), 6);
+    }
+  });
+
+  it.each(fromSurface)("%s: lõks on täpselt see arv, mis küsimuses anti", (questionId) => {
+    for (const variant of variantsOf(questionId)) {
+      const trap = variant.traps?.[0];
+      expect(trap?.answer).toBe(variant.values.pinnanurk);
+      expect(trap?.misconception).toBe("nurk-pinna-suhtes");
+      // 45° juures langeksid lõks ja õige vastus kokku – siis loeks checker
+      // õige vastuse väärarusaamaks. Ükski variant ei tohi sinna sattuda.
+      expect(trap?.answer).not.toBe(variant.answer);
+    }
+  });
+
+  it.each(fromNormal)("%s: peegeldumisnurk võrdub langemisnurgaga", (questionId) => {
+    const variants = variantsOf(questionId);
+    expect(variants.length).toBeGreaterThanOrEqual(2);
+    for (const variant of variants) {
+      expect(variant.answer).toBeCloseTo(reflectionAngle(variant.values.nurk), 6);
+    }
+  });
+
+  it("harjutuse variandid ei korda lahendatud näidise arvu", () => {
+    // Näidis lahendab 40° juhu lõpuni. Sama arv variandina tähendaks, et
+    // vastuse saab maha kirjutada, mitte arvutada.
+    for (const variant of variantsOf("practice-1")) {
+      expect(variant.values.nurk).not.toBe(40);
+    }
   });
 });

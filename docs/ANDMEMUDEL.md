@@ -77,7 +77,12 @@ peab seda mainima.
 
 Põhimõtted:
 
-- `payload` on jsonb – küsimuste struktuur muutub, tabel mitte
+- `payload` on jsonb – küsimuste struktuur muutub, tabel mitte. Siin elab ka
+  `variantId`: MILLISE arvuvariandiga küsimusele vastus anti
+  (docs/MOODULILEPING.md „Juhuslikkus"). Ilma selleta ei tähenda „55"
+  koondvaates midagi – ta on õige ühe variandi ja vale teise juures. Variant
+  ise loositakse `attempts.started_at` põhjal, seega uut veergu vaja ei ole:
+  sama käik = sama variant, „Alusta uuesti" = uus käik = uus loos
 - Ei kunagi: e-post (v.a õpetaja), sünniaeg, fotod, klassikood avatekstina
 - `modules` tabelisse kirjutab ainult sync-modules skript, mitte rakendus
 - `module_version` + `question_id` **`responses` rea enda küljes** (mitte

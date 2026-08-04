@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { maxDelta } from "../checker/number";
 import { stepQuestions } from "./contract";
+import { placeholdersIn } from "./placeholders";
 
 /**
  * Moodulilepingu skeem (docs/MOODULILEPING.md).
@@ -144,34 +146,172 @@ const toleranceSchema = z.strictObject({
   value: z.number().positive(),
 });
 
-const numericQuestionSchema = z.strictObject({
-  kind: z.literal("numeric"),
-  id: questionIdSchema,
-  prompt: nonEmpty("Küsimus"),
-  hints: hintsSchema.optional(),
-  /** Mooduli joonise silt – joonis ilmub küsimuse teksti ja vastuse vahele. */
-  figure: figureIdSchema.optional(),
-  /** Õige vastus arvuna, ühikus `unit`. */
+/**
+ * Lõksud: teadaolev VALE vastus, mis reedab kindla väärarusaama
+ * (nt nurk mõõdetuna pinna, mitte normaali suhtes). Checker (samm 1.4)
+ * annab siis üldise „vale" asemel just selle tagasiside.
+ */
+const trapsSchema = z
+  .array(
+    z.strictObject({
+      answer: z.number(),
+      misconception: nonEmpty("Väärarusaama silt"),
+      feedback: nonEmpty("Lõksu tagasiside"),
+    }),
+  )
+  .min(1);
+
+type NumericTraps = z.infer<typeof trapsSchema>;
+
+/**
+ * Variandi id on IGAVENE, nagu küsimuse oma: ta salvestub vastuse juurde
+ * (`AnswerPayload.variantId`), et õpetaja koondvaade teaks, MILLISELE
+ * küsimusele õpilane vastas. Ümber nimetatud variant lõhub vanad vastused.
+ */
+const variantIdSchema = z
+  .string()
+  .regex(
+    /^[a-z0-9]+(-[a-z0-9]+)*$/,
+    "Variandi id kuju on nagu v1 või suur-nurk",
+  );
+
+const placeholderKeySchema = z
+  .string()
+  .regex(/^[a-zA-Z][a-zA-Z0-9]*$/, "Kohahoidja nimi on kujul nagu nurk");
+
+/**
+ * Üks arvvariant: kohahoidjate väärtused + selle variandi õige vastus.
+ *
+ * Vastus on siin KIRJAS, mitte arvutatud: valemit `activities.ts`-i ei panda,
+ * sest füüsika elab ainult `model.ts`-is (CLAUDE.md reegel 1). Variandi arvud
+ * kontrollib üle test (tests/peegeldumisseadus.model.test.ts), mis küsib
+ * vastuse mudelilt.
+ */
+const numericVariantSchema = z.strictObject({
+  id: variantIdSchema,
+  /** Kohahoidja nimi → arv, mis läheb küsimuse teksti. */
+  values: z.record(placeholderKeySchema, z.number()),
+  /** Selle variandi õige vastus, ühikus `unit`. */
   answer: z.number(),
-  /** Nt "kPa", "°". Puudub, kui suurus on ühikuta. */
-  unit: z.string().min(1).optional(),
-  tolerance: toleranceSchema,
-  /**
-   * Lõksud: teadaolev VALE vastus, mis reedab kindla väärarusaama
-   * (nt nurk mõõdetuna pinna, mitte normaali suhtes). Checker (samm 1.4)
-   * annab siis üldise „vale" asemel just selle tagasiside.
-   */
-  traps: z
-    .array(
-      z.strictObject({
-        answer: z.number(),
-        misconception: nonEmpty("Väärarusaama silt"),
-        feedback: nonEmpty("Lõksu tagasiside"),
-      }),
-    )
-    .min(1)
-    .optional(),
+  /** Lõks käib variandi juurde: vale vastus sõltub antud arvust. */
+  traps: trapsSchema.optional(),
 });
+
+const numericQuestionSchema = z
+  .strictObject({
+    kind: z.literal("numeric"),
+    id: questionIdSchema,
+    prompt: nonEmpty("Küsimus"),
+    hints: hintsSchema.optional(),
+    /** Mooduli joonise silt – joonis ilmub küsimuse teksti ja vastuse vahele. */
+    figure: figureIdSchema.optional(),
+    /** Õige vastus arvuna, ühikus `unit`. Variantidega küsimusel on ta variandi sees. */
+    answer: z.number().optional(),
+    /** Nt "kPa", "°". Puudub, kui suurus on ühikuta. */
+    unit: z.string().min(1).optional(),
+    tolerance: toleranceSchema,
+    traps: trapsSchema.optional(),
+    /**
+     * Arvuvariandid: sama küsimus eri arvudega (docs/MOODULILEPING.md
+     * „Juhuslikkus"). Kui nad on olemas, on `prompt` mall (`{nurk}`) ja
+     * õige vastus elab variandi sees – engine valib ühe variandi
+     * moodulikäigu alguses (src/engine/resolve.ts).
+     */
+    variants: z.array(numericVariantSchema).min(2).optional(),
+  })
+  .superRefine((question, ctx) => {
+    const placeholders = placeholdersIn([question.prompt, ...(question.hints ?? [])]);
+
+    // Lõks, mis mahub tolerantsi sisse, ei saa KUNAGI tööle: checker vaatab
+    // enne, kas vastus on õige, ja alles siis lõkse (src/checker/numeric.ts).
+    // Õpilane saaks „Õige!" ja väärarusaama tagasiside jääks igaveseks
+    // andmata – vaikne auk, mida brauseris ei paista (CodeRabbit 2026-08-04).
+    const checkTraps = (answer: number, traps: NumericTraps | undefined, where: string) => {
+      const delta = maxDelta(answer, question.tolerance);
+      for (const trap of traps ?? []) {
+        if (Math.abs(trap.answer - answer) <= delta) {
+          ctx.addIssue({
+            code: "custom",
+            message: `${where}: lõks ${trap.answer} mahub õige vastuse ${answer} tolerantsi sisse – checker ei jõuaks temani kunagi`,
+          });
+        }
+      }
+    };
+
+    if (!question.variants) {
+      if (question.answer !== undefined) {
+        checkTraps(question.answer, question.traps, "Küsimus");
+      }
+    } else {
+      for (const variant of question.variants) {
+        checkTraps(variant.answer, variant.traps, `Variant "${variant.id}"`);
+      }
+    }
+
+    if (!question.variants) {
+      if (question.answer === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Arvküsimusel peab olema kas `answer` või `variants`",
+        });
+      }
+      // Kohahoidja ilma variantideta jõuaks õpilase ekraanile TEKSTINA
+      // („Sea langemisnurk {nurk}°") – seda ei paneks keegi enne tundi tähele.
+      for (const name of placeholders) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Küsimuses on kohahoidja "{${name}}", aga variante ei ole – kohahoidja jõuaks nii õpilase ekraanile`,
+        });
+      }
+      return;
+    }
+
+    // Variandid ANNAVAD vastuse. Kaks tõe allikat tähendaks, et keegi peab
+    // meeles pidama, kumb võidab – ja ühel päeval peab valesti.
+    if (question.answer !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Variantidega küsimusel ei ole oma `answer`-it – vastus on variandi sees",
+      });
+    }
+    if (question.traps) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Variantidega küsimusel käivad lõksud variandi juurde, mitte küsimuse juurde",
+      });
+    }
+    if (placeholders.size === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Variantidega küsimuse tekstis peab olema vähemalt üks kohahoidja, nt {nurk} – muidu näeksid kõik variandid ühesugused välja",
+      });
+    }
+    for (const id of duplicates(question.variants.map((variant) => variant.id))) {
+      ctx.addIssue({ code: "custom", message: `Variandi id "${id}" kordub` });
+    }
+    // Iga variant peab katma TÄPSELT need kohahoidjad, mis tekstis on: puuduv
+    // väärtus jätaks ekraanile „{nurk}", üleliigne oleks vaikselt kasutamata.
+    for (const variant of question.variants) {
+      const keys = new Set(Object.keys(variant.values));
+      for (const name of placeholders) {
+        if (!keys.has(name)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Variandil "${variant.id}" puudub väärtus kohahoidjale "{${name}}"`,
+          });
+        }
+      }
+      for (const key of keys) {
+        if (!placeholders.has(key)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Variandi "${variant.id}" väärtust "${key}" ei kasuta ükski kohahoidja`,
+          });
+        }
+      }
+    }
+  });
 
 const choiceOptionSchema = z.strictObject({
   id: z
@@ -194,6 +334,16 @@ const choiceQuestionSchema = z
     options: z.array(choiceOptionSchema).min(2),
     /** true = mitu õiget vastust. Puudu või false = täpselt üks õige. */
     multiple: z.boolean().optional(),
+    /**
+     * false = variandid jäävad autori järjekorda. Puudu või true = engine
+     * segab nad iga moodulikäigu alguses (src/engine/resolve.ts).
+     *
+     * Segamine on VAIKIMISI sees, sest kordamisel jääb meelde järjekord, mitte
+     * sisu (katsetus 2026-08-04). Välja lülita seal, kus järjekord ise kannab
+     * tähendust: arvud kasvavas reas (15°, 30°, 60°) või „kõik eelnevad",
+     * mis peab jääma viimaseks.
+     */
+    shuffle: z.boolean().optional(),
   })
   .refine(
     (question) =>

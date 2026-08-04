@@ -141,9 +141,25 @@ export function withCompleted(progress: ModuleProgress, now?: Date): ModuleProgr
  */
 export function withAnswer(
   progress: ModuleProgress,
-  args: { step: Step; questionId: string; payload: AnswerPayload; now?: Date },
+  args: {
+    step: Step;
+    questionId: string;
+    payload: AnswerPayload;
+    /**
+     * Valitud arvuvariandi id (src/engine/resolve.ts). Ta tuleb engine'ist,
+     * MITTE vaatest: vaade näeb ainult valmis küsimust ja ei tea, mitmes
+     * variant see oli.
+     */
+    variantId?: string;
+    now?: Date;
+  },
 ): ModuleProgress {
-  const { step, questionId, payload } = args;
+  const { step, questionId } = args;
+  // Variant käib vastuse juurde, mitte küsimuse juurde: küsimus muutub
+  // järgmise moodulikäiguga, vastus jääb.
+  const payload = args.variantId
+    ? { ...args.payload, variantId: args.variantId }
+    : args.payload;
   const question = stepQuestions(step).find((item) => item.id === questionId);
 
   // Küsimust ei ole selles sammus – see on meie, mitte õpilase viga. Vastus
@@ -345,6 +361,9 @@ function isStoredResponse(value: unknown): value is StoredResponse {
 
 function isAnswerPayload(value: unknown): value is AnswerPayload {
   if (!isRecord(value)) return false;
+  // Variant on valikuline (vanad vastused ja variantideta küsimused), aga kui
+  // ta on, peab ta olema silt – mitte arv ega objekt.
+  if (value.variantId !== undefined && typeof value.variantId !== "string") return false;
   switch (value.kind) {
     case "numeric":
       return typeof value.raw === "string";
