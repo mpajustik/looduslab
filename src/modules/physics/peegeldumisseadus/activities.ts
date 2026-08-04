@@ -1,24 +1,16 @@
-import { Link, useSearchParams } from "react-router";
-import { ArrowRight } from "lucide-react";
-import type { Step } from "../../engine/contract";
-import { Simulation } from "../../modules/physics/peegeldumisseadus/Simulation";
-import { buttonClasses } from "../../ui/buttonStyles";
-import { StepShell } from "../../ui/StepShell";
+import { defineActivities } from "../../../engine/contract";
+import type { ReviewCard, Step } from "../../../engine/contract";
 
 /**
- * Arendusdemo (/m/test) – ainult raami katsumiseks.
+ * Sammud ja kordamiskaardid (docs/MOODULILEPING.md, sisu/MOODUL-peegeldumisseadus.md).
  *
- * See EI ole päris moodul: ta ei ole registris ega kursusefailis ja
- * marsruut on App.tsx-is `import.meta.env.DEV` taga, seega toodangu buildi
- * ta ei jõua. Päris moodul tuleb sammus 1.13.
- *
- * `Simulation` on siin imporditud otse (see leht on app-kihis, mitte ui-s –
- * docs/ARHITEKTUUR.md lubab appil moodulitest teada). Päris moodulis annab
- * sama komponendi StepShellile ModulePage, kui ta registrist mooduli laadib
- * (samm 1.13). /sim-test arendusleht (samm 1.8) kadus siit samm 1.9 –
- * simulatsiooni saab nüüd katsuda otse explore-sammu sees.
+ * Sisu on pärit sammuraami arendusdemost (endine StepDemoPage, sammud
+ * 1.9–1.12), kus see juba läbis kaks ülevaatusringi (CodeRabbit + Codex) ja
+ * telefonis katsetuse. Demo (`/m/test`) on samm 1.13 seisuga eemaldatud –
+ * päris moodul (`/m/peegeldumisseadus`) katab nüüd sama eesmärki, seega
+ * kahte kohta sama sisuga enam ei ole.
  */
-const DEMO_STEPS: Step[] = [
+const steps: Step[] = [
   {
     type: "theory",
     id: "theory-1",
@@ -373,33 +365,52 @@ const DEMO_STEPS: Step[] = [
   },
 ];
 
-export default function StepDemoPage() {
-  // `/m/test?eelvaade=1` – nii saab preview-režiimi (õpetaja „Vaata
-  // õpilasena", samm 2.14) käega katsuda juba enne, kui see marsruut olemas
-  // on: läbi tehtud moodul ei tohi jätta localStorage'i ühtegi jälge.
-  const [params] = useSearchParams();
-  const mode = params.has("eelvaade") ? "preview" : "persist";
+/**
+ * Kordamiskaardid (docs/MOODULILEPING.md „activities.ts – kordamiskaardid",
+ * sisu/MOODUL-peegeldumisseadus.md „Kordamiskaardid"). Kordamismootor
+ * valmib alles etapis 3 – kuni selleni ei loe neid keegi, aga nad on juba
+ * olemas, et moodulit hiljem uuesti lahti võtta ei peaks.
+ */
+const reviewCards: ReviewCard[] = [
+  {
+    id: "rc-1",
+    type: "concept",
+    question: "Millise joone suhtes mõõdetakse langemis- ja peegeldumisnurka?",
+    answer: "Pinna ristsirge suhtes",
+  },
+  {
+    id: "rc-2",
+    type: "calc",
+    question: "Langemisnurk on 35° ristsirge suhtes. Kui suur on peegeldumisnurk?",
+    answer: "35°",
+  },
+  {
+    id: "rc-3",
+    type: "calc",
+    question:
+      "Kiir moodustab peegli pinnaga 20° nurga. Kui suur on peegeldumisnurk ristsirge suhtes?",
+    answer: "70° (90° − 20°, sest nurgad mõõdetakse ristsirgest, mitte pinnast)",
+  },
+  {
+    id: "rc-4",
+    type: "explain",
+    question:
+      "Miks näeme matti seina igast suunast, aga peeglist ainult kindla nurga alt?",
+    answer:
+      "Matt pind hajutab valgust igas suunas (hajus peegeldumine); sile pind peegeldab korrapäraselt (peegelpeegeldus), seega jõuab kindel kujutis silma ainult ühest nurgast.",
+  },
+  {
+    id: "rc-5",
+    type: "transfer",
+    question: "Miks saadab helkur valguse tagasi täpselt sinna, kust see tuli?",
+    // Ülevaatuse leid (CodeRabbit, 2026-08-04): eelmine sõnastus võrdles
+    // helkurit ekslikult periskoobiga. Periskoobi kaks PARALLEELSET 45°
+    // peeglit säilitavad kiire algse suuna (ainult nihutavad kõrvale) –
+    // helkuri nurkpeegel (kaks peeglit TÄISNURGA all) pöörab kiire tagasi
+    // valgusallika poole. Erinev peeglipaigutus, erinev tulemus.
+    answer:
+      "Helkuris on nurkpeegel (kaks peeglit täisnurga all), mis peegeldab kiire alati tagasi täpselt sinna, kust see tuli – erinevalt periskoobi paralleelsetest peeglitest, mis säilitavad kiire suuna, aga nihutavad seda kõrvale.",
+  },
+];
 
-  return (
-    <StepShell
-      moduleId="demo"
-      // Demol ei ole manifesti – versioon on siin ainult selleks, et vastused
-      // saaksid oma versioonisildi (docs/ANDMEMUDEL.md).
-      moduleVersion="0.0.0"
-      moduleTitle="Näidistund (arendus)"
-      // Päris moodulil tuleb see manifest'ist (`goal`) – siin on sama lause
-      // käsitsi, et kokkuvõtteekraani saaks juba katsuda.
-      moduleGoal="Oskan ennustada, kuhu valguskiir peegeldub"
-      steps={DEMO_STEPS}
-      mode={mode}
-      Simulation={Simulation}
-      // Edasiviiv nupp tuleb app-kihist, sest ui ei tea marsruutidest.
-      summaryAction={
-        <Link to="/kursus" className={buttonClasses()}>
-          Tagasi kursuse juurde
-          <ArrowRight aria-hidden="true" className="size-5" />
-        </Link>
-      }
-    />
-  );
-}
+export const activities = defineActivities({ steps, reviewCards });

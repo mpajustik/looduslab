@@ -26,7 +26,10 @@ export const manifest = defineModule({
     "pinna ristsirge",
   ],
   practicalWork: ["P1-PT3"],
-  minutes: { demo: 10, lesson: 45, homework: 25 },
+  // lesson: 45 min spetsi järgi (sisu/MOODUL-peegeldumisseadus.md) + 6 min
+  // kolmele teooria-sammule (teacher.ts lessonPlan) – kasutaja otsustas
+  // (2026-08-04) need alles jätta, mitte kärpida.
+  minutes: { demo: 10, lesson: 51, homework: 25 },
   version: "1.0.0",
   status: "active",
 });

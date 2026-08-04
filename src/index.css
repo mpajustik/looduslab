@@ -49,6 +49,27 @@
     outline-offset: 2px;
   }
 
+  /* Ülariba on FIKSEERITUD (AppLayout `header`, `sticky top-0`) igas
+     vaates – ilma selle reata kerib brauser (Tab-fookus, `scrollIntoView`)
+     nupu riba ALLA, nii et nupp jääb peaaegu täielikult peidetuks ja
+     puudutus tabab tühja riba. Sama viga leiti sammu 1.13 telefonitestis
+     väljumispileti nupuga. ~53 px riba + väike varu. */
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+
+  /* Telefonis on alumine navigatsiooniriba FIKSEERITUD (AppLayout, `sm:hidden`
+     nav) ega mõjuta lehe kõrgust. Ilma selle reaata kerib brauser (Tab-fookus,
+     mobiilklaviatuuri fookus, `scrollIntoView`) nupu riba TAHA, nii et nupp
+     jääb nähtamatuks ja puudutus tabab hoopis navigatsiooni – täpselt see
+     juhtus sammu 1.13 telefonitestis predict-sammu "Esita vastus" nupuga.
+     6 rem kattub `AppLayout`-i `pb-24`-ga (sama „turvaline vahemaa"). */
+  @media (max-width: 639px) {
+    html {
+      scroll-padding-bottom: 6rem;
+    }
+  }
+
   /* Kes on liikumise välja lülitanud, ei näe meilt ühtegi animatsiooni. */
   @media (prefers-reduced-motion: reduce) {
     *,

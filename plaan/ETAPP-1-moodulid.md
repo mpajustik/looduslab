@@ -810,9 +810,92 @@ asju: CodeRabbit ülesande SISU, Codex koodi ja piire.
 > (src/content/fyysika-8.ts) plokki 1 – kursuseleht hakkab moodulit näitama;
 > /m/peegeldumisseadus avaneb laisalt laaditult.
 
-- [ ] Moodul on kursuselehelt leitav ja algusest lõpuni läbitav
-- [ ] reviewCards on failis olemas (keegi ei loe neid veel – see on ootuspärane)
-- [ ] Võrgusakis on näha, et mooduli kood laaditakse eraldi failina
+- [x] Moodul on kursuselehelt leitav ja algusest lõpuni läbitav
+      (brauseris läbitud algusest „Valmis!"-ekraanini, sh kokkuvõtte
+      õpieesmärk manifest'ist, 2026-08-03)
+- [x] reviewCards on failis olemas (keegi ei loe neid veel – see on ootuspärane)
+- [x] Võrgusakis on näha, et mooduli kood laaditakse eraldi failina
+      (activities-*.js ja Simulation-*.js eraldi chunkidena, kontrollitud
+      nii `npm run build` väljundist kui brauseri võrgusakist)
+
+**Otsused (2026-08-03):**
+
+- **`moduleRegistry` laadib manifest+activities, `moduleSimulations` laadib
+  `Simulation.tsx`-i eraldi `React.lazy`-ga** (samm 1.1 jäetud otsuse
+  täitmine – „vaata üle sammus 1.13"). ModulePage ei tea moodulitest
+  rohkem kui id ja slug; `<Suspense>` katab ainult explore-sammu, mitte
+  kogu lehte, et teooria/precheck sammud ei ootaks Simulation.tsx laadimist.
+- **Arendusdemo `/m/test` ja `StepDemoPage.tsx` on kustutatud.** Demo hoidis
+  ~350-realist koopiat samast sisust, mis nüüd elab `activities.ts`-is –
+  kaks kohta sama sisuga oleks tähendanud, et üks parandus unustatakse
+  teises. Päris moodul (`/m/peegeldumisseadus`) katab sama testimisvajaduse,
+  sh `?eelvaade=1` preview-režiimi jaoks.
+- **CoursePage laeb mooduli manifesti registrist, et näidata pealkirja
+  ja linki, mitte tooret id-d.** Ainult manifest+activities laetakse (mitte
+  Simulation.tsx, mis ei ole nende failide sees) – „kursuseleht vajab ainult
+  pealkirja" (samm 1.1 märkus) ei toonud kaasa rasket sõltuvust, seega ei
+  olnud vaja registrit veel kolmandaks lõigata.
+- **`ModulePage` jagab sünkroonse "vale slug" haru asünkroonsest
+  laadimisest.** `slugIndex.get(slug)` on registrist ehitatud Map – teada
+  KOHE, ilma efekti ega olekuta. Ainult päris mooduli laadimine (asünkroonne
+  `import()`) läheb `ModuleLoader` alamkomponenti, mis taastub `key={id}`
+  kaudu uue mooduli peal – React'i enda soovitatud muster „reset state on
+  prop change", mitte käsitsi nullimine efekti sees (viimane lõi ka
+  `react-hooks/set-state-in-effect` lindi viga).
+- **Telefonitestis leitud ja parandatud päris viga: fikseeritud ülariba ja
+  alumine navigatsioon ei jätnud `scroll-padding`-ut.** Kui brauser kerib
+  nupu vaatesse (nt `Tab`-fookus või sammu vahetuse fookus), maandus nupp
+  kas peaaegu täielikult peidetuna ülariba ALLA või alumise navigatsiooni
+  TAHA – väljumispileti "Esita vastus" ja predict-sammu oma mõlemad
+  tabasid seda. Parandus: `scroll-padding-top: 4.5rem` (kõigil vaadetel,
+  ülariba on alati fikseeritud) ja `scroll-padding-bottom: 6rem` telefonis
+  (`src/index.css`) – kattub `AppLayout`-i olemasoleva `pb-24` varuga.
+  See ei ole ainult automaatika viga: reaalne õpilane, kes vajutab
+  "Esita vastus" kohe pärast "Edasi" (fookus liigub, ekraan kerib), oleks
+  sama probleemi otsa jooksnud.
+- **teacher.ts on vabavormis (ei ole contract.ts tüüpi).** Moodulileping
+  nimetab faili sisu (juhend, väärarusaamad, aruteluküsimused), aga ei
+  defineeri zod-skeemi – TeacherPage (etapp 2) on veel tüvi, seega pole
+  praegu, mida valideerida. `misconceptions`-loend katab kõik
+  `activities.ts`-is päriselt kasutusel olevad `misconception` sildid
+  (5 tükki), et miski ei jääks õpetajale seletamata.
+
+**Ülevaatuse leiud (CodeRabbit, 2026-08-04).** Tavasamm (ei puuduta
+`model.ts`/`checker`/`engine`/migratsioone) – Codexit ei kutsutud.
+7 leidu, kolm päris viga sisus/koodis, üks päris viga jäi teadlikult
+tegemata, kaks väiksemat parandust, üks vale leid:
+
+- *Päris viga (sisus, oluline):* `rc-5` kordamiskaardi vastus väitis, et
+  helkur töötab "sama põhimõtte" järgi mis periskoobi kaks peeglit. Vale:
+  periskoobi PARALLEELSED 45° peeglid säilitavad kiire suuna (nihutavad
+  ainult kõrvale), helkuri nurkpeegel (peeglid TÄISNURGA all) pöörab kiire
+  tagasi valgusallika poole – erinev peeglipaigutus, erinev tulemus.
+  Parandatud: vastus kirjeldab nüüd erinevust, mitte väidetavat sarnasust.
+- *Päris viga (koodis, mõlemad):* `CoursePage.tsx` ja `ModulePage.tsx`
+  laadisid moodulit `.then()`-iga ilma `.catch`-ita. Katkine võrguühendus
+  (telefonis reaalne risk) oleks jätnud brauserisse käsitlemata
+  tagasilükke ja `ModulePage`-i IGAVESEKS "Laen tundi …" peale, ilma et
+  õpilane saaks midagi teha. Parandatud: mõlemad said `.catch`, `ModulePage`
+  ka nähtava veaoleku + "Proovi uuesti" nupuga (lehe taaslaadimine).
+- *Väiksem parandus:* `?eelvaade` kontrolliti `params.has(...)`-ga, seega
+  ka `?eelvaade=0` oleks lülitanud preview peale. Parandatud täpseks
+  võrdluseks `params.get("eelvaade") === "1"`.
+- *Väiksem parandus (sõnastus):* `nurk-pinna-suhtes` väärarusaama kirjeldus
+  ütles "annab 90° kraadi vale väärtuse", mis on ebatäpne (viga on
+  täiendnurga suurune, mitte fikseeritud 90°). Sõnastus täpsustatud.
+- *Päris viga, teadlikult parandamata koos otsusega laiendada, mitte
+  kärpida:* `teacher.ts` 45 min plaan ei arvestanud kolme teooria-sammuga,
+  mis moodulis PÄRISELT on (spetsifail neid ei nimeta – need lisandusid
+  StepShelli raami esimese demona sammus 1.2 ja jäid mooduli osaks).
+  Kasutaja otsustas need alles jätta ja mitte kärpida mujalt – lisatud
+  `lessonPlan`-i 6 min "teooria" rida ja tõstetud `manifest.ts` `minutes.lesson`
+  45 → 51.
+- *Vale leid:* soovitas eemaldada kõik muudatused plaanifailist. See ON
+  projekti töövoog (samad leiud tulid sammudes 1.6, 1.8, 1.11, 1.12) –
+  otsuste logi elab siin, mitte eraldi kanalis.
+
+Testid ja build minu käes rohelised pärast parandusi: 230 testi, `npm run
+build` genereerib `activities-*.js` ja `Simulation-*.js` eraldi chunkidena.
 
 ## 1.14 Katsetus päris kasutajaga
 

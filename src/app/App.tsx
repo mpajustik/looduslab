@@ -7,7 +7,6 @@ import ModulePage from "./pages/ModulePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProgressPage from "./pages/ProgressPage";
 import ReviewPage from "./pages/ReviewPage";
-import StepDemoPage from "./pages/StepDemoPage";
 import TeacherPage from "./pages/TeacherPage";
 
 /**
@@ -25,11 +24,9 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
             <Route path="kursus" element={<CoursePage />} />
-            {/* Ainult arenduses: sammuraami demo (samm 1.2). Täpne tee
-                võidab /m/:slug üle, seega päris moodulid ei kannata. */}
-            {import.meta.env.DEV && (
-              <Route path="m/test" element={<StepDemoPage />} />
-            )}
+            {/* Sammuraami arendusdemo (/m/test, sammud 1.2–1.12) on kadunud:
+                päris moodul (/m/peegeldumisseadus, samm 1.13) katab nüüd
+                sama eesmärki, sh preview't saab katsuda `?eelvaade=1`-ga. */}
             <Route path="m/:slug" element={<ModulePage />} />
             <Route path="kordamine" element={<ReviewPage />} />
             <Route path="edenemine" element={<ProgressPage />} />

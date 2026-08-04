@@ -11,14 +11,18 @@ import { defineCourse } from "./schema";
  * (sisu/AINEKAVA-fyysika-8.md). Pealkirjad on siin lühemad, sest need
  * loeb õpilane telefoniekraanilt; ainekava täispealkiri jääb ainekavva.
  *
- * Moodulite loendid on praegu tühjad – esimesed moodulid tulevad etapis 1.
+ * Moodulite loendid täituvad samm-sammult etapis 1 – esimene on
+ * "Valguse peegeldumine" (samm 1.13).
  */
 export const course = defineCourse({
   id: "fyysika-8",
   title: "8. klassi füüsika",
   blocks: [
     // P1. Valgus ja valguse sirgjooneline levimine. Peegeldumine ja neeldumine
-    { title: "Valgus ja peegeldumine", modules: [] },
+    {
+      title: "Valgus ja peegeldumine",
+      modules: ["physics.peegeldumisseadus"],
+    },
     // P2. Valguse murdumine
     { title: "Valguse murdumine", modules: [] },
     // P3. Liikumine ja jõud
