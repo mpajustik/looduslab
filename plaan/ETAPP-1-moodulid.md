@@ -983,7 +983,8 @@ Leitud konarusi oli üheksa. Parandatud seitsme commit'iga:
 
 Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
 
-- [ ] 1.15 model.ts + manifest + testid (kontrolli füüsika!)
+- [ ] 1.15 model.ts + manifest + testid (kontrolli füüsika!) – kood valmis
+      2026-08-04, ootab kasutaja füüsikakontrolli (vt „1.15 otsused" allpool)
 - [ ] 1.16 Simulation.tsx visuaal (andur, liugurid, vedelike valik)
 - [ ] 1.17 explore ülesanded + anuma kuju lisavaade
 - [ ] 1.18 hook + precheck + predict
@@ -999,6 +1000,51 @@ Codex, nagu moodulil 1.
 
 Kui mall vajas mooduli 2 juures muutmist: rakenda muudatus tagasi ka
 moodulile 1 (eraldi sessioon).
+
+### 1.15 otsused (2026-08-04)
+
+Viis eksporti: `pressure(ρ, h, g = 9.8)`, `depthFromPressure(p, ρ, g)`,
+`toKilopascals`, `metresFromCentimetres`, `LIQUID_DENSITIES`. 325 testi.
+
+- **Anuma kuju ei ole parameeter ja see on mooduli mõte.** Väärarusaam
+  `kuju-mojutab-rohku` ongi ootus, et siia käiks neljas argument. Kirjas
+  faili päises, et hilisem lugeja seda „ära ei parandaks".
+- **Õhurõhku ei liideta.** Spets ütleb „maini, ära süvene". Kogurõhk teeks
+  iga õpilase arvutuse 101 kPa võrra suuremaks kui see, mille ta valemist
+  saab.
+- **g = 9,8 vaikimisi, g = 10 lubatud tolerantsi kaudu** – ja seda VÄIDET
+  kontrollib test: vahe jääb kõigil mooduli sügavustel alla 2%, seega 5%
+  tolerants (samm 1.20) katab. Muidu oleks tolerantsi valik lootus, mitte
+  otsus.
+- **h = 0 lubatud, h < 0 viskab vea.** Null on graafiku nullpunkt (1.19),
+  mitte erijuht.
+- **`depthFromPressure` on mudelis**, sest harjutuse 1 näidislahendus
+  (29,4 kPa → 3,0 m) ja simulatsiooni ülesanne 3 (õli 1,0 m = vesi 0,9 m)
+  lähevad mõlemad seda teed – kumbki ei tuleta vastust omaette.
+- **Vedelike nimed jäid mudelist välja** – ainult tihedused. „Soolane vesi"
+  on UI-tekst ja läheb Simulation.tsx-i (1.16).
+- **`practicalWork: []`** – P5-PT3 (üleslükkejõud) on JÄRGMISE mooduli oma.
+  Vale kirje annaks katvusraportile (4.0) valeteate.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-04).** Riskisamm, seega
+mõlemad. Üks leid, mõlemal sama – ja see on kogu ülevaatuse mõte kirjas ühe
+näitena.
+
+- *Päris viga (mõlemad, parandatud):* lõplikest sisenditest võib tulla
+  lõpmatus. `pressure(1e308, 2)` läbib iga sisendikontrolli, aga korrutis
+  voolab üle `Infinity`-ks. Uus `assertFiniteResult` valvab tulemust.
+- *Kolmas juht, mille leidsin leidu kontrollides:* `depthFromPressure`-is
+  voolab üle NIMETAJA (ρ · g) ja siis kukub jagatis nulli – vastuseks tuleks
+  „0 m", arv arvu moodi, mida keegi kahtlustama ei hakkaks. Vaikne vale arv
+  on halvem kui `Infinity`, mille vähemalt märkab. Seepärast kontrollitakse
+  nimetajat eraldi. Leid oli õige suuremas ulatuses, kui ülevaataja ise
+  nägi – tasub iga leid ise läbi mängida, mitte ainult ära parandada.
+- Kõrvalisi muudatusi kumbki ei leidnud: ainult selle sammu kolm faili.
+- Codex ei saanud teste käivitada (keskkonna poliitika lükkas tagasi) –
+  testid jooksid minu käes.
+
+**Ootab:** kasutaja loeb `model.ts` ise läbi ja kinnitab füüsika, nagu
+sammus 1.7. Alles siis linnuke ja commit.
 
 ## 1.22 Etapi lõpukontroll
 
