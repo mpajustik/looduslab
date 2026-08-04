@@ -994,6 +994,9 @@ Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
 - [x] 1.19 collect (graafik – punktid langevad TÄPSELT sirgele, sim on
       ideaalne) + explain – läbitud telefonivaates (360 px) ja töölaual
       ajutise registrikirje kaudu (2026-08-04) – vt „1.19 otsused" allpool
+- [x] 1.19b hook/predict joonised (tamm, kolm anumat) + precheck'i
+      2-lauselised meeldetuletused – kasutaja tellitud lisandus pärast 1.19
+      läbimist, läbitud telefonivaates (360 px) ja töölaual (2026-08-04)
 - [ ] 1.20 practice + exit
 - [ ] 1.21 teacher.ts + reviewCards + registry.ts + kursusefaili plokk 5 +
       telefonis läbimine

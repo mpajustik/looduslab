@@ -96,6 +96,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
       })),
     ),
   },
+  // Moodul ise jõuab `moduleRegistry`-sse alles sammuga 1.21 (koos
+  // kursusefaili ja teacher.ts-iga). Joonised on siin juba nüüd, sest
+  // kaardil ei ole kõrvalmõju: teda loeb ainult ModulePage, kui see moodul
+  // päriselt avatakse. Registry.test.ts kontrollib silte alles siis, kui
+  // moodul on registris – seniks valvab neid mooduli enda test.
+  "physics.vedeliku-rohk": {
+    tamm: lazy(() =>
+      import("./physics/vedeliku-rohk/figures").then((module) => ({
+        default: module.DamFigure,
+      })),
+    ),
+    "kolm-anumat": lazy(() =>
+      import("./physics/vedeliku-rohk/figures").then((module) => ({
+        default: module.ThreeVesselsFigure,
+      })),
+    ),
+  },
 };
 
 /**

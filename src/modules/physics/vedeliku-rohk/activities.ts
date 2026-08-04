@@ -28,6 +28,8 @@ const steps: Step[] = [
     type: "hook",
     id: "hook-1",
     title: "Miks on tamm alt paksem kui üleval?",
+    // Joonis näitab müüri kuju, aga mitte põhjust – rõhunooli sellel ei ole.
+    figure: "tamm",
     body: [
       "Vaata suurt veetammi: selle müür on põhja juures palju paksem kui ülal veepinna lähedal. Miks ei ehitata tammi kogu ulatuses ühesuguse paksusega?",
       "Sama küsimus teistmoodi: kui sukeldud basseinis sügavamale, hakkavad kõrvad valutama ja tunned end „lukus“. Pinnal seistes seda ei juhtu.",
@@ -38,12 +40,21 @@ const steps: Step[] = [
     type: "precheck",
     id: "precheck-1",
     title: "Kontrolli, kas jäi meelde",
+    /**
+     * Meeldetuletused on VIHJETES, mitte sammu alguses (spets: „vale vastuse
+     * korral 2-lauseline meeldetuletus, mitte hinne"). Kui teooria oleks
+     * küsimuste ees, loeks õpilane vastuse sealt maha ja eelkontroll ei
+     * näitaks enam ei talle ega õpetajale, mis tal päriselt meeles oli.
+     * Vale vastuse peale saab ta selle sama teooria kohe kätte.
+     */
     questions: [
       {
         kind: "choice",
         id: "precheck-1",
         prompt: "Rõhk on defineeritud kui…",
-        hints: ["Rõhk näitab, kui palju jõudu mõjub igale pindala ühikule."],
+        hints: [
+          "Rõhk näitab, kui suur jõud mõjub igale pindalaühikule: p = F / S. Seepärast tungib sama jõuga surutud terav nael puitu, lame mündi serv aga mitte – väiksem pind annab suurema rõhu.",
+        ],
         options: [
           { id: "korda", text: "jõud korda pindala", correct: false },
           { id: "jagatud", text: "jõud jagatud pindalaga", correct: true },
@@ -62,7 +73,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "precheck-2",
         prompt: "Vee tihedus on ligikaudu…",
-        hints: ["1 liiter vett kaalub ligikaudu 1 kg."],
+        hints: [
+          "1 liiter vett kaalub ligikaudu 1 kg. Tihedus 1000 kg/m³ tähendab, et 1 kuupmeeter (1000 liitrit) vett kaalub 1000 kg.",
+        ],
         options: [
           { id: "sada", text: "100 kg/m³", correct: false, misconception: "vee-tihedus-vale" },
           { id: "tuhat", text: "1000 kg/m³", correct: true },
@@ -78,7 +91,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "precheck-3",
         prompt: "Ühik paskal (Pa) tähendab…",
-        hints: ["Pa on rõhu ühik: jõud pindalaühiku kohta."],
+        hints: [
+          "Pa on rõhu ühik: jõud pindalaühiku kohta. 1 njuuton, mis mõjub 1 ruutmeetrile, annab rõhu 1 Pa.",
+        ],
         options: [
           { id: "njm2", text: "1 N/m²", correct: true },
           {
@@ -109,6 +124,10 @@ const steps: Step[] = [
         kind: "choice",
         id: "predict-1",
         prompt: "Millises anumas on rõhk põhjas kõige suurem?",
+        // Kolm kuju korraga on raske peas hoida – joonis näitab neid kõrvuti
+        // ja ühise veetasemega. Rõhu väärtusi joonisel ei ole: need ütleksid
+        // ennustuse ette.
+        figure: "kolm-anumat",
         options: [
           {
             id: "kitsas",
