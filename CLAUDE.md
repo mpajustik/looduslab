@@ -175,7 +175,8 @@ tests/                        # model.ts ja checker'i testid
 - Moodulileping: docs/MOODULILEPING.md
 - Andmemudel ja RLS: docs/ANDMEMUDEL.md
 - Tokenikulu ja töökiirus: docs/TOKENIKULU.md (mõõdetud arvud – üks samm =
-  üks sessioon, ekraanipilt on lõppkontroll, kirjuta fail korraga valmis)
+  üks sessioon, ekraanipilt on lõppkontroll, brauser ainult visuaali-sammudel,
+  kirjuta fail korraga valmis)
 - Kursused ja sisu jagamine: docs/SISUHALDUS.md
 - Lisatooted ja ristmüük: docs/LISATOOTED.md (ristmüük AINULT õpetaja-alas,
   õpilasele ei turundata kunagi midagi)

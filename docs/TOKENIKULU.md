@@ -83,7 +83,49 @@ loetud, või oled samas sessioonis alustanud uut teemat.
   arvuga: test model.ts-i vastu või `evaluate_script`, mis tagastab arvu.
   Arv maksab 200 baiti, pilt 114 000.
 
-### 3. Kirjuta fail valmis, siis paranda
+### 3. Brauser on ainult visuaali-sammudel
+
+Claude Code'i enda kasutusraport näitas, et **42% ühe ööpäeva kulust tuli
+chrome-devtools MCP serverist**. See on rohkem, kui pildid üksi seletavad,
+ja põhjuseid on kaks:
+
+- **Server maksab ka siis, kui sa teda ei kasuta.** Kõigi tema tööriistade
+  kirjeldused laaditakse konteksti sessiooni alguses – ka mudeli- või
+  ülesandesammul, kus brauserit kordagi ei avata.
+- **Iga brauserikutse vastus jääb konteksti.** `take_snapshot` on 2 KB
+  kutse kohta (sammus 1.14 kokku 62 KB) ja neid koguneb märkamatult
+  kiiremini kui ekraanipilte.
+
+Reegel: brauser käib kaasa **ainult siis, kui samm puudutab visuaali**
+(Simulation.tsx, joonised, stiilid). Sammudel, mis muudavad model.ts-i,
+manifesti, activities.ts-i või dokumente, jäta ta välja.
+
+Väljajätmiseks lisa `.claude/settings.json`-i väli
+`disabledMcpjsonServers` – olemasolev `hooks` jääb alles:
+
+```json
+{
+  "hooks": { "PreToolUse": [ "...siin olev sisu jääb muutmata..." ] },
+  "disabledMcpjsonServers": ["chrome-devtools"]
+}
+```
+
+**Ära kopeeri seda plokki faili peale** – `hooks` sisu on siin lühendatud.
+Lisa failis olemasoleva `hooks`-i kõrvale ainult uus `disabledMcpjsonServers`
+rida ja pane eelmise rea lõppu koma.
+
+Visuaali-sammu alguses **kustuta see väli päriselt ära** – JSON ei luba
+kommentaare, seega väljakommenteeritud rida teeb kogu faili katki ja koos
+sellega ka ülevaatuse-hooki. Seejärel käivita Claude uuesti.
+
+`.mcp.json` ise jääb puutumata – see on ainsana serveri seadistuse allikas,
+`settings.json` ütleb ainult, kas server sellel sessioonil käivitatakse.
+
+Ja kui brauser on lahti: **eelista `evaluate_script`-i, mis tagastab arvu,
+`take_snapshot`-ile.** Kas nurk on õige või koordinaat klapib – seda ütleb
+arv 200 baidiga, hetktõmmis 2000-ga ja pilt 114 000-ga.
+
+### 4. Kirjuta fail valmis, siis paranda
 
 160 pisi-Edit'i ja 20 suuremat annavad sama lõpptulemuse, aga esimene
 maksab 8× rohkem. Ütle AI-le:
@@ -92,20 +134,20 @@ maksab 8× rohkem. Ütle AI-le:
 
 Uue faili puhul on Write (üks kutse) alati odavam kui Write + 20 Edit'i.
 
-### 4. Ütle „ütle plaan enne koodi" – aga ainult üks kord
+### 5. Ütle „ütle plaan enne koodi" – aga ainult üks kord
 
 TOOVOOG.md samm 3 („lase AI-l plaan öelda") on hea ja jääb. Aga kui plaan
 on kinnitatud, lase tal terve samm ära teha ilma vahepeal küsimata.
 Iga „kas ma jätkan?" küsimus on üks täiskonteksti kutse.
 
-### 5. Hoia plaanifail kärbituna
+### 6. Hoia plaanifail kärbituna
 
 `plaan/ETAPP-1-moodulid.md` on 1054 rida ja kasvab. Kui moodul on valmis,
 tõsta selle sammude detailid arhiivi (`plaan/ARHIIV-moodul-N.md`) ja jäta
 elavasse faili pealkiri + link. Elav plaanifail peaks kirjeldama ainult
 käimasolevat ja tulevast tööd.
 
-### 6. Jaga suured failid väiksemaks
+### 7. Jaga suured failid väiksemaks
 
 `figures.tsx` on 860 rida. Iga muudatus selles nõuab enne kogu faili
 lugemist. Kui üks moodul vajab mitut joonist, jaga need eraldi failidesse
