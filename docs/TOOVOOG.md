@@ -25,6 +25,8 @@ käib ja kuidas projekt kontrolli all hoida.
 5. **Testid ja build.** `npm run test && npm run build` – mõlemad rohelised.
 6. **Commit.** Lühike eestikeelne sõnum: mida ja miks.
 7. **Märgi samm tehtuks** plaanifailis (`- [x]`).
+8. **Tee `/clear`.** Uus samm = uus sessioon. Vana kontekst ei aita
+   järgmist sammu, aga maksab iga kutse juures edasi – vt docs/TOKENIKULU.md.
 
 ## Ülevaatus ja testimine (sammude 4–6 täpsustus)
 
