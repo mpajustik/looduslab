@@ -62,9 +62,15 @@ suhtes). Kuvatakse suurelt: langemisnurk ja peegeldumisnurk väärtustena.
 2. „Leia nurk, mille korral kiir peegeldub otse tagasi." (vastus: 0°)
 3. „Lülita sisse nurk pinna suhtes (lisavaade). Sea langemisnurk ristsirge
    suhtes 60°. Mitu kraadi on see pinna suhtes?" (30°)
+4. „Lülita sisse „Mattpind" sama nurga juures. Mis kiirtega juhtub?"
+   (valikvastus: kiired hajuvad, aga iga üksik kiir järgib ikka seadust)
 
-Lisalüliti (avaneb pärast ülesannet 2): „mattpind" – sama kiir mattpinnal
-hajub eri suundades (hajus peegeldumine), selgitustekst 2 lauset.
+Lisalüliti (avaneb pärast ülesannet 2): „mattpind" – eri kaldega mikropinnad
+peegeldavad sama langemissuunaga kiiri eri suundades. Iga kiir järgib
+peegeldumisseadust oma langemispunkti kohaliku ristsirge suhtes
+(hajus peegeldumine), selgitustekst 2 lauset. Ülesanne 4 on ainus koht,
+kus õpilane peab lülitit päriselt kasutama, mitte ainult nägema seda
+olemas olevat.
 
 ### 5. collect – andmete kogumine
 

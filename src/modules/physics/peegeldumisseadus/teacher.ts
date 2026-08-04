@@ -73,9 +73,16 @@ export const teacher = {
     {
       id: "ainult-peegel-peegeldab",
       description:
-        "Õpilane arvab, et ainult läikivad esemed (peeglid) peegeldavad valgust; matt pind justkui \"neelab\" kogu valguse.",
+        "Õpilane arvab, et ainult läikivad esemed (peeglid) peegeldavad valgust; mattpind justkui \"neelab\" kogu valguse.",
       remedy:
-        "Näita simulatsioonis mattpinna hajusat peegeldumist (explore-samm, lüliti avaneb pärast 2. ülesannet): miks me üldse esemeid näeme, kui mitte peegleid.",
+        "Näita simulatsioonis mattpinna hajusat peegeldumist (explore-4, lüliti avaneb pärast 2. ülesannet): miks me üldse esemeid näeme, kui mitte peegleid.",
+    },
+    {
+      id: "mattpind-uks-kiir",
+      description:
+        "Õpilane arvab, et mattpind peegeldab ikka üheks kindlaks kiireks nagu tasapeegel – ei mõista, et hajumine tähendab MITUT suunda korraga.",
+      remedy:
+        "Lülita simulatsioonis mattpind sisse-välja: tasapeeglil üks kindel kiir, mattpinnal kimp erinevates suundades (explore-4).",
     },
     {
       id: "nurk-kiirte-vahel",

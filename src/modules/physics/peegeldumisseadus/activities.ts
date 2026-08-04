@@ -26,7 +26,7 @@ const steps: Step[] = [
     title: "Peegeldumine",
     body: [
       "Kui valguskiir jõuab siledale pinnale, ei jää ta sinna pidama: ta põrkab tagasi. Seda nimetatakse peegeldumiseks.",
-      "Siledalt pinnalt (peegel, vaikne veepind) peegelduvad kõrvuti tulnud kiired korrapäraselt: nad jäävad ka pärast peegeldumist kõrvuti. Kare pind (paber, sein) saadab nad laiali eri suundadesse – seepärast näed peeglist oma nägu, seinast mitte.",
+      "Siledalt pinnalt (peegel, vaikne veepind) peegelduvad kõrvuti tulnud kiired korrapäraselt: nad jäävad ka pärast peegeldumist kõrvuti. Mattpind (paber, sein) saadab nad laiali eri suundadesse – seepärast näed peeglist oma nägu, seinast mitte.",
     ],
   },
   {
@@ -112,7 +112,7 @@ const steps: Step[] = [
         multiple: true,
         options: [
           { id: "sile", text: "Siledalt pinnalt peegelduvad kõrvuti kiired korrapäraselt", correct: true },
-          { id: "matt", text: "Kare pind saadab kiired laiali eri suundadesse", correct: true },
+          { id: "matt", text: "Mattpind saadab kiired laiali eri suundadesse", correct: true },
           {
             id: "ainult-peegel",
             text: "Ainult läikivad esemed peegeldavad valgust",
@@ -176,6 +176,33 @@ const steps: Step[] = [
         answer: 30,
         unit: "°",
         tolerance: { mode: "absolute", value: 1 },
+      },
+      {
+        // Ainus ülesanne, mis nõuab mattpinna lülitit – see avaneb ülesande 2
+        // järel, aga kuni selleni ei kasutanud teda ükski ülesanne (katsetus
+        // 2026-08-04).
+        kind: "choice",
+        id: "explore-4",
+        prompt: "Lülita sisse „Mattpind“ sama nurga juures. Mis kiirtega juhtub?",
+        options: [
+          {
+            id: "hajub-seaduse-jargi",
+            text: "Kiired hajuvad mitmes suunas, aga iga üksik kiir järgib ikka peegeldumisseadust",
+            correct: true,
+          },
+          {
+            id: "ei-peegeldu",
+            text: "Valgus ei peegeldu mattpinnalt, sest see pole peegel",
+            correct: false,
+            misconception: "ainult-peegel-peegeldab",
+          },
+          {
+            id: "uks-kiir",
+            text: "Tuleb tagasi ikka ainult üks kindel kiir, samamoodi nagu tasapeeglilt",
+            correct: false,
+            misconception: "mattpind-uks-kiir",
+          },
+        ],
       },
     ],
     simulation: {
@@ -397,7 +424,7 @@ const reviewCards: ReviewCard[] = [
     question:
       "Miks näeme matti seina igast suunast, aga peeglist ainult kindla nurga alt?",
     answer:
-      "Matt pind hajutab valgust igas suunas (hajus peegeldumine); sile pind peegeldab korrapäraselt (peegelpeegeldus), seega jõuab kindel kujutis silma ainult ühest nurgast.",
+      "Mattpind hajutab valgust igas suunas (hajus peegeldumine); sile pind peegeldab korrapäraselt (peegelpeegeldus), seega jõuab kindel kujutis silma ainult ühest nurgast.",
   },
   {
     id: "rc-5",
