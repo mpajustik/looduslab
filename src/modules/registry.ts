@@ -29,6 +29,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/peegeldumisseadus/manifest")).manifest,
     activities: (await import("./physics/peegeldumisseadus/activities")).activities,
   }),
+  "physics.vedeliku-rohk": async () => ({
+    manifest: (await import("./physics/vedeliku-rohk/manifest")).manifest,
+    activities: (await import("./physics/vedeliku-rohk/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -54,6 +58,11 @@ export const moduleSimulations: Record<
 > = {
   "physics.peegeldumisseadus": lazy(() =>
     import("./physics/peegeldumisseadus/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.vedeliku-rohk": lazy(() =>
+    import("./physics/vedeliku-rohk/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -96,11 +105,6 @@ export const moduleFigures: Record<string, ModuleFigures> = {
       })),
     ),
   },
-  // Moodul ise jõuab `moduleRegistry`-sse alles sammuga 1.21 (koos
-  // kursusefaili ja teacher.ts-iga). Joonised on siin juba nüüd, sest
-  // kaardil ei ole kõrvalmõju: teda loeb ainult ModulePage, kui see moodul
-  // päriselt avatakse. Registry.test.ts kontrollib silte alles siis, kui
-  // moodul on registris – seniks valvab neid mooduli enda test.
   "physics.vedeliku-rohk": {
     tamm: lazy(() =>
       import("./physics/vedeliku-rohk/figures").then((module) => ({

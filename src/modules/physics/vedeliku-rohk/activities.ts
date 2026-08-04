@@ -1,5 +1,5 @@
 import { defineActivities } from "../../../engine/contract";
-import type { Step } from "../../../engine/contract";
+import type { ReviewCard, Step } from "../../../engine/contract";
 import {
   depthFromPressure,
   LIQUID_DENSITIES,
@@ -33,6 +33,9 @@ const PRACTICE_AQUARIUM_40CM_KPA = toKilopascals(
 const PRACTICE_AQUARIUM_40CM_TRAP_KPA = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 40));
 const EXIT_WATER_1_5M_KPA = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 1.5));
 
+/** Kordamiskaardi rc-2 vastus – sama muster, mudelist mitte kirjutatud arvust. */
+const REVIEW_WATER_3M_KPA = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 3.0));
+
 /** Näidise sügavus (m) – tuletatud mudelist, mitte kirjutatud arvuna. */
 const WORKED_BASIN_DEPTH_M = depthFromPressure(29400, LIQUID_DENSITIES.vesi);
 
@@ -44,10 +47,9 @@ function comma(value: number, decimals: number): string {
 /**
  * Sammud (docs/MOODULILEPING.md, sisu/MOODUL-vedeliku-rohk.md).
  *
- * Sammud 1.18 (hook/precheck/predict), 1.19 (collect/explain) ja 1.20
- * (practice/exit) on tehtud. `reviewCards` jääb lahtiseks 1.21-ni
- * (teacher.ts kõrval) – enne seda ei impordi seda faili keegi (moodul ei ole
- * veel `registry.ts`-is), seega tühi loend praegu ei katkesta midagi.
+ * Sammud 1.18 (hook/precheck/predict), 1.19 (collect/explain), 1.20
+ * (practice/exit) ja 1.21 (reviewCards, koos teacher.ts ja registry.ts-iga)
+ * on tehtud.
  */
 const steps: Step[] = [
   {
@@ -508,4 +510,52 @@ const steps: Step[] = [
   },
 ];
 
-export const activities = defineActivities({ steps, reviewCards: [] });
+/**
+ * Kordamiskaardid (docs/MOODULILEPING.md „activities.ts – kordamiskaardid",
+ * sisu/MOODUL-vedeliku-rohk.md „Kordamiskaardid"). Kordamismootor valmib
+ * alles etapis 3 – kuni selleni ei loe neid keegi, aga nad on juba olemas,
+ * et moodulit hiljem uuesti lahti võtta ei peaks.
+ */
+const reviewCards: ReviewCard[] = [
+  {
+    id: "rc-1",
+    type: "concept",
+    question: "Millest sõltub rõhk vedelikus?",
+    answer:
+      "Sügavusest, vedeliku tihedusest ja raskuskiirendusest – EI sõltu anuma kujust ega vedeliku kogusest.",
+  },
+  {
+    id: "rc-2",
+    type: "calc",
+    question: "Kui suur on rõhk 3,0 m sügavusel vees?",
+    answer: `${comma(REVIEW_WATER_3M_KPA, 1)} kPa`,
+  },
+  {
+    id: "rc-3",
+    type: "graph",
+    question: "p(h) graafik on sirge, mis läbib nullpunkti. Mida see tähendab?",
+    answer: "Rõhk on sügavusega võrdeline (proportsionaalne) seos.",
+  },
+  {
+    id: "rc-4",
+    type: "explain",
+    question: "Miks on suure veetammi müür alt paksem kui üleval?",
+    answer:
+      "Sest rõhk kasvab sügavusega – põhja lähedal peab müür vastu pidama palju suuremale rõhule kui veepinna lähedal.",
+  },
+  {
+    id: "rc-5",
+    type: "calc",
+    question: "60 cm = ___ m; 9800 Pa = ___ kPa",
+    answer: "0,6 m; 9,8 kPa",
+  },
+  {
+    id: "rc-6",
+    type: "transfer",
+    question: "Kummas on 1 m sügavusel suurem rõhk – järvevees või merevees? Miks?",
+    answer:
+      "Merevees, sest soolane vesi on tihedam kui järvevesi – sama sügavuse juures annab suurem tihedus suurema rõhu (p = ρ·g·h).",
+  },
+];
+
+export const activities = defineActivities({ steps, reviewCards });

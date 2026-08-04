@@ -999,8 +999,9 @@ Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
       läbimist, läbitud telefonivaates (360 px) ja töölaual (2026-08-04)
 - [x] 1.20 practice + exit – läbitud telefonivaates (360 px) ja töölaual
       ajutise registrikirje kaudu (2026-08-04) – vt „1.20 otsused" allpool
-- [ ] 1.21 teacher.ts + reviewCards + registry.ts + kursusefaili plokk 5 +
-      telefonis läbimine
+- [x] 1.21 teacher.ts + reviewCards + registry.ts + kursusefaili plokk 5 –
+      läbitud telefonivaates (360 px) ja töölaual (2026-08-05, kasutaja
+      kinnitas) – vt „1.21 otsused" allpool
 
 **Riskisammud selles loendis:** 1.15 (füüsika `model.ts`-is) ja 1.19
 (graafiku ja tolerantsi loogika) – nende juures jookseb `/ulevaatus`-es ka
@@ -1165,6 +1166,29 @@ harjutuse 5 juurde (`figures.tsx` uus `BarrelHolesFigure`, `tunn-augud`).
   „see näitab kiirust" on põhjendus, mida küsimus otsib. Allkiri kirjutati
   ümber puhtalt kirjeldavaks: „Alumine juga ulatub kõige kaugemale seinast
   ja on kõige sirgem" (ilma tõlgenduseta).
+
+### 1.21 otsused (2026-08-05)
+
+- **6 kordamiskaarti spetsist üle võetud**, arvväärtus (rc-2) mudelist
+  tuletatud (`toKilopascals(pressure(...))`), mitte kirjutatud arvuna –
+  sama joon mis kõigil teistel selle mooduli õigetel vastustel.
+- **`teacher.ts` misconceptions-loend on täpselt 11 kirjet**, üks iga
+  `activities.ts` `misconception`-sildi kohta (mitte spetsi
+  „Väärarusaamad"-tabeli 6 rida) – kaks spetsi rida (`rohk-ainult-alla`,
+  `g-unustatud`) ei ole ühegi konkreetse vale vastuse küljes, seega jäid
+  välja, sama reegel mis peegeldumisseaduse moodulil (1.15).
+- **Tünnikatse „kaugeim juga" küsimus (spetsi „Õpetajale" osa) sai
+  hoiatava kommentaari** `teacher.ts`-is: see on lennuulatuse küsimus,
+  mida moodul EI õpeta (sama piir, mis practice-4 juures juba 1.20
+  otsustes) – õpetaja ei tohi lasta katsel tekitada muljet, et moodul
+  testib kaugust, mitte kiirust.
+- **`lessonPlan` summa on 45 min ilma teooria-sammuta** – erinevalt
+  peegeldumisseaduse moodulist ei alga see moodul teooriakonspektiga,
+  vaid otse hook'ist (1.18 otsus).
+
+**Ülevaatuse leiud (CodeRabbit, 2026-08-05).** Ei ole riskisamm (ainult
+`activities.ts`, `teacher.ts`, `registry.ts`, kursusefail – mitte
+`model.ts`/`checker`/`engine`), seega Codexit ei kutsutud. **0 leidu.**
 
 ## 1.22 Etapi lõpukontroll
 

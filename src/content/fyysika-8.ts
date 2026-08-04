@@ -30,7 +30,7 @@ export const course = defineCourse({
     // P4. Jõud looduses
     { title: "Jõud looduses", modules: [] },
     // P5. Rõhumisjõud ja rõhk. Rõhk ja üleslükkejõud vedelikes ja gaasides
-    { title: "Rõhk ja üleslükkejõud", modules: [] },
+    { title: "Rõhk ja üleslükkejõud", modules: ["physics.vedeliku-rohk"] },
     // P6. Mehaaniline töö, energia ja võimsus
     { title: "Töö, energia ja võimsus", modules: [] },
     // P7. Võnkumine ja laine
