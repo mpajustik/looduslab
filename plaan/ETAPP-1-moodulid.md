@@ -983,8 +983,8 @@ Leitud konarusi oli üheksa. Parandatud seitsme commit'iga:
 
 Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
 
-- [ ] 1.15 model.ts + manifest + testid (kontrolli füüsika!) – kood valmis
-      2026-08-04, ootab kasutaja füüsikakontrolli (vt „1.15 otsused" allpool)
+- [x] 1.15 model.ts + manifest + testid; **kasutaja luges model.ts ise läbi
+      ja kinnitas füüsika** (2026-08-04) – vt „1.15 otsused" allpool
 - [ ] 1.16 Simulation.tsx visuaal (andur, liugurid, vedelike valik)
 - [ ] 1.17 explore ülesanded + anuma kuju lisavaade
 - [ ] 1.18 hook + precheck + predict
@@ -1043,8 +1043,8 @@ näitena.
 - Codex ei saanud teste käivitada (keskkonna poliitika lükkas tagasi) –
   testid jooksid minu käes.
 
-**Ootab:** kasutaja loeb `model.ts` ise läbi ja kinnitab füüsika, nagu
-sammus 1.7. Alles siis linnuke ja commit.
+**Valmis:** kasutaja luges `model.ts` läbi ja kinnitas füüsika (2026-08-04),
+nagu sammus 1.7. Vedelike tihedused ja g = 9,8 jäid muutmata.
 
 ## 1.22 Etapi lõpukontroll
 
