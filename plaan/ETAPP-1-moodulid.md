@@ -985,7 +985,8 @@ Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
 
 - [x] 1.15 model.ts + manifest + testid; **kasutaja luges model.ts ise läbi
       ja kinnitas füüsika** (2026-08-04) – vt „1.15 otsused" allpool
-- [ ] 1.16 Simulation.tsx visuaal (andur, liugurid, vedelike valik)
+- [x] 1.16 Simulation.tsx visuaal (andur, liugurid, vedelike valik) –
+      läbitud telefonivaates (360 px) ja töölaual (2026-08-04)
 - [ ] 1.17 explore ülesanded + anuma kuju lisavaade
 - [ ] 1.18 hook + precheck + predict
 - [ ] 1.19 collect (graafik – punktid langevad TÄPSELT sirgele, sim on
