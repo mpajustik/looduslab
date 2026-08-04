@@ -899,9 +899,26 @@ build` genereerib `activities-*.js` ja `Simulation-*.js` eraldi chunkidena.
 
 ## 1.14 Katsetus päris kasutajaga
 
-- [ ] Lase 1–2 õpilasel (või kolleegil) moodul telefonis läbida, ise vaikselt
+- [x] Lase 1–2 õpilasel (või kolleegil) moodul telefonis läbida, ise vaikselt
       kõrvalt vaadates. Märgi üles IGA koht, kus tekkis küsimus või seisak
-- [ ] Paranda kolm kõige suuremat konarust (igaüks eraldi commit)
+      (2026-08-04, kasutaja katsetas ise)
+- [x] Paranda kolm kõige suuremat konarust (igaüks eraldi commit)
+
+Leitud konarusi oli üheksa. Parandatud kuue commit'iga:
+
+1. **Pooleli vastus kadus sammu vahetusel** – selgitust kirjutades ja
+   mõõtmisi üle vaatamas käies kadus kirjutatu. Sama viga oli ka pooleli
+   valikul, tipitud arvul ja tabelil. Mustandid elavad nüüd
+   `ui/steps/drafts.ts`-is, ainult mälus (preview jääb kirjutamisvabaks).
+2. **„Kare pind" → „mattpind"** ja uus explore-4, mis mattpinna lülitit
+   päriselt kasutab (varem oli lüliti kaunistus).
+3. **Neli joonist** (`figures.tsx`, uus valikuline kuues moodulifail):
+   mõistejoonis, sile pind vs mattpind, Mari taskulambiga, periskoop.
+
+**Lahtised leiud (järgmisesse sessiooni):** arvude ja valikvastuste
+järjekorra juhuslikkus kordamisel. See on riskisamm (checker + leping):
+küsimuse arvväärtus peab muutuma parameetriks ja vastus salvestama, MILLINE
+variant õpilasel oli – muidu ei tea õpetaja koondvaade, millele vastati.
 
 **Valmis, kui:** järgmine katsetaja läbib mooduli ilma sinu abita.
 
