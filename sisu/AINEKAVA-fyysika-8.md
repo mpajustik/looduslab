@@ -26,6 +26,14 @@ vari ja varjutused; Kuu faasid; peegeldumine ja neeldumine;
 peegeldumisseadus; tasapeegel, kumer- ja nõguspeegel; mattpind; mustad,
 valged ja värvilised esemed; valgusfilter
 
+**Õppesisu täpsustused (metoodilistest soovitustest):**
+
+- Päikeselt jõuab Maale peamiselt lühilaineline kiirgus (sh ultraviolett),
+  Maalt lahkub atmosfääri pikalaineline infrapunane kiirgus – energiabilanss
+  kui peegeldumise ja neeldumise rakendus planeedi mõõtkavas
+- Värvuste TAJUMINE (silm ja värvid) on eraldi vaatenurk kõrvuti sellega,
+  miks ese ise mingit värvi paistab
+
 **Põhimõisted:** valge valgus, liht- ja liitvalgus, valguse spekter,
 valguskiir, punktvalgusallikas, valgusvihk, optiline keskkond, täisvari,
 poolvari, tasapeegel, mattpind, kumerpeegel, nõguspeegel, fookus
@@ -43,9 +51,11 @@ erialadega.
 
 **Metoodilised rõhud:** peegeldumisseadus MITTE ainult teoreetiliselt –
 läbi jooniste eri olukordades (nurkpeegel, periskoop, matt- ja
-kumerpind); varjutused NASA kaartidega; Kuu faasid simulatsiooniga;
-valgusfiltrite tööpõhimõte las õpilane ise avastab; lambivalik koos
-põhjendusega.
+kumerpind); varjutused NASA kaartidega JA möödunud varjutuste videotega;
+Kuu faasid simulatsiooniga; valgusfiltrite tööpõhimõte las õpilane ise
+avastab (sh anaglüüfpilt punase ja sinise filtriga); värvuste tajumine
+simulatsiooniga; lambivalik koos põhjendusega; Päikese ja Maa
+energiabilanss (lühi- vs pikalaineline kiirgus).
 
 **Õpilase tegevused (D = digiteeritav LoodusLabis, K = klassiruumi,
 õpetajajuhendisse):**
@@ -55,9 +65,15 @@ põhjendusega.
 - (D+K) peegeldumisseaduse ja tasapeegli kujutise uurimine: hüpotees →
   katse → järeldus (sim + päris katse)
 - (D+K) täis- ja poolvarju uurimine hüpoteesiga
+- (D) joonestab täis- ja poolvarju ning Kuu- ja Päikesevarjutuse
+  tekkimise joonised
 - (D) Kuu faaside uurimine simulatsiooniga + selgitus
-- (D+K) valgusfiltrite simulatsioon ja katse
-- (D) NASA varjutuste kaardi lugemine; (K) arutelu varjutuse teekonnast
+- (D+K) valgusfiltrite simulatsioon ja katse; (D) anaglüüfpildi uurimine
+  punase ja sinise filtriga
+- (D) värvuste tajumise uurimine simulatsiooniga + selgitus, kuidas silm
+  värve näeb
+- (D) NASA varjutuste kaardi lugemine; (K) arutelu, MIKS on varjutuse
+  teekond kaardil kõver, mitte sirge; (K) möödunud varjutuste videod
 
 ---
 
@@ -288,7 +304,8 @@ Goldbergi masin kokkuvõtteks.
 - **P7-T2** seostab võnkumist heli tekkimise ja helilainete levimisega
 - **P7-T3** kavandab ja korraldab katsed müra tugevuse mõõtmiseks ning
   heli kõrguse ja sageduse seose uurimiseks
-- **P7-T4** rakendab seost f = 1/T probleemülesandeid lahendades
+- **P7-T4** rakendab seoseid f = 1/T ja v = λ·f probleemülesandeid
+  lahendades
 
 **Õppesisu:** võnkumine; amplituud, sagedus ja periood; heli tekkimine ja
 levimine; rist- ja pikilaine; heli kõrgus ja valjus; ultra- ja infraheli;
