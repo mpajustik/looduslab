@@ -2,6 +2,7 @@ import type { AnswerPayload, TableRow } from "../../engine/answers";
 import type { TableQuestion } from "../../engine/contract";
 import { Button } from "../Button";
 import { useDraft } from "./drafts";
+import { TableGraph } from "./TableGraph";
 
 /** Ridade arv peab klappima: muidu tuleks hoidlast teise kujuga küsimuse tabel. */
 function isTableDraft(saved: unknown, rows: number): saved is TableRow[] {
@@ -140,6 +141,11 @@ export function TableInput({
           </tbody>
         </table>
       </div>
+
+      {/* Graafik joonistub tipitud arvude pealt kohe, mitte alles esitamisel:
+          punktide sirgele langemine ON siin see, mida õpilane märkama peab.
+          Loetamatu või pooleli lahter jääb lihtsalt joonistamata. */}
+      {question.graph ? <TableGraph question={question} rows={rows} /> : null}
 
       {submitted ? null : (
         <div>

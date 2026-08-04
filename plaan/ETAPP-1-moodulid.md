@@ -991,8 +991,9 @@ Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
       (360 px) ja töölaual ajutise dev-marsruudi kaudu (2026-08-04)
 - [x] 1.18 hook + precheck + predict – jooniseta (kasutaja otsus 2026-08-04:
       joonised lisatakse hiljem eraldi sammuna, nagu peegeldumisseadus tegi)
-- [ ] 1.19 collect (graafik – punktid langevad TÄPSELT sirgele, sim on
-      ideaalne) + explain
+- [x] 1.19 collect (graafik – punktid langevad TÄPSELT sirgele, sim on
+      ideaalne) + explain – läbitud telefonivaates (360 px) ja töölaual
+      ajutise registrikirje kaudu (2026-08-04) – vt „1.19 otsused" allpool
 - [ ] 1.20 practice + exit
 - [ ] 1.21 teacher.ts + reviewCards + registry.ts + kursusefaili plokk 5 +
       telefonis läbimine
@@ -1048,6 +1049,69 @@ näitena.
 
 **Valmis:** kasutaja luges `model.ts` läbi ja kinnitas füüsika (2026-08-04),
 nagu sammus 1.7. Vedelike tihedused ja g = 9,8 jäid muutmata.
+
+### 1.19 otsused (2026-08-04)
+
+- **Uus tabelireegel `proportional`, mitte vana muutmine.** Leping ise ütles
+  seda ette (`contractSchema.ts`: „moodul 2 vajab `p = ρgh`"), seega
+  `equal-columns` jäi puutumata ja unioonile tuli teine liige.
+- **Kordaja tuleb mudelist, mitte kirjutatud arvust.** `activities.ts`
+  arvutab `toKilopascals(pressure(LIQUID_DENSITIES.vesi, 1))` – käsitsi
+  kirjutatud 9,8 jääks vaikselt vanaks, kui g mudelis muutub. Seda seost
+  valvab test mõlemast otsast.
+- **Tolerants 0,1 kPa, MITTE spetsis pakutud ±2%.** Protsent kahaneb väikese
+  sügavuse juures alla näidiku ümardusvea (0,1 m → 0,98 kPa, näidik kuvab
+  1,0; ±2% = 0,02 kPa) ja lükkaks õigesti loetud punkti tagasi. Absoluutne
+  0,1 kPa ON näidiku täpsus. Spetsi arv oli hea mõte vale ühikuga.
+- **Eristatavusel oma tolerants (`distinctTolerance`).** Eristatav veerg on
+  meetrites, reegli tolerants kilopaskalites – vaikimisi jagatud arv oleks
+  lugenud 0,5 m ja 0,6 m üheks mõõtmiseks. Skeem NÕUAB nüüd eri ühikute
+  korral oma arvu, sest see viga ei paista ekraanil välja. Moodul 1 jäi
+  puutumata (kraadid mõlemal pool, vaikeväärtus kehtib edasi).
+- **Graafik joonistab ainult punktid, joont mitte.** Sirge kuju sõnastamine
+  ongi järgmise küsimuse töö.
+- **Oma SVG, mitte Recharts** (CLAUDE.md reegel 4): neli punkti ja kaks telge
+  on ~70 rida, teek tuleks bundle'isse iga tabeli pärast. Telgede otsad
+  tulevad veeru `min`/`max`-ist – ise skaleeruv telg venitaks iga tabeli
+  sirgeks ja peidaks vea ära.
+- **Leitud moodulit ise läbi käies (parandatud):** sammu 1.18 predict jäi
+  õpilasele LUKKU – `PredictStep` oskas näidata ainult valikvastust, aga
+  spets küsib kõrvale „Miks sa nii arvad?" (vabatekst). Nüüd renderdab samm
+  ka teksti, ikka ilma hinnanguta. Ükski test seda ei püüdnud, sest moodul ei
+  ole veel registris.
+- **Uus test: `activities.ts` vastab lepingule.** Register moodulit veel ei
+  tea (1.21), seega `registry.test.ts` teda läbi ei käinud ja vigane samm
+  oleks paistnud alles õpilase ekraanil.
+
+**Ülevaatuse leiud (CodeRabbit + Codex, 2026-08-04).** Riskisamm, seega
+mõlemad. Kokku 4 leidu, kattuvusi EI olnud – kumbki tõi oma.
+
+- *Päris viga (Codex, parandatud):* vahemikust üksi ei piisanud. Sügavused
+  `0,05 / 0,95 / 1,45 / 1,95` on piirides, on omavahel ilusti ühel sirgel ja
+  läbisid kontrolli – aga liugur liigub 0,1 m kaupa, seega ekraanil neid
+  kunagi ei olnud. Mõõtmise asemel piisas väljamõeldud sirgest, mis on
+  täpselt see, mida collect-samm välistama peab. Veerul on nüüd `step` ja
+  checker nõuab, et väärtus oleks selle kordne. Sama klass, mille Codex
+  leidis moodulil 1 („10000 ja 10000").
+- *Päris viga (Codex, parandatud):* `min: 0, max: 0` läbis skeemi
+  (`min <= max`), aga joonis kadus brauseris VAIKSELT – ja järgmine küsimus
+  palub just tema kuju kohta vastata. Skeem nõuab nüüd graafiku telje veerul
+  `min < max`.
+- *Päris, aga varjatud viga (CodeRabbit, parandatud):* teljesildid ümardati
+  alati ühele komakohale. Kitsal teljel (0 … 0,1) oleks kaks eri kohta
+  saanud sildi „0,1". Täna sellist telge ei ole, aga järgmine moodul võib
+  selle tuua. Komakohtade arv tuletatakse nüüd teljest – ja teine nõue
+  kõrvale: silt peab oma väärtust ka AUSALT esitama (teljel 0 … 2,5 oleks
+  „3" küll erinev, aga näitaks arvu, mida teljel ei ole).
+- *Lahtine küsimus (Codex, ei parandatud):* manifest jäi `version: "1.0.0"`
+  peale, kuigi lisandusid küsimused. Versioonitabel
+  (docs/MOODULILEPING.md) räägib AVALDATUD moodulist: number peab midagi
+  tähendama, sest iga vastus salvestatakse `module_version`-iga. Seda
+  moodulit ei ole registris ega kursusefailis ja ühtki vastust ei
+  eksisteeri – 1.0.0 on tema esmaversioon kuni sammuni 1.21. Pärast
+  avaldamist käib iga uus küsimus minor-tõusuga.
+- Codex ei saanud teste käivitada (keskkonna poliitika) – testid jooksid
+  minu käes. Iga paranduse ees on test, mis vea punaseks tegi.
 
 ## 1.22 Etapi lõpukontroll
 

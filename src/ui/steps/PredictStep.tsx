@@ -2,6 +2,7 @@ import type { AnswerPayload, Answers } from "../../engine/answers";
 import type { ModuleFigures } from "../../engine/figures";
 import { ChoiceInput } from "./ChoiceInput";
 import { Figure } from "./Figure";
+import { TextInput } from "./TextInput";
 import type { StepOfType } from "./types";
 
 /**
@@ -14,8 +15,13 @@ import type { StepOfType } from "./types";
  * kas ennustus pidas paika, tuleb välja alles simulatsioonist (explore)
  * ja explain-sammust (1.11).
  *
- * `ChoiceInput` iseenesest ei näita õigsust (ainult õpilase enda valikut),
- * seega sobib see siia otse.
+ * `ChoiceInput` ja `TextInput` ise õigsust ei näita (ainult õpilase enda
+ * valikut või teksti), seega sobivad nad siia otse.
+ *
+ * Vabatekst lisandus sammus 1.19: vedeliku rõhu moodul küsib ennustuse kõrval
+ * „Miks sa nii arvad?", aga samm oskas näidata ainult valikvastust ja jättis
+ * õpilase lukku – „Edasi" ootas vastust küsimusele, millel polnud vastamise
+ * kohta. Leitud moodulit ise läbi käies.
  */
 export function PredictStep({
   step,
@@ -39,34 +45,42 @@ export function PredictStep({
         </div>
       ) : null}
 
-      {step.questions.map((question) =>
-        question.kind === "choice" ? (
-          <div key={question.id} className="flex max-w-prose flex-col gap-4">
-            <p
-              id={`${question.id}-prompt`}
-              className="text-lg font-medium leading-relaxed text-ink"
-            >
-              {question.prompt}
-            </p>
-            {/* Sama koht mis QuestionCardis: küsimuse ja vastuse vahel. */}
-            <Figure figures={figures} id={question.figure} />
+      {step.questions.map((question) => (
+        <div key={question.id} className="flex max-w-prose flex-col gap-4">
+          <p
+            id={`${question.id}-prompt`}
+            className="text-lg font-medium leading-relaxed text-ink"
+          >
+            {question.prompt}
+          </p>
+          {/* Sama koht mis QuestionCardis: küsimuse ja vastuse vahel. */}
+          <Figure figures={figures} id={question.figure} />
+          {question.kind === "choice" ? (
             <ChoiceInput
               question={question}
               answer={answers[question.id]}
               onAnswer={(payload) => onAnswer(question.id, payload)}
               labelledBy={`${question.id}-prompt`}
             />
-          </div>
-        ) : (
-          // Ennustuse küsimus on spetsifikatsioonis alati valikvastus. Vabatekst
-          // („Miks sa nii arvad?") jääb explain-sammuga (1.11) samasse ajastusse,
-          // nagu QuestionCard vabateksti puhulgi – enne seda ei tohi ükski päris
-          // moodul sellist küsimust kasutada.
-          <p key={question.id} className="text-lg text-ink-soft">
-            Sellele küsimusele ei oska rakendus veel vastust vastu võtta.
-          </p>
-        ),
-      )}
+          ) : question.kind === "text" ? (
+            // „Miks sa nii arvad?" – põhjendus ennustuse kõrval (vedeliku rõhu
+            // moodul, samm 1.18). Ka see läheb ilma tagasisideta: ennustust ei
+            // hinnata, ta ainult salvestatakse.
+            <TextInput
+              question={question}
+              answer={answers[question.id]}
+              onAnswer={(payload) => onAnswer(question.id, payload)}
+              labelledBy={`${question.id}-prompt`}
+            />
+          ) : (
+            // Arv ega mõõtetabel ennustusse ei kuulu: mõlemal on üks õige
+            // vastus ja checker ütleks selle kohe välja.
+            <p className="text-lg text-ink-soft">
+              Sellele küsimusele ei oska rakendus veel vastust vastu võtta.
+            </p>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

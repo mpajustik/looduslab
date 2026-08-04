@@ -11,8 +11,9 @@ import type { CheckResult } from "./types";
  * peatab kontrolli: kaks korraga antud etteheidet ei aita kedagi.
  *
  * **Siin ei ole füüsikat.** Checker teab ainult, et üks veerg peab teisega
- * kokku käima – MIKS (peegeldumisseadus) teab `model.ts` (CLAUDE.md reegel 1).
- * Seost hoiab kooskõlas test, mitte import.
+ * kokku käima – kas võrdselt (`equal-columns`, peegeldumisseadus) või kordse
+ * kaudu (`proportional`, vedeliku rõhk). MIKS see nii on, teab `model.ts`
+ * (CLAUDE.md reegel 1). Seost hoiab kooskõlas test, mitte import.
  *
  * Tolerants on LUGEMISTOLERANTS, mitte mõõtmisviga: simulatsioon on ideaalne,
  * aga õpilane loeb liugurilt ja tipib käsitsi.
@@ -20,6 +21,26 @@ import type { CheckResult } from "./types";
  * Tagasiside ei anna kunagi ära seaduspärasust ennast – just selle sõnastamine
  * on järgmise sammu (explain) töö.
  */
+
+/**
+ * Kas väärtus on liuguril üldse olemas – ehk sammu kordne.
+ *
+ * Vahemikust üksi ei piisa: vedeliku rõhu liugur liigub 0,1 m kaupa, seega
+ * sügavused 0,05 / 0,95 / 1,45 on vahemikus ja isegi omavahel ühel sirgel,
+ * aga ekraanilt neid lugeda ei saanud (Codexi ülevaatuse leid 2026-08-04).
+ * Ilma selleta piisaks mõõtmise asemel väljamõeldud sirgest.
+ *
+ * Ujukoma pärast käib võrdlus astmete ARVU peal (0,1 ei ole kahendsüsteemis
+ * täpne, seega `value % step` annaks 0,3 juures nullist erineva jäägi).
+ * Lubatud hälve on tuhandik sammust – see katab ümardusmüra, aga mitte
+ * poolt sammu.
+ */
+function onSliderStep(value: number, column: TableQuestion["columns"][number]): boolean {
+  if (column.step === undefined) return true;
+  const from = column.min ?? 0;
+  const steps = (value - from) / column.step;
+  return Math.abs(steps - Math.round(steps)) <= 0.001;
+}
 
 /**
  * Üks rida arvudeks. `string` = viga õpilase keeles, `Map` = korras rida.
@@ -48,13 +69,31 @@ function readRow(
     // on liuguril näha ja õige arvu me ette ei ütle.
     if (
       (column.min !== undefined && value < column.min) ||
-      (column.max !== undefined && value > column.max)
+      (column.max !== undefined && value > column.max) ||
+      !onSliderStep(value, column)
     ) {
       return `${rowNumber}. reas on väärtus, mida simulatsioonilt lugeda ei saa.`;
     }
     values.set(column.key, value);
   }
   return values;
+}
+
+/**
+ * Mida see rida reegli järgi olema PEAKS – `rule.column` väärtus teiste
+ * veergude pealt. `undefined`, kui vajalikku veergu reas ei ole.
+ *
+ * Ka siin ei ole füüsikat: `proportional` teab ainult, et üks veerg on teise
+ * kordne. Kordaja `factor` tuleb moodulist, kes ta omakorda `model.ts`-ist
+ * arvutab (CLAUDE.md reegel 1).
+ */
+function expectedValue(
+  rule: TableQuestion["rule"],
+  row: Map<string, number>,
+): number | undefined {
+  if (rule.kind === "equal-columns") return row.get(rule.equalsColumn);
+  const base = row.get(rule.perColumn);
+  return base === undefined ? undefined : base * rule.factor;
 }
 
 export function checkTableAnswer(question: TableQuestion, rows: TableRow[]): CheckResult {
@@ -78,6 +117,10 @@ export function checkTableAnswer(question: TableQuestion, rows: TableRow[]): Che
     const label =
       question.columns.find((column) => column.key === key)?.label ?? key;
     const values = parsedRows.map((row) => row.get(key) ?? Number.NaN);
+    // Vaikimisi reegli tolerants (peegeldumisseadus: kraadid mõlemal pool).
+    // Kui eristatav veerg on reegli veerust eri ühikus, nõuab skeem oma arvu –
+    // muidu võrreldaks meetreid kilopaskalites lubatud veaga.
+    const distinctTolerance = question.distinctTolerance ?? rule.tolerance;
     // „Erinev" tähendab siin: lugemistolerantsi juures ERISTATAV. Kaks
     // väärtust, mis mahuvad sama tolerantsi sisse, ei ole kaks mõõtmist –
     // muidu läheks 30 ja 30,2 kolme eri nurga arvestusse. Tolerants tuleb
@@ -86,7 +129,7 @@ export function checkTableAnswer(question: TableQuestion, rows: TableRow[]): Che
       values.some(
         (other, otherIndex) =>
           otherIndex > index &&
-          withinTolerance(value, other, maxDelta(other, rule.tolerance)),
+          withinTolerance(value, other, maxDelta(other, distinctTolerance)),
       ),
     );
     if (repeated) {
@@ -99,7 +142,7 @@ export function checkTableAnswer(question: TableQuestion, rows: TableRow[]): Che
 
   for (const [index, row] of parsedRows.entries()) {
     const actual = row.get(rule.column);
-    const expected = row.get(rule.equalsColumn);
+    const expected = expectedValue(rule, row);
     // Mõlemad on olemas: skeem valvab, et reegel osutab olemasolevale veerule,
     // ja readRow luges iga veeru ära.
     if (actual === undefined || expected === undefined) continue;

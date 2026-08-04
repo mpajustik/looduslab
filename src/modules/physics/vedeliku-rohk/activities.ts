@@ -1,11 +1,21 @@
 import { defineActivities } from "../../../engine/contract";
 import type { Step } from "../../../engine/contract";
+import { LIQUID_DENSITIES, pressure, toKilopascals } from "./model";
+
+/**
+ * Mõõtetabeli kordaja: rõhk vees ühe meetri sügavusel (kPa/m).
+ *
+ * Arvutatud MUDELIST, mitte kirjutatud arvuna (CLAUDE.md reegel 1). Kui g või
+ * vee tihedus mudelis kunagi muutub, muutub kordaja kaasa – käsitsi kirjutatud
+ * 9,8 jääks vaikselt vanaks.
+ */
+const WATER_KPA_PER_METRE = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 1));
 
 /**
  * Sammud (docs/MOODULILEPING.md, sisu/MOODUL-vedeliku-rohk.md).
  *
- * Samm 1.18 lisab hook/precheck/predict. collect/explain (1.19) ja
- * practice/exit (1.20) tulevad hilisemates sessioonides
+ * Sammud 1.18 (hook/precheck/predict) ja 1.19 (collect/explain) on tehtud;
+ * practice/exit (1.20) tuleb järgmises sessioonis
  * (plaan/ETAPP-1-moodulid.md „Moodul 2"). Kasutaja otsustas 1.18 juures, et
  * hook/predict jäävad esialgu jooniseta – peegeldumisseadus moodul lisas
  * joonised (figures.tsx) samuti eraldi sessioonides, mitte kohe sammuga
@@ -209,6 +219,108 @@ const steps: Step[] = [
     simulation: {
       unlocks: [{ feature: "anuma-kuju", afterQuestion: "explore-2" }],
     },
+  },
+  {
+    type: "collect",
+    id: "collect-1",
+    title: "Kogu neli mõõtmist",
+    body: [
+      "Vali vedelikuks vesi. Vii andur nelja ERINEVASSE sügavusse ja kirjuta iga kord üles nii sügavus kui ka rõhk.",
+      "Ühikuid ei pea kirjutama – piisab arvudest. Graafik joonistub tabeli alla ise, iga täidetud rida lisab ühe punkti.",
+    ],
+    questions: [
+      {
+        kind: "table",
+        id: "collect-1",
+        prompt: "Neli mõõtmist vees",
+        // `min`/`max`/`step` on SIMULATSIOONI liuguri piirid ja samm
+        // (Simulation.tsx: sügavus 0–2 m, 0,1 m kaupa). Sammuta läbiks
+        // kontrolli ka 0,05 m, mis on vahemikus ja teiste punktidega ühel
+        // sirgel, aga mida liuguril kunagi ei olnud. Rõhu ülempiir 20 kPa on
+        // veidi üle sügavaima vee lugemi (19,6 kPa) – nii mahub ümardus
+        // piiridesse, aga elavhõbeda arv ei mahu. Rõhul SAMMU EI OLE: näidik
+        // on arvutatud suurus, mitte liugur.
+        columns: [
+          { key: "depth", label: "Sügavus", unit: "m", min: 0, max: 2, step: 0.1 },
+          { key: "pressure", label: "Rõhk", unit: "kPa", min: 0, max: 20 },
+        ],
+        rows: 4,
+        // Neli ERI sügavust: ühest korratud punktist ei paista sirge välja.
+        distinctColumn: "depth",
+        // Liuguri samm on 0,1 m, seega kaks kõrvutist astet on kaks mõõtmist.
+        // Ilma selle arvuta võrreldaks meetreid reegli kilopaskalitega.
+        distinctTolerance: { mode: "absolute", value: 0.05 },
+        rule: {
+          kind: "proportional",
+          column: "pressure",
+          perColumn: "depth",
+          // Kordaja tuleb MUDELIST, mitte käsitsi kirjutatud arvust: rõhk vees
+          // ühe meetri sügavusel, kilopaskalites (CLAUDE.md reegel 1).
+          factor: WATER_KPA_PER_METRE,
+          // Lugemistolerants = näidiku täpsus (kPa ühe komakohaga), mitte
+          // protsent. Spetsis pakutud ±2% kahaneb 0,1 m sügavusel 0,02 kPa
+          // peale ehk ALLA ümardusvea ja lükkaks õigesti loetud punkti tagasi.
+          tolerance: { mode: "absolute", value: 0.1 },
+        },
+        // Sirge kuju ongi järgmise küsimuse sisu, seepärast on tabeli kõrval
+        // joonis. Punktid ilma jooneta – joone sõnastab õpilane ise.
+        graph: { x: "depth", y: "pressure" },
+      },
+      {
+        kind: "choice",
+        id: "collect-2",
+        prompt: "Vaata oma punkte. Mida ütleb nende kuju rõhu ja sügavuse seose kohta?",
+        hints: [
+          "Kui sügavus kahekordistub, mitu korda kasvab rõhk sinu tabelis?",
+        ],
+        options: [
+          {
+            id: "vordeline",
+            text: "Rõhk on sügavusega võrdeline – kaks korda sügavamal on rõhk kaks korda suurem",
+            correct: true,
+          },
+          {
+            id: "aeglustub",
+            text: "Rõhk kasvab alguses kiiresti ja sügavamal aina aeglasemalt",
+            correct: false,
+            misconception: "rohk-kullastub",
+          },
+          {
+            id: "ruut",
+            text: "Sügavuse kahekordistamisel kasvab rõhk neli korda",
+            correct: false,
+            misconception: "rohk-ruutsoltuvus",
+          },
+          {
+            id: "sotumatu",
+            text: "Rõhk ei sõltu sügavusest – punktid on ühel kõrgusel",
+            correct: false,
+            misconception: "rohk-ei-solju-sugavusest",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: "explain",
+    id: "explain-1",
+    title: "Selgita, miks rõhk sügavusega kasvab",
+    body: [
+      "Kasuta mõtet: mida sügavamal sa oled, seda rohkem vett on sinu kohal – ja kogu see vesi vajutab alla.",
+      "Võrdle ka oma ennustusega anumate kohta. Kas pidid midagi ümber mõtlema?",
+    ],
+    // Ennustus on kõrval näha, et võrdlemiseks ei peaks samme tagasi kerima.
+    recallQuestion: "predict-1",
+    questions: [
+      {
+        kind: "text",
+        id: "explain-1",
+        prompt: "Selgita oma sõnadega, MIKS rõhk vedelikus sügavusega kasvab.",
+        // Spetsi „vabatekst min 20 sõna" – lühem vastus jääb tavaliselt
+        // valemi ümberkirjutuseks, mitte selgituseks.
+        minWords: 20,
+      },
+    ],
   },
 ];
 

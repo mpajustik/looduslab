@@ -401,6 +401,16 @@ const columnSchema = z
      */
     min: z.number().optional(),
     max: z.number().optional(),
+    /**
+     * Simulatsiooni liuguri SAMM – väärtus peab olema selle kordne.
+     *
+     * Vahemikust üksi ei piisa (Codexi ülevaatuse leid 2026-08-04): vedeliku
+     * rõhu liugur liigub 0,1 m kaupa, seega sügavus 0,05 m on vahemikus, on
+     * teiste punktidega ilusti ühel sirgel – ja seda ei olnud kunagi ekraanil.
+     * Ilma sammuta saab tabeli õigeks väljamõeldud sirgega, mis on täpselt
+     * see, mida collect-samm välistama peab.
+     */
+    step: z.number().positive().finite().optional(),
   })
   .refine((column) => column.min === undefined || column.max === undefined || column.min <= column.max, {
     message: "Veeru min ei tohi olla suurem kui max",
@@ -431,7 +441,50 @@ const equalColumnsRuleSchema = z.strictObject({
   tolerance: toleranceSchema,
 });
 
-const tableRuleSchema = z.discriminatedUnion("kind", [equalColumnsRuleSchema]);
+/**
+ * Võrdeline seos: üks veerg on teise KORDNE (`p = k · h`).
+ *
+ * Teine liige unioonis, täpselt nagu ülal lubatud – vana reeglit ei muudetud.
+ * `factor` ühik on „column'i ühik perColumn'i ühiku kohta" (vedeliku rõhu
+ * moodulis kPa/m). Ka SIIN ei ole füüsikat: skeem ei tea, kust kordaja tuleb.
+ * Moodul arvutab ta `model.ts`-ist (CLAUDE.md reegel 1) ja test hoiab neid
+ * kooskõlas – kirjutatud arv activities.ts-is läheks mudelist ühel päeval lahku.
+ */
+const proportionalRuleSchema = z.strictObject({
+  kind: z.literal("proportional"),
+  /** Kontrollitav veerg (õpilase loetud väärtus, nt rõhk). */
+  column: columnKeySchema,
+  /** Veerg, MILLEGA ta on võrdeline (nt sügavus). */
+  perColumn: columnKeySchema,
+  /** Kordaja k seoses `column = k · perColumn`. Positiivne ja lõplik. */
+  factor: z.number().positive().finite(),
+  /**
+   * Lugemistolerants `column`-i ühikus. Vedeliku rõhu moodulis on see näidiku
+   * täpsus (0,1 kPa), mitte protsent: protsenttolerants kahaneb väikese
+   * sügavuse juures alla ümardusvea ja lükkaks õigesti loetud punkti tagasi.
+   */
+  tolerance: toleranceSchema,
+});
+
+const tableRuleSchema = z.discriminatedUnion("kind", [
+  equalColumnsRuleSchema,
+  proportionalRuleSchema,
+]);
+
+/** Reegli veeruviited koos väljanimega – veaviide peab ütlema, MIS väli katki on. */
+function ruleColumnRefs(
+  rule: z.infer<typeof tableRuleSchema>,
+): readonly (readonly [string, string])[] {
+  return rule.kind === "equal-columns"
+    ? [
+        ["rule.column", rule.column],
+        ["rule.equalsColumn", rule.equalsColumn],
+      ]
+    : [
+        ["rule.column", rule.column],
+        ["rule.perColumn", rule.perColumn],
+      ];
+}
 
 const tableQuestionSchema = z
   .strictObject({
@@ -449,7 +502,26 @@ const tableQuestionSchema = z
      * ühest korratud väärtusest ei paista seaduspärasus välja.
      */
     distinctColumn: columnKeySchema.optional(),
+    /**
+     * Kui väike vahe loeb veel „sama väärtuseks" – `distinctColumn`-i ühikus.
+     * Vaikimisi kasutab kontroll reegli tolerantsi, aga see kõlbab ainult siis,
+     * kui mõlemad on samas ühikus (peegeldumisseadus: kraadid ja kraadid).
+     * Vedeliku rõhu tabelis on eristatav veerg meetrites ja reegli tolerants
+     * kilopaskalites – 0,1 kPa „meetritena" loeks 0,5 m ja 0,6 m üheks ja samaks
+     * mõõtmiseks. Seepärast nõuab skeem eri ühikute korral oma arvu.
+     */
+    distinctTolerance: toleranceSchema.optional(),
     rule: tableRuleSchema,
+    /**
+     * Punktdiagramm tabeli all: `x` ja `y` on veergude võtmed. Ilma selleta on
+     * tabel ainult arvude loend – vedeliku rõhu moodulis on aga just SIRGE
+     * kuju see, mille kohta järgmine küsimus käib. Telgede otsad tulevad
+     * veergude `min`/`max`-ist, seepärast on need graafiku puhul kohustuslikud:
+     * ise skaleeruv telg venitaks iga tabeli sirgeks ja peidaks vea ära.
+     */
+    graph: z
+      .strictObject({ x: columnKeySchema, y: columnKeySchema })
+      .optional(),
   })
   .superRefine((question, ctx) => {
     const keys = new Set(question.columns.map((column) => column.key));
@@ -458,11 +530,17 @@ const tableQuestionSchema = z
     }
     // Olematule veerule osutav reegel ei kontrolliks MITTE MIDAGI ja seda ei
     // paneks keegi brauseris tähele – seepärast valvab seda skeem.
+    const refs = ruleColumnRefs(question.rule);
     for (const [field, key] of [
-      ["rule.column", question.rule.column],
-      ["rule.equalsColumn", question.rule.equalsColumn],
-      ...(question.distinctColumn ? [["distinctColumn", question.distinctColumn]] : []),
-    ] as const) {
+      ...refs,
+      ...(question.distinctColumn ? [["distinctColumn", question.distinctColumn] as const] : []),
+      ...(question.graph
+        ? ([
+            ["graph.x", question.graph.x],
+            ["graph.y", question.graph.y],
+          ] as const)
+        : []),
+    ]) {
       if (!keys.has(key)) {
         ctx.addIssue({
           code: "custom",
@@ -470,24 +548,74 @@ const tableQuestionSchema = z
         });
       }
     }
-    if (question.rule.column === question.rule.equalsColumn) {
+    const [[, ruleColumn], [, otherColumn]] = refs;
+    if (ruleColumn === otherColumn) {
       ctx.addIssue({
         code: "custom",
-        message: "Veerg ei saa võrduda iseendaga – siis oleks iga vastus õige",
+        message: "Veerg ei saa käia kokku iseendaga – siis oleks iga vastus õige",
       });
     }
-    // Kaht eri ühikus veergu ei saa omavahel võrrelda: „30 cm = 30 °" ei
-    // tähenda midagi. Ühikuteisendus tabeli SEES oleks eraldi reegliliik.
     const unitOf = (key: string) => question.columns.find((column) => column.key === key)?.unit;
+    // Kaht eri ühikus veergu ei saa omavahel VÕRDSUSTADA: „30 cm = 30 °" ei
+    // tähenda midagi. Võrdelisel seosel on ühikute vahe just normaalne (kPa ja
+    // m) – seal kannab ühikuvahet kordaja.
     if (
-      keys.has(question.rule.column) &&
-      keys.has(question.rule.equalsColumn) &&
-      unitOf(question.rule.column) !== unitOf(question.rule.equalsColumn)
+      question.rule.kind === "equal-columns" &&
+      keys.has(ruleColumn) &&
+      keys.has(otherColumn) &&
+      unitOf(ruleColumn) !== unitOf(otherColumn)
     ) {
       ctx.addIssue({
         code: "custom",
         message: "equal-columns reegli mõlemal veerul peab olema sama ühik",
       });
+    }
+    // Eristatavuse tolerants tuleb vaikimisi reegli omast – see kõlbab ainult
+    // sama ühiku korral. Muidu võrreldaks meetreid kilopaskalites lubatud
+    // veaga ja kaks eri sügavust loetaks üheks mõõtmiseks.
+    if (
+      question.distinctColumn &&
+      question.distinctTolerance === undefined &&
+      keys.has(question.distinctColumn) &&
+      keys.has(ruleColumn) &&
+      unitOf(question.distinctColumn) !== unitOf(ruleColumn)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "distinctColumn on reegli veerust eri ühikus – lisa distinctTolerance selle veeru ühikus",
+      });
+    }
+    if (question.graph) {
+      if (question.graph.x === question.graph.y) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Graafiku teljed ei saa olla sama veerg",
+        });
+      }
+      // Telje otsad tulevad veeru piiridest: ilma nendeta ei saaks joonis
+      // näidata, kus punkt SKAALAL asub (vt graph-välja selgitust ülal).
+      for (const [axis, key] of [
+        ["graph.x", question.graph.x],
+        ["graph.y", question.graph.y],
+      ] as const) {
+        const column = question.columns.find((candidate) => candidate.key === key);
+        if (column && (column.min === undefined || column.max === undefined)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `${axis} veerul "${key}" peab graafiku jaoks olema nii min kui ka max`,
+          });
+        }
+        // Kokku langevad otspunktid läbisid `min <= max` kontrolli, aga
+        // joonis kaob brauseris VAIKSELT ära – ja järgmine küsimus palub
+        // just tema kuju kohta vastata (Codexi leid 2026-08-04).
+        if (column && column.min !== undefined && column.min === column.max) {
+          ctx.addIssue({
+            code: "custom",
+            message: `${axis} veerul "${key}" on min ja max võrdsed – siis ei ole telge, mida joonistada`,
+          });
+        }
+      }
     }
   });
 

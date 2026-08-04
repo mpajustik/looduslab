@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { manifestSchema } from "../src/engine/contractSchema";
+import { activitiesSchema, manifestSchema } from "../src/engine/contractSchema";
+import { activities } from "../src/modules/physics/vedeliku-rohk/activities";
 import { manifest } from "../src/modules/physics/vedeliku-rohk/manifest";
 import {
   GRAVITY_MS2,
@@ -272,5 +273,37 @@ describe("manifest", () => {
     // P5-PT3 on JÄRGMISE mooduli oma (spetsifikatsioon hoiatab eraldi) –
     // vale kirje siin annaks katvusraportile (etapp 4.0) valeteate.
     expect(manifest.practicalWork).toEqual([]);
+  });
+});
+
+describe("activities", () => {
+  it("sammud vastavad moodulilepingu skeemile", () => {
+    // Moodul EI ole veel registris (samm 1.21), seega registry.test.ts teda
+    // veel läbi ei käi – ilma selle reata jääks vigane samm märkamata kuni
+    // hetkeni, mil ta juba õpilase ekraanil on.
+    //
+    // Kordamiskaardid tulevad alles sammuga 1.21 (leping nõuab neid vähemalt
+    // kolme), seega paneme kontrolli ajaks kohatäited: kontrollida tahame
+    // SAMME, mitte veel kirjutamata kaarte.
+    const placeholders = [1, 2, 3].map((number) => ({
+      id: `rc-${number}`,
+      type: "concept" as const,
+      question: "kohatäide",
+      answer: "kohatäide",
+    }));
+    expect(() =>
+      activitiesSchema.parse({ ...activities, reviewCards: placeholders }),
+    ).not.toThrow();
+  });
+
+  it("võtab mõõtetabeli kordaja mudelist", () => {
+    // Kordaja on kPa ühe meetri kohta vees. Kui g või vee tihedus mudelis
+    // muutub, peab tabeli reegel muutuma kaasa (CLAUDE.md reegel 1).
+    const collect = activities.steps.find((step) => step.type === "collect");
+    const table = collect?.questions.find((question) => question.kind === "table");
+    expect(table?.rule).toMatchObject({
+      kind: "proportional",
+      factor: toKilopascals(pressure(LIQUID_DENSITIES.vesi, 1)),
+    });
   });
 });
