@@ -13,15 +13,28 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 ## 2.1 Supabase projektid ja CLI
 
 - [ ] Loo supabase.com kontole KAKS projekti: looduslab-dev ja looduslab-prod
-- [ ] Paigalda Supabase CLI, `supabase login`, `supabase link` (dev-projekt)
-- [ ] .env.local dev-võtmetega; kontrolli, et .env* on .gitignore'is
+      – **osaliselt tehtud (2026-08-05):** ainult `looduslab-dev` on loodud,
+      kasutaja kinnitas otsuse. `looduslab-prod` jääb tegemata kuni
+      tootmisele lähemale (linnuke jääb lahti, kuni prod on olemas)
+- [x] Paigalda Supabase CLI, `supabase login`, `supabase link` (dev-projekt)
+      (kasutati `npx supabase`, eraldi paigaldust ei vaja; lingitud
+      project-ref `ccqofqdyddeltfszzwlk`)
+- [x] .env.local dev-võtmetega; kontrolli, et .env* on .gitignore'is
+      (`.env.example` lisatud võltsandmetega; `supabase/.temp/` lisatud
+      gitignore'i, sest sisaldab CLI vahemälu, mitte saladusi endid)
 
 ## 2.2 Supabase klient
 
 > **Prompt AI-le:** Lisa @supabase/supabase-js ja TanStack Query. Loo
 > src/lib/supabase.ts klient env-muutujatest. Ära ühenda veel ühtegi vaadet.
 
-- [ ] Build õnnestub; ühenduse test (nt supabase.auth.getSession) töötab
+- [x] Build õnnestub; ühenduse test töötab
+      (2026-08-05: `supabase.auth.getSession()` tagastas vea asemel
+      `null`-sessiooni, aga see üksi ei tõesta võrguühendust – getSession
+      loeb kohalikust seansist ega tee tingimata päringut serverisse.
+      Kinnituseks tehti täiendav otsepäring `GET /auth/v1/settings` koos
+      `apikey` päisega vastu looduslab-dev projekti: HTTP 200 ja projekti
+      pärisseaded tagasi – URL ja anon key on kinnitatud õiged)
 
 ## 2.3 Migratsioon: tabelid
 
