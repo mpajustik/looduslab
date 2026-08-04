@@ -997,7 +997,8 @@ Sama jaotus nagu moodulil 1 – iga rida üks sessioon:
 - [x] 1.19b hook/predict joonised (tamm, kolm anumat) + precheck'i
       2-lauselised meeldetuletused – kasutaja tellitud lisandus pärast 1.19
       läbimist, läbitud telefonivaates (360 px) ja töölaual (2026-08-04)
-- [ ] 1.20 practice + exit
+- [x] 1.20 practice + exit – läbitud telefonivaates (360 px) ja töölaual
+      ajutise registrikirje kaudu (2026-08-04) – vt „1.20 otsused" allpool
 - [ ] 1.21 teacher.ts + reviewCards + registry.ts + kursusefaili plokk 5 +
       telefonis läbimine
 
@@ -1115,6 +1116,55 @@ mõlemad. Kokku 4 leidu, kattuvusi EI olnud – kumbki tõi oma.
   avaldamist käib iga uus küsimus minor-tõusuga.
 - Codex ei saanud teste käivitada (keskkonna poliitika) – testid jooksid
   minu käes. Iga paranduse ees on test, mis vea punaseks tegi.
+
+### 1.20 otsused (2026-08-04)
+
+- **Kõik õiged vastused MUDELIST, mitte kirjutatud arvudest** – sama joon,
+  mis WATER_KPA_PER_METRE-l (1.19). `practice-1`, `practice-2`, `practice-3`
+  ja `exit-2` arvutavad õige vastuse `pressure()`/`toKilopascals()`-iga,
+  lõksuarv sama moodi (`PRACTICE_AQUARIUM_40CM_TRAP_KPA`).
+- **Tolerants 5%, nagu spets ütles** (mitte 1.19 collect-sammu 0,1 kPa) –
+  siin ei loeta liuguri näitu, vastus tuleb peast arvutamisest, ja 5% katab
+  ka g = 10 kasutaja (test seda väidet valvab, vt 1.15 otsused).
+- **Variante EI lisatud** (erinevalt peegeldumisseaduse moodulist 1.14) –
+  see oli seal HILISEM lihv pärast kasutajakatsetust, mitte
+  practice/exit-sammu enda nõue. Kui katsetus (1.21 järel) näitab sama
+  vajadust, lisandub `resolve.ts` juba olemasoleva mustri järgi.
+- **Näidise (worked) numbrid on kirjas, mitte mudelist tuletatud teksti sees**
+  – peegeldumisseaduse moodul tegi sama (40° oli lihtsalt valitud arv).
+  Ainult sügavuse LÕPPTULEMUS (`WORKED_BASIN_DEPTH_M`) tuleb
+  `depthFromPressure`-ist, et näidis ei saaks mudelist lahku minna.
+
+**Ülevaatuse leiud (CodeRabbit, 2026-08-04).** Ei ole riskisamm (ainult
+`activities.ts` muutus, mitte `model.ts`/`checker`/`engine`), seega Codexit
+ei kutsutud. 2 leidu.
+
+- *Stiiliküsimus, parandatud:* näidise lahenduskäik hüppas otse
+  „29 400 / (1000 · 9,8)" juurde, ilma et näidataks, kust 29 400 (Pa) tuli
+  29,4 (kPa) küljest. Lisati vahesamm „29,4 kPa = 29 400 Pa".
+- *Päris füüsikaviga (parandatud, kasutaja kinnitas suuna):* harjutus 5
+  („Miks purskab vesi katkisest tünnist kõige KAUGEMALE kõige alumisest
+  august?") on otse spetsist üle võetud, aga eeldab vale füüsikat – see on
+  klassikaline „lekkiva ämbri" katse, kus kaugeimale jõuab KESKMINE auk
+  (väljumiskiirus ja langemisaeg koos annavad maksimumi poolel kõrgusel:
+  x = 2·√(y·(H−y)), maksimum y = H/2), mitte alumine. Moodul õpetab ainult
+  rõhku, mitte kaugvise/liikumisõpetust, seega küsimus küsib nüüd
+  KIIRUST/joa jõudu (mis KASVAB monotoonselt sügavusega – Torricelli valem),
+  mitte kaugust: „Miks purskab vesi kõige alumisest august kõige suurema
+  kiirusega?". Sama parandus tehti ka sisu/MOODUL-vedeliku-rohk.md-is, et
+  spetsifail ei jääks koodiga vastuollu.
+
+**Teine ülevaatusring (CodeRabbit, 2026-08-05)** – kasutaja tellitud joonis
+harjutuse 5 juurde (`figures.tsx` uus `BarrelHolesFigure`, `tunn-augud`).
+1 leid, parandatud.
+
+- *Päris viga:* joonise allkiri väitis „Alumine juga on kõige pikem ja
+  sirgem – see näitab kõige suuremat väljumiskiirust" – see ÜTLES vastuse
+  ette (mooduli enda reegel, `figures.tsx` päis: „Kumbki joonis ei tohi
+  vastust ette öelda"). Joa pikkuse ERINEVUS on küsimuse ANTUD eeldus, aga
+  „see näitab kiirust" on põhjendus, mida küsimus otsib. Allkiri kirjutati
+  ümber puhtalt kirjeldavaks: „Alumine juga ulatub kõige kaugemale seinast
+  ja on kõige sirgem" (ilma tõlgenduseta).
 
 ## 1.22 Etapi lõpukontroll
 

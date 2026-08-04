@@ -88,8 +88,12 @@ sügavamal, seda rohkem vett on sinu kohal." + võrdlus ennustusega sammust 3
 4. **Iseseisev (ühikulõks):** Akvaariumi sügavus on 40 cm. Rõhk põhjas?
    (3,9 kPa, tolerants 5%; vale vastus ~392 kPa → silt `cm-m-teisendus`,
    vihje: „teisenda cm → m")
-5. **Ülekanne:** Miks purskab vesi katkisest tünnist kõige kaugemale kõige
-   alumisest august? (valikvastus)
+5. **Ülekanne:** Miks purskab vesi katkisest tünnist kõige alumisest august
+   kõige suurema kiirusega (kõige kõvema joana)? (valikvastus) – MITTE
+   „kõige kaugemale": see on lennuulatuse küsimus (klassikaline „lekkiva
+   ämbri" katse, kus kaugeimale jõuab KESKMINE auk), mida moodul ei õpeta.
+   Rõhk/kiirus KASVAB monotoonselt sügavusega, kaugus mitte (CodeRabbiti
+   ülevaatuse leid, samm 1.20, 2026-08-04).
 
 ### 8. exit – väljumispilet
 

@@ -112,6 +112,11 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.ThreeVesselsFigure,
       })),
     ),
+    "tunn-augud": lazy(() =>
+      import("./physics/vedeliku-rohk/figures").then((module) => ({
+        default: module.BarrelHolesFigure,
+      })),
+    ),
   },
 };
 

@@ -1,6 +1,12 @@
 import { defineActivities } from "../../../engine/contract";
 import type { Step } from "../../../engine/contract";
-import { LIQUID_DENSITIES, pressure, toKilopascals } from "./model";
+import {
+  depthFromPressure,
+  LIQUID_DENSITIES,
+  metresFromCentimetres,
+  pressure,
+  toKilopascals,
+} from "./model";
 
 /**
  * Mõõtetabeli kordaja: rõhk vees ühe meetri sügavusel (kPa/m).
@@ -12,16 +18,36 @@ import { LIQUID_DENSITIES, pressure, toKilopascals } from "./model";
 const WATER_KPA_PER_METRE = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 1));
 
 /**
+ * Harjutuse ja väljumispileti õiged vastused – kõik MUDELIST, mitte käsitsi
+ * kirjutatud arvudena (sama põhjus mis `WATER_KPA_PER_METRE`-l).
+ */
+const PRACTICE_WATER_2M_KPA = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 2.0));
+const PRACTICE_SEA_12M_KPA = toKilopascals(
+  pressure(LIQUID_DENSITIES["soolane-vesi"], 12),
+);
+const PRACTICE_AQUARIUM_40CM_KPA = toKilopascals(
+  pressure(LIQUID_DENSITIES.vesi, metresFromCentimetres(40)),
+);
+// Lõks: väärarusaam `cm-m-teisendus` – sügavus jääb sentimeetritesse ja
+// valemisse läheb 40, mitte 0,4.
+const PRACTICE_AQUARIUM_40CM_TRAP_KPA = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 40));
+const EXIT_WATER_1_5M_KPA = toKilopascals(pressure(LIQUID_DENSITIES.vesi, 1.5));
+
+/** Näidise sügavus (m) – tuletatud mudelist, mitte kirjutatud arvuna. */
+const WORKED_BASIN_DEPTH_M = depthFromPressure(29400, LIQUID_DENSITIES.vesi);
+
+/** Eesti kombe järgi koma, mitte punkt: „3,0", mitte „3.0". */
+function comma(value: number, decimals: number): string {
+  return value.toFixed(decimals).replace(".", ",");
+}
+
+/**
  * Sammud (docs/MOODULILEPING.md, sisu/MOODUL-vedeliku-rohk.md).
  *
- * Sammud 1.18 (hook/precheck/predict) ja 1.19 (collect/explain) on tehtud;
- * practice/exit (1.20) tuleb järgmises sessioonis
- * (plaan/ETAPP-1-moodulid.md „Moodul 2"). Kasutaja otsustas 1.18 juures, et
- * hook/predict jäävad esialgu jooniseta – peegeldumisseadus moodul lisas
- * joonised (figures.tsx) samuti eraldi sessioonides, mitte kohe sammuga
- * koos. `reviewCards` jääb lahtiseks 1.21-ni (teacher.ts kõrval) – enne
- * seda ei impordi seda faili keegi (moodul ei ole veel `registry.ts`-is),
- * seega tühi loend praegu ei katkesta midagi.
+ * Sammud 1.18 (hook/precheck/predict), 1.19 (collect/explain) ja 1.20
+ * (practice/exit) on tehtud. `reviewCards` jääb lahtiseks 1.21-ni
+ * (teacher.ts kõrval) – enne seda ei impordi seda faili keegi (moodul ei ole
+ * veel `registry.ts`-is), seega tühi loend praegu ei katkesta midagi.
  */
 const steps: Step[] = [
   {
@@ -338,6 +364,145 @@ const steps: Step[] = [
         // Spetsi „vabatekst min 20 sõna" – lühem vastus jääb tavaliselt
         // valemi ümberkirjutuseks, mitte selgituseks.
         minWords: 20,
+      },
+    ],
+  },
+  {
+    type: "practice",
+    id: "practice-1",
+    title: "Proovi ise järele",
+    // Näidis (spets „practice" p 1): LAHENDATUD ülesanne, mitte küsimus –
+    // sama muster mis peegeldumisseaduse moodulis (1.12 otsused).
+    worked: {
+      prompt: `Kui sügav on bassein, kui põhjas on vee rõhk 29,4 kPa?`,
+      solution: [
+        "Sügavus tuleb rõhu valemist tagurpidi: h = p / (ρ · g).",
+        "Rõhk kilopaskalites tuleb enne teisendada paskaliteks: 29,4 kPa = 29 400 Pa.",
+        `h = 29 400 / (1000 · 9,8) = ${comma(WORKED_BASIN_DEPTH_M, 1)} m.`,
+      ],
+      answer: `${comma(WORKED_BASIN_DEPTH_M, 1)} m`,
+    },
+    questions: [
+      {
+        // Osaline (spets p 2): valem on osaliselt ette antud, vastus tuleb ise.
+        kind: "numeric",
+        id: "practice-1",
+        prompt: "Arvuta rõhk 2,0 m sügavusel vees: p = ρ · g · h = 1000 · 9,8 · 2,0 = ___ kPa",
+        hints: ["Korruta tihedus, raskuskiirendus ja sügavus kokku, tulemus teisenda kilopaskaliteks."],
+        unit: "kPa",
+        // 5% katab ka g = 10 kasutaja (sama otsus mis 1.15 „g-unustatud"
+        // testis) – vt CLAUDE.md reegel 1 ja sammu 1.15 otsused.
+        tolerance: { mode: "percent", value: 5 },
+        answer: PRACTICE_WATER_2M_KPA,
+      },
+      {
+        // Iseseisev (spets p 3).
+        kind: "numeric",
+        id: "practice-2",
+        prompt: "Sukelduja on meres (ρ = 1030 kg/m³) 12 m sügavusel. Kui suur on vee rõhk temale?",
+        hints: ["p = ρ · g · h.", "Vasta kilopaskalites: 1 kPa = 1000 Pa."],
+        unit: "kPa",
+        tolerance: { mode: "percent", value: 5 },
+        answer: PRACTICE_SEA_12M_KPA,
+      },
+      {
+        // Iseseisev, ühikulõks (spets p 4): sügavus antud sentimeetrites.
+        // Lõks jäädvustab väärarusaama `cm-m-teisendus` (Väärarusaamad-tabel).
+        kind: "numeric",
+        id: "practice-3",
+        prompt: "Akvaariumi sügavus on 40 cm. Kui suur on rõhk põhjas?",
+        hints: ["Teisenda sügavus enne arvutamist sentimeetritest meetritesse."],
+        unit: "kPa",
+        tolerance: { mode: "percent", value: 5 },
+        answer: PRACTICE_AQUARIUM_40CM_KPA,
+        traps: [
+          {
+            answer: PRACTICE_AQUARIUM_40CM_TRAP_KPA,
+            misconception: "cm-m-teisendus",
+            feedback: "Sügavus jäi sentimeetritesse. Teisenda 40 cm enne arvutamist meetriteks (40 cm = 0,4 m).",
+          },
+        ],
+      },
+      {
+        // Ülekanne (spets p 5): valikvastus.
+        //
+        // Spetsi algne sõnastus küsis, MIS AUGUST vesi kõige KAUGEMALE
+        // purskab – aga see on lennuulatuse (kaugvise) küsimus, mitte rõhu
+        // küsimus: klassikaline „lekkiva ämbri" katse näitab, et kõige
+        // kaugemale jõuab KESKMINE auk (väljumiskiirus ja langemisaeg koos
+        // annavad maksimumi poolel kõrgusel), mitte alumine (CodeRabbiti
+        // ülevaatuse leid 2026-08-04). Moodul õpetab ainult rõhku, mitte
+        // liikumisõpetust, seega küsimus küsib nüüd KIIRUST (mis KASVAB
+        // monotoonselt sügavusega – Torricelli valem), mitte kaugust.
+        kind: "choice",
+        id: "practice-4",
+        prompt: "Miks purskab vesi kõige alumisest august kõige suurema kiirusega (kõige kõvema joana)?",
+        // Joonis näitab ANTUD olukorra (alumine juga on kõige pikem/sirgem),
+        // mitte PÕHJUST – see on küsimuse enda sisu, sama piir mis tammi
+        // joonisel (kasutaja soov 2026-08-04: pilt teeb ülesande arusaadavamaks).
+        figure: "tunn-augud",
+        hints: ["Mis mõjutab veejoa kiirust – kui suur on rõhk selle augu kohal?"],
+        options: [
+          {
+            id: "alumine",
+            text: "Sest alumise augu kohal on kõige rohkem vett ja seal on kõige suurem rõhk, mis lükkab vee kõige suurema kiirusega välja",
+            correct: true,
+          },
+          {
+            id: "uhtemoodi",
+            text: "Kõik augud purskavad ühtviisi kõvasti, sest anumas on kõikjal sama kogus vett",
+            correct: false,
+            misconception: "rohk-ei-solju-sugavusest",
+          },
+          {
+            id: "ulemine",
+            text: "Ülemisest august, sest sealt jõuab vesi kiiremini väljapoole voolata",
+            correct: false,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: "exit",
+    id: "exit-1",
+    title: "Väljumispilet",
+    questions: [
+      {
+        kind: "choice",
+        id: "exit-1",
+        prompt: "Rõhk vedelikus sõltub:",
+        multiple: true,
+        options: [
+          { id: "sugavus", text: "Sügavusest", correct: true },
+          { id: "tihedus", text: "Vedeliku tihedusest", correct: true },
+          {
+            id: "kuju",
+            text: "Anuma kujust",
+            correct: false,
+            misconception: "kuju-mojutab-rohku",
+          },
+          {
+            id: "kogus",
+            text: "Vee kogusest",
+            correct: false,
+            misconception: "kuju-mojutab-rohku",
+          },
+        ],
+      },
+      {
+        kind: "numeric",
+        id: "exit-2",
+        prompt: "Arvuta: rõhk 1,5 m sügavusel vees ≈ ___ kPa",
+        unit: "kPa",
+        tolerance: { mode: "percent", value: 5 },
+        answer: EXIT_WATER_1_5M_KPA,
+      },
+      {
+        kind: "text",
+        id: "exit-3",
+        prompt: "Mida sa täna õppisid ja mis jäi segaseks?",
+        minWords: 5,
       },
     ],
   },

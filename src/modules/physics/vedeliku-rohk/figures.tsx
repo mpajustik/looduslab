@@ -253,3 +253,98 @@ export function ThreeVesselsFigure() {
     </figure>
   );
 }
+
+// --- Tünn kolme auguga (practice) -------------------------------------------
+
+/** Tünni sein ja veepind – augud ja joad joonistuvad selle peale. */
+const BARREL = { left: 60, right: 160, top: 30, bottom: 176, waterSurface: 42 };
+
+/** Kolme augu kõrgus (y) tünni seinal, ülalt alla. */
+const HOLES = { ylemine: 78, keskmine: 122, alumine: 164 };
+
+/**
+ * Üks auk + juga. Joa PIKKUS peegeldab spetsi antud eeldust (alumine auk
+ * purskab kõige kaugemale ja kõige sirgemalt) – see ON küsimuse eeldus,
+ * ANTUD olukorrana, mitte tõestus ega vastus. Joonis EI TOHI väita, MIKS see
+ * nii on (nt „see näitab kiirust") – see oleks vastuse ette ütlemine, sama
+ * piir mis tammi joonisel: kuju paistab, põhjus mitte (CodeRabbiti
+ * ülevaatuse leid 2026-08-05).
+ */
+function Jet({ y, length, droop }: { y: number; length: number; droop: number }) {
+  const startX = BARREL.right;
+  const endX = startX + length;
+  return (
+    <g>
+      <circle cx={startX} cy={y} r={4} className="fill-ink" />
+      <path
+        d={`M ${startX} ${y} Q ${startX + length * 0.6} ${y + droop * 0.3} ${endX} ${y + droop}`}
+        fill="none"
+        className="stroke-info"
+        strokeWidth={3}
+        strokeLinecap="round"
+      />
+    </g>
+  );
+}
+
+export function BarrelHolesFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
+        role="img"
+        aria-label="Joonis: küljelt vaadatud tünn kolme auguga selle seinas – üleval, keskel ja all. Igast august purskab veejuga küljele. Alumise augu juga ulatub kõige kaugemale ja kõige sirgemalt, keskmise oma vähem, ülemise oma kõige vähem."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        {/* Vesi tünni sees, pinnast põhjani. */}
+        <rect
+          x={BARREL.left}
+          y={BARREL.waterSurface}
+          width={BARREL.right - BARREL.left}
+          height={BARREL.bottom - BARREL.waterSurface}
+          className="fill-info"
+          fillOpacity={WATER_OPACITY}
+        />
+        {/* Vee pind – katkendjoon, sama kokkulepe mis mujal moodulis. */}
+        <line
+          x1={BARREL.left}
+          y1={BARREL.waterSurface}
+          x2={BARREL.right}
+          y2={BARREL.waterSurface}
+          className="stroke-info"
+          strokeWidth={2}
+          strokeDasharray="6 5"
+        />
+
+        {/* Tünni sein ja põhi. */}
+        <path
+          d={`M ${BARREL.left} ${BARREL.top} L ${BARREL.left} ${BARREL.bottom} L ${BARREL.right} ${BARREL.bottom} L ${BARREL.right} ${BARREL.top}`}
+          fill="none"
+          className="stroke-ink"
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {/* Kolm auku + juga, ülalt alla – pikkus kasvab, sest see on antud. */}
+        <Jet y={HOLES.ylemine} length={28} droop={10} />
+        <Jet y={HOLES.keskmine} length={54} droop={16} />
+        <Jet y={HOLES.alumine} length={86} droop={20} />
+
+        <text x={BARREL.left - 10} y={HOLES.ylemine + 4} textAnchor="end" className="fill-ink-soft" fontSize={12}>
+          ülal
+        </text>
+        <text x={BARREL.left - 10} y={HOLES.keskmine + 4} textAnchor="end" className="fill-ink-soft" fontSize={12}>
+          keskel
+        </text>
+        <text x={BARREL.left - 10} y={HOLES.alumine + 4} textAnchor="end" className="fill-ink-soft" fontSize={12}>
+          all
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Tünn kolme auguga. Alumine juga ulatub kõige kaugemale seinast ja on
+        kõige sirgem.
+      </figcaption>
+    </figure>
+  );
+}
