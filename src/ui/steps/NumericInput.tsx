@@ -1,7 +1,8 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import type { AnswerPayload } from "../../engine/answers";
 import type { NumericQuestion } from "../../engine/contract";
 import { Button } from "../Button";
+import { useDraft } from "./drafts";
 
 /**
  * Arvvastus: õpilane tipib arvu (soovi korral koos ühikuga).
@@ -26,7 +27,11 @@ export function NumericInput({
   /** Küsimuse teksti id – väli viitab sellele oma nimena. */
   labelledBy: string;
 }) {
-  const [draft, setDraft] = useState("");
+  // Tipitud arv elab mustandihoidlas – sammu vahetus ei tohi teda kaotada
+  // (vt drafts.tsx).
+  const [draft, setDraft] = useDraft(question.id, (saved) =>
+    typeof saved === "string" ? saved : "",
+  );
   const hintId = useId();
 
   // Vale kujuga vastus tähendab katkist moodulit (küsimus numeric, vastus

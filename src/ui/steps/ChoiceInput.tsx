@@ -1,9 +1,13 @@
-import { useState } from "react";
 import { Check } from "lucide-react";
 import type { AnswerPayload } from "../../engine/answers";
 import type { ChoiceQuestion } from "../../engine/contract";
 import { Button } from "../Button";
 import { cn } from "../cn";
+import { useDraft } from "./drafts";
+
+function isOptionIds(saved: unknown): saved is string[] {
+  return Array.isArray(saved) && saved.every((id) => typeof id === "string");
+}
 
 /** Ühe variandi rea ühine kuju – valitud variant on alati ka SÕNAS, mitte ainult värvis. */
 const OPTION_ROW =
@@ -34,7 +38,11 @@ export function ChoiceInput({
   /** Küsimuse teksti id – variandirühm viitab sellele oma nimena. */
   labelledBy: string;
 }) {
-  const [draft, setDraft] = useState<string[]>([]);
+  // Tehtud, aga esitamata valik elab mustandihoidlas – sammu vahetus ei tohi
+  // teda kaotada (vt drafts.tsx).
+  const [draft, setDraft] = useDraft<string[]>(question.id, (saved) =>
+    isOptionIds(saved) ? saved : [],
+  );
   const multiple = question.multiple === true;
 
   // Vastus võib tulla vale kujuga ainult siis, kui moodul on katki (küsimus
@@ -74,12 +82,15 @@ export function ChoiceInput({
   }
 
   const toggle = (optionId: string) => {
-    setDraft((current) => {
-      if (!multiple) return [optionId];
-      return current.includes(optionId)
-        ? current.filter((id) => id !== optionId)
-        : [...current, optionId];
-    });
+    if (!multiple) {
+      setDraft([optionId]);
+      return;
+    }
+    setDraft(
+      draft.includes(optionId)
+        ? draft.filter((id) => id !== optionId)
+        : [...draft, optionId],
+    );
   };
 
   return (

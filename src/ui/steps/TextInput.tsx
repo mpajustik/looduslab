@@ -1,8 +1,9 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import type { AnswerPayload } from "../../engine/answers";
 import type { TextQuestion } from "../../engine/contract";
 import { countWords } from "../../lib/text";
 import { Button } from "../Button";
+import { useDraft } from "./drafts";
 
 /**
  * Vabatekst: õpilane selgitab oma sõnadega.
@@ -27,7 +28,11 @@ export function TextInput({
   /** Küsimuse teksti id – väli viitab sellele oma nimena. */
   labelledBy: string;
 }) {
-  const [draft, setDraft] = useState("");
+  // Pooleli tekst elab mustandihoidlas, mitte siin: sammude vahel edasi-tagasi
+  // käimine ei tohi kirjutatut kaotada (vt drafts.tsx).
+  const [draft, setDraft] = useDraft(question.id, (saved) =>
+    typeof saved === "string" ? saved : "",
+  );
   const counterId = useId();
 
   // Vale kujuga vastus tähendab katkist moodulit (küsimus text, vastus

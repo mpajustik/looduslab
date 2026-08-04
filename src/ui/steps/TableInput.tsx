@@ -1,7 +1,16 @@
-import { useState } from "react";
 import type { AnswerPayload, TableRow } from "../../engine/answers";
 import type { TableQuestion } from "../../engine/contract";
 import { Button } from "../Button";
+import { useDraft } from "./drafts";
+
+/** Ridade arv peab klappima: muidu tuleks hoidlast teise kujuga küsimuse tabel. */
+function isTableDraft(saved: unknown, rows: number): saved is TableRow[] {
+  return (
+    Array.isArray(saved) &&
+    saved.length === rows &&
+    saved.every((row) => typeof row === "object" && row !== null)
+  );
+}
 
 /**
  * Mõõtetabel: õpilane loeb simulatsioonilt väärtused ja tipib need ridadena.
@@ -30,8 +39,13 @@ export function TableInput({
   /** Küsimuse teksti id – tabel viitab sellele oma nimena. */
   labelledBy: string;
 }) {
-  const [draft, setDraft] = useState<TableRow[]>(() =>
-    Array.from({ length: question.rows }, () => ({})),
+  // Pooleli tabel elab mustandihoidlas: õpilane käib mõõtmiste ajal
+  // simulatsiooni ja tabeli vahet, ja tipitud read ei tohi seda kaotada
+  // (vt drafts.tsx).
+  const [draft, setDraft] = useDraft<TableRow[]>(question.id, (saved) =>
+    isTableDraft(saved, question.rows)
+      ? saved
+      : Array.from({ length: question.rows }, () => ({})),
   );
 
   // Vale kujuga vastus tähendab katkist moodulit (küsimus table, vastus
@@ -44,9 +58,7 @@ export function TableInput({
   );
 
   const setCell = (rowIndex: number, key: string, value: string) => {
-    setDraft((current) =>
-      current.map((row, index) => (index === rowIndex ? { ...row, [key]: value } : row)),
-    );
+    setDraft(draft.map((row, index) => (index === rowIndex ? { ...row, [key]: value } : row)));
   };
 
   return (

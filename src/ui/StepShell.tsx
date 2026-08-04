@@ -15,6 +15,7 @@ import type { SimulationProps } from "../engine/simulationFeatures";
 import { useModuleProgress } from "../engine/useModuleProgress";
 import { Button } from "./Button";
 import { ModuleSummary } from "./ModuleSummary";
+import { DraftContext, useDraftStore } from "./steps/drafts";
 import { STEP_LABELS, STEP_NOTES, stepRegistry } from "./steps/registry";
 import type { StepComponent } from "./steps/types";
 
@@ -70,6 +71,9 @@ export function StepShell({
   summaryAction?: ReactNode;
 }) {
   const progress = useModuleProgress({ moduleId, moduleVersion, steps, mode });
+  // Pooleli mustandid kaovad koos vastustega: teise moodulisse minnes või
+  // „Alusta uuesti" järel (runId vahetub).
+  const drafts = useDraftStore(`${moduleId}:${progress.runId}`);
   const [askRestart, setAskRestart] = useState(false);
   const [askRestartModuleId, setAskRestartModuleId] = useState(moduleId);
   /**
@@ -206,23 +210,29 @@ export function StepShell({
             </div>
 
             {StepContent ? (
-              // Võti sunnib uue mooduli, sammu või uue käigu peal uue instantsi.
-              // Ilma selleta taaskasutab React sama komponenti ja sammukomponendi
-              // POOLELI olek (nt tehtud, aga esitamata valik) kanduks üle –
-              // küsimuste id-d (`precheck-1`) korduvad moodulite vahel, seega ei
-              // aita ka võtmed allpool. Esitatud vastused tulevad engine'ist.
-              <StepContent
-                key={`${moduleId}:${runId}:${step.id}`}
-                step={step}
-                answers={answers}
-                onAnswer={(questionId, payload) =>
-                  progress.answer(step, questionId, payload)
-                }
-                Simulation={Simulation}
-                // Varasema vastuse otsimiseks on vaja KÕIKI samme (küsimus elab
-                // eelmises sammus) – sammukomponent näeb ainult enda oma.
-                recall={(questionId) => recallAnswer(steps, answers, questionId)}
-              />
+              // Mustandihoidla on sammust VÄLJASPOOL: pooleli kirjutatu peab
+              // elama sammu vahetust üle (vt steps/drafts.ts).
+              <DraftContext.Provider value={drafts}>
+                {/* Võti sunnib uue mooduli, sammu või uue käigu peal uue
+                    instantsi. Sammu id-d (`precheck-1`) korduvad moodulite
+                    vahel, seega ei piisa temast üksi. `runId` on siin
+                    „Alusta uuesti" pärast: koos vastustega tühjeneb ka
+                    mustandihoidla ja sisestusväli peab lugema uue, tühja
+                    mustandi – ilma selleta jääks vana valik ekraanile
+                    (CodeRabbiti ülevaatuse leid 2026-08-04). */}
+                <StepContent
+                  key={`${moduleId}:${runId}:${step.id}`}
+                  step={step}
+                  answers={answers}
+                  onAnswer={(questionId, payload) =>
+                    progress.answer(step, questionId, payload)
+                  }
+                  Simulation={Simulation}
+                  // Varasema vastuse otsimiseks on vaja KÕIKI samme (küsimus elab
+                  // eelmises sammus) – sammukomponent näeb ainult enda oma.
+                  recall={(questionId) => recallAnswer(steps, answers, questionId)}
+                />
+              </DraftContext.Provider>
             ) : (
               // Seda ei tohiks õpilane kunagi näha – aga tühi valge ekraan oleks
               // hullem kui aus lause.
