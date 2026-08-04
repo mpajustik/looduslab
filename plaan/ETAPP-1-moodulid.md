@@ -1192,6 +1192,8 @@ harjutuse 5 juurde (`figures.tsx` uus `BarrelHolesFigure`, `tunn-augud`).
 
 ## 1.22 Etapi lõpukontroll
 
-- [ ] Mõlemad moodulid läbitavad telefonis algusest lõpuni
-- [ ] Hinda ausalt: kas kolmas moodul valmiks selle malli peal ~1 päevaga?
-      Kui ei – lihtsusta malli enne 2. etappi
+- [x] Mõlemad moodulid läbitavad telefonis algusest lõpuni (2026-08-05,
+      kasutaja kinnitas: „Kõik on hästi")
+- [x] Hinda ausalt: kas kolmas moodul valmiks selle malli peal ~1 päevaga?
+      Kui ei – lihtsusta malli enne 2. etappi (2026-08-05, kasutaja
+      kinnitas – mall sobib, lihtsustamist ei vaja)
