@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { Answers, AnswerPayload } from "../../engine/answers";
 import type { Step, StepType } from "../../engine/contract";
+import type { ModuleFigures } from "../../engine/figures";
 import type { RecalledAnswer } from "../../engine/recall";
 import type { SimulationProps } from "../../engine/simulationFeatures";
 
@@ -39,6 +40,13 @@ export type StepComponent<T extends StepType> = ComponentType<{
   onAnswer: (questionId: string, payload: AnswerPayload) => void;
   /** Mooduli simulatsioonikomponent, kui moodulil üks on. */
   Simulation?: ComponentType<SimulationProps>;
+  /**
+   * Mooduli joonised sildi kaupa (src/engine/figures.ts). Sama põhjus mis
+   * `Simulation`-il: see fail ei tohi teada ühestki moodulist, seega tulevad
+   * joonised väljastpoolt. Sammutüübid, millel `figure` välja ei ole,
+   * jätavad selle propsi lihtsalt kasutamata.
+   */
+  figures?: ModuleFigures;
   /**
    * Varasema küsimuse vastus loetaval kujul (explain näitab ennustust).
    *

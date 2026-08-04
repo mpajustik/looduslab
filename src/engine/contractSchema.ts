@@ -345,6 +345,21 @@ const featureSchema = z
   );
 
 /**
+ * Joonise silt, nt `peegeldumise-moisted`.
+ *
+ * Sama muster mis `featureSchema`-l: sildi tähendust teab ainult sama mooduli
+ * figures.tsx – engine kannab teda edasi, aga ei tea, mida ta joonistab
+ * (src/engine/figures.ts). Kuju on sama mis slugil, et kirjaviga oleks
+ * silmatorkav; kooskõla registriga valvab test.
+ */
+const figureIdSchema = z
+  .string()
+  .regex(
+    /^[a-z0-9]+(-[a-z0-9]+)*$/,
+    "Joonise silt tohib sisaldada ainult väiketähti, numbreid ja sidekriipse",
+  );
+
+/**
  * Lahendatud näidis (practice-sammu ees).
  *
  * Vastus on omaette väli, mitte lahenduskäigu viimane rida: ekraanil peab
@@ -374,10 +389,27 @@ const questionsSchema = z.array(questionSchema);
  * nimetata ümber – vanad vastused viitavad neile (docs/MOODULILEPING.md).
  */
 export const stepSchemas = {
-  /** Lühike teooria: max üks ekraan. Vastust ei ole. */
-  theory: z.strictObject({ type: z.literal("theory"), ...stepBase, body: bodySchema }),
+  /**
+   * Lühike teooria: max üks ekraan. Vastust ei ole.
+   *
+   * `figure` on mooduli enda joonise silt (src/engine/figures.ts) – joonis
+   * ilmub teksti järele. Mõistet on lihtsam näidata kui sõnadega ümber
+   * jutustada, aga joonis EI ASENDA teksti: ekraanilugejaga õpilane peab
+   * sammu ka ilma pildita läbima, seega `body` jääb kohustuslikuks.
+   */
+  theory: z.strictObject({
+    type: z.literal("theory"),
+    ...stepBase,
+    body: bodySchema,
+    figure: figureIdSchema.optional(),
+  }),
   /** Häälestav probleem või küsimus. Vastust ei ole. */
-  hook: z.strictObject({ type: z.literal("hook"), ...stepBase, body: bodySchema }),
+  hook: z.strictObject({
+    type: z.literal("hook"),
+    ...stepBase,
+    body: bodySchema,
+    figure: figureIdSchema.optional(),
+  }),
   /** 1–3 eelteadmiste küsimust. */
   precheck: z.strictObject({
     type: z.literal("precheck"),

@@ -1,7 +1,7 @@
 # Moodulileping
 
-Iga õppemoodul on kaust `src/modules/physics/<slug>/` täpselt viie failiga.
-See on projekti kõige tähtsam muster – ära kaldu sellest kõrvale.
+Iga õppemoodul on kaust `src/modules/physics/<slug>/` viie kohustusliku
+failiga. See on projekti kõige tähtsam muster – ära kaldu sellest kõrvale.
 
 ## Failid
 
@@ -12,7 +12,21 @@ peegeldumisseadus/
   Simulation.tsx   # visuaal (SVG) – ainult kuvamine ja interaktsioon
   activities.ts    # sammud, küsimused, õiged vastused, vihjed + reviewCards
   teacher.ts       # õpetajajuhend, väärarusaamad, aruteluküsimused
+  figures.tsx      # VALIKULINE: teooria- ja hook-sammu staatilised joonised
 ```
+
+`figures.tsx` on ainus lubatud kuues fail ja ainult siis, kui moodulil on
+staatilisi jooniseid (sammu `figure` väli). Miks eraldi failis, mitte
+`Simulation.tsx`-is: teooriasamm tuleb enne simulatsiooni ja ei tohi tirida
+kaasa kogu simulatsiooni koodi (reegel 13). Miks mitte `activities.ts`-is:
+see fail peab jääma puhtaks ANDMEKS, mida zod valideerib ja mis läheb
+hiljem andmebaasi – komponent seal ei tohi olla. Kehtivad samad reeglid mis
+`Simulation.tsx`-il: ainult kuvamine, füüsika tuleb `model.ts`-ist.
+
+Joonised registreeritakse `src/modules/registry.ts`-is (`moduleFigures`)
+laiskade komponentidena, sildi kaupa. Silt peab klappima `activities.ts`
+`figure` väljaga – seda valvab test, sest puuduv joonis ei tee ekraani
+katki, ta lihtsalt EI ILMU.
 
 Moodul registreeritakse `src/modules/registry.ts`-is (`id → () => import()`).
 See on AINUS koht, mis teab kõiki mooduleid – nii jääb dünaamiline laadimine
@@ -170,9 +184,9 @@ export const reviewCards = [
 ];
 ```
 
-Kaardid elavad `activities.ts`-is (mitte manifest'is ega kuuendas failis),
+Kaardid elavad `activities.ts`-is (mitte manifest'is ega omaette failis),
 sest nad on sama sorti sisu mis küsimused: tekst + õige vastus + kontroll.
-Nii jääb viie faili reegel kehtima.
+Kaardi jaoks eraldi faili ei tehta – vt failide loend ülal.
 
 **Kaardid kirjutatakse valmis KOHE mooduli loomisel**, ka enne etappi 3, kus
 kordamismootor valmib. Spetsifikatsioonifailis (sisu/MOODUL-*.md) on nad

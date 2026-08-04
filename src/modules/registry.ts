@@ -1,6 +1,7 @@
 import { lazy } from "react";
 import type { ComponentType, LazyExoticComponent } from "react";
 import type { Activities, ModuleManifest } from "../engine/contract";
+import type { ModuleFigures } from "../engine/figures";
 import type { SimulationProps } from "../engine/simulationFeatures";
 
 /**
@@ -56,6 +57,30 @@ export const moduleSimulations: Record<
       default: module.Simulation,
     })),
   ),
+};
+
+/**
+ * Sammude joonised (theory/hook sammu `figure` silt), eraldi kaart nagu
+ * simulatsioonidel ja samal põhjusel.
+ *
+ * Iga joonis on `lazy` – nii ei võta esilehe bundle neid kaasa (CLAUDE.md
+ * reegel 13) ja kõik ühe mooduli joonised jagavad üht tükki (sama import()
+ * tee). Kaart ise on SÜNKROONNE: ModulePage saab ta kohe kätte ja ei pea
+ * jooniste jaoks omaette laadimisolekut hoidma – ootamise eest hoolitseb
+ * Suspense, mis on lehel juba olemas.
+ *
+ * Sildid peavad klappima activities.ts `figure` väljadega – seda valvab test
+ * (tests/registry.test.ts), sest puuduv joonis ei tee ekraani katki, ta
+ * lihtsalt EI ILMU ja seda ei pruugi keegi märgata.
+ */
+export const moduleFigures: Record<string, ModuleFigures> = {
+  "physics.peegeldumisseadus": {
+    "peegeldumise-moisted": lazy(() =>
+      import("./physics/peegeldumisseadus/figures").then((module) => ({
+        default: module.ReflectionConceptFigure,
+      })),
+    ),
+  },
 };
 
 /**

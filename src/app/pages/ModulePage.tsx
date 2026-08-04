@@ -6,7 +6,12 @@ import { PageHeader } from "../../ui/PageHeader";
 import { StepShell } from "../../ui/StepShell";
 import type { ProgressMode } from "../../engine/progress";
 import type { LoadedModule } from "../../modules/registry";
-import { moduleRegistry, moduleSimulations, slugIndex } from "../../modules/registry";
+import {
+  moduleFigures,
+  moduleRegistry,
+  moduleSimulations,
+  slugIndex,
+} from "../../modules/registry";
 
 /**
  * Päris moodul (`/m/:slug`) – laeb mooduli registrist slugi järgi ja
@@ -100,8 +105,10 @@ function ModuleLoader({ id }: { id: string }) {
 
   const { manifest, activities } = loaded;
 
+  // Laisalt laetakse nii simulatsioon kui ka joonised, seega ütleb ootelause
+  // „sisu", mitte „simulatsioon" – teooriasammul oleks teine sõna vale.
   return (
-    <Suspense fallback={<PageHeader title="Laen simulatsiooni …" />}>
+    <Suspense fallback={<PageHeader title="Laen tunni sisu …" />}>
       <StepShell
         moduleId={manifest.id}
         moduleVersion={manifest.version}
@@ -110,6 +117,7 @@ function ModuleLoader({ id }: { id: string }) {
         steps={activities.steps}
         mode={mode}
         Simulation={moduleSimulations[manifest.id]}
+        figures={moduleFigures[manifest.id]}
         // Edasiviiv nupp tuleb app-kihist, sest ui ei tea marsruutidest.
         summaryAction={
           <Link to="/kursus" className={buttonClasses()}>

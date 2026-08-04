@@ -1,3 +1,4 @@
+import type { ModuleFigures } from "../../engine/figures";
 import type { StepOfType } from "./types";
 
 /**
@@ -8,7 +9,15 @@ import type { StepOfType } from "./types";
  * komponent, sest tüübid on moodulilepingus lahus (docs/MOODULILEPING.md
  * „Laiendatavus") ja vastuste tabelis peab sammu tüüp olema õigesti tuletatav.
  */
-export function HookStep({ step }: { step: StepOfType<"hook"> }) {
+export function HookStep({
+  step,
+  figures,
+}: {
+  step: StepOfType<"hook">;
+  figures?: ModuleFigures;
+}) {
+  const Figure = step.figure ? figures?.[step.figure] : undefined;
+
   return (
     <div className="flex max-w-prose flex-col gap-4 text-lg leading-relaxed text-ink">
       {step.body.map((paragraph, index) => (
@@ -16,6 +25,8 @@ export function HookStep({ step }: { step: StepOfType<"hook"> }) {
         // seega järjekorranumber on siin turvaline võti.
         <p key={index}>{paragraph}</p>
       ))}
+
+      {Figure ? <Figure /> : null}
     </div>
   );
 }

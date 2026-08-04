@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSlugIndex,
   hasModule,
+  moduleFigures,
   moduleRegistry,
   slugFromId,
   slugIndex,
@@ -70,6 +71,24 @@ describe("moodulite register", () => {
       const { manifest, activities } = await load();
       expect(manifestSchema.parse(manifest).id).toBe(id);
       expect(() => activitiesSchema.parse(activities)).not.toThrow();
+    },
+  );
+
+  // Puuduv joonis EI tee ekraani katki – samm renderdub lihtsalt ilma pildita
+  // ja seda ei pruugi keegi märgata. Seepärast valvab sidet test.
+  it.each(Object.entries(moduleRegistry))(
+    "mooduli %s iga joonise silt on registris olemas",
+    async (id, load) => {
+      const { activities } = await load();
+      const figures = moduleFigures[id] ?? {};
+      for (const step of activities.steps) {
+        if ("figure" in step && step.figure !== undefined) {
+          expect(
+            Object.keys(figures),
+            `sammu "${step.id}" joonis "${step.figure}" puudub registrist`,
+          ).toContain(step.figure);
+        }
+      }
     },
   );
 });

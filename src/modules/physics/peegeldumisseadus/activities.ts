@@ -37,6 +37,9 @@ const steps: Step[] = [
       "Nurki ei mõõdeta mitte peegli pinna, vaid pinnaga risti oleva joone suhtes. Seda risti joont nimetatakse pinna ristsirgeks.",
       "Sellest ühest kokkuleppest sõltub kogu peegeldumisseadus. Pinna suhtes mõõtes saad hoopis teise arvu: see täiendab ristsirgest mõõdetud nurga 90 kraadini.",
     ],
+    // Kõik mõisted korraga ühel joonisel – siin on nad esimest korda koos
+    // (katsetus 2026-08-04: tekstist üksi ei saanud õpilane pilti kokku).
+    figure: "peegeldumise-moisted",
   },
   {
     type: "hook",

@@ -9,6 +9,7 @@ import {
 import { ArrowLeft, ArrowRight, Check, Lock, RotateCcw } from "lucide-react";
 import { isStepAnswered } from "../engine/answers";
 import { stepQuestions, type Step, type StepType } from "../engine/contract";
+import type { ModuleFigures } from "../engine/figures";
 import type { ProgressMode } from "../engine/progress";
 import { recallAnswer } from "../engine/recall";
 import type { SimulationProps } from "../engine/simulationFeatures";
@@ -39,6 +40,7 @@ export function StepShell({
   steps,
   mode = "persist",
   Simulation,
+  figures,
   summaryAction,
 }: {
   /**
@@ -64,6 +66,12 @@ export function StepShell({
    * mooduli laadis) annab selle propsina kaasa.
    */
   Simulation?: ComponentType<SimulationProps>;
+  /**
+   * Mooduli joonised sildi kaupa (theory/hook sammu `figure`). Sama põhjus
+   * mis `Simulation`-il: StepShell ei tea moodulitest, seega annab kutsuja
+   * ka joonised propsina.
+   */
+  figures?: ModuleFigures;
   /**
    * Kokkuvõtteekraani edasiviiv nupp (nt link kursuse juurde). Tuleb
    * app-kihist, sest ui ei tea marsruutidest (docs/ARHITEKTUUR.md).
@@ -228,6 +236,7 @@ export function StepShell({
                     progress.answer(step, questionId, payload)
                   }
                   Simulation={Simulation}
+                  figures={figures}
                   // Varasema vastuse otsimiseks on vaja KÕIKI samme (küsimus elab
                   // eelmises sammus) – sammukomponent näeb ainult enda oma.
                   recall={(questionId) => recallAnswer(steps, answers, questionId)}

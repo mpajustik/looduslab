@@ -30,6 +30,9 @@ export const manifest = defineModule({
   // kolmele teooria-sammule (teacher.ts lessonPlan) – kasutaja otsustas
   // (2026-08-04) need alles jätta, mitte kärpida.
   minutes: { demo: 10, lesson: 51, homework: 25 },
-  version: "1.0.0",
+  // 1.1.0: uus küsimus explore-4 (mattpind) – minor.
+  // 1.1.1: teooriasammu mõistejoonis – visuaal on patch.
+  // Reeglid: docs/MOODULILEPING.md „Versioonimine".
+  version: "1.1.1",
   status: "active",
 });
