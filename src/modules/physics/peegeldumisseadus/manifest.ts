@@ -32,7 +32,8 @@ export const manifest = defineModule({
   minutes: { demo: 10, lesson: 51, homework: 25 },
   // 1.1.0: uus küsimus explore-4 (mattpind) – minor.
   // 1.1.1: teooriasammu mõistejoonis – visuaal on patch.
+  // 1.1.2: sile pind vs mattpind joonis – samuti visuaal.
   // Reeglid: docs/MOODULILEPING.md „Versioonimine".
-  version: "1.1.1",
+  version: "1.1.2",
   status: "active",
 });

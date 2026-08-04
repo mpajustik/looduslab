@@ -80,6 +80,11 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.ReflectionConceptFigure,
       })),
     ),
+    "sile-ja-mattpind": lazy(() =>
+      import("./physics/peegeldumisseadus/figures").then((module) => ({
+        default: module.SurfaceComparisonFigure,
+      })),
+    ),
   },
 };
 

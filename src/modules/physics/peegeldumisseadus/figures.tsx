@@ -1,4 +1,9 @@
-import { incidentDirection, reflectedDirection, type Vector2 } from "./model";
+import {
+  diffuseDirections,
+  incidentDirection,
+  reflectedDirection,
+  type Vector2,
+} from "./model";
 
 /**
  * Mooduli joonised (src/engine/figures.ts).
@@ -119,6 +124,36 @@ function hatchXs(left: number, right: number): number[] {
   );
 }
 
+/** Sirge pind viirutusega – kordub mõlemal joonisel. */
+function FlatSurface({
+  left,
+  right,
+  y,
+}: {
+  left: number;
+  right: number;
+  y: number;
+}) {
+  return (
+    <>
+      <line
+        x1={left}
+        y1={y}
+        x2={right}
+        y2={y}
+        className="stroke-ink"
+        strokeWidth={3}
+        strokeLinecap="round"
+      />
+      <g className="stroke-ink-soft" strokeWidth={1.5} strokeLinecap="round">
+        {hatchXs(left, right).map((x) => (
+          <line key={x} x1={x} y1={y} x2={x - HATCH_STEP} y2={y + HATCH_STEP} />
+        ))}
+      </g>
+    </>
+  );
+}
+
 // --- Joonis: peegeldumise mõisted ------------------------------------------
 
 /**
@@ -196,26 +231,11 @@ export function ReflectionConceptFigure() {
         <RayArrowDefs />
 
         {/* Peegel: paks joon + viirutus tagumisel poolel */}
-        <line
-          x1={CONCEPT_MIRROR.left}
-          y1={CONCEPT_ORIGIN.y}
-          x2={CONCEPT_MIRROR.right}
-          y2={CONCEPT_ORIGIN.y}
-          className="stroke-ink"
-          strokeWidth={3}
-          strokeLinecap="round"
+        <FlatSurface
+          left={CONCEPT_MIRROR.left}
+          right={CONCEPT_MIRROR.right}
+          y={CONCEPT_ORIGIN.y}
         />
-        <g className="stroke-ink-soft" strokeWidth={1.5} strokeLinecap="round">
-          {hatchXs(CONCEPT_MIRROR.left, CONCEPT_MIRROR.right).map((x) => (
-            <line
-              key={x}
-              x1={x}
-              y1={CONCEPT_ORIGIN.y}
-              x2={x - HATCH_STEP}
-              y2={CONCEPT_ORIGIN.y + HATCH_STEP}
-            />
-          ))}
-        </g>
 
         {/* Pinna ristsirge – katkendjoon, sest ta EI ole valguskiir */}
         <line
@@ -308,6 +328,181 @@ export function ReflectionConceptFigure() {
         <span className="font-semibold text-brand">α</span> – langemisnurk,{" "}
         <span className="font-semibold text-info">β</span> – peegeldumisnurk.
         Mõlemat mõõdetakse pinna ristsirgest, mitte peegli pinnast.
+      </figcaption>
+    </figure>
+  );
+}
+
+// --- Joonis: sile pind ja mattpind -----------------------------------------
+
+/**
+ * Langemisnurk mõlemal pinnal. 35° on VALIK: piisavalt kaldu, et kolm kiirt
+ * oleksid teineteisest eristatavad, ja piisavalt lame, et kimp mahuks ära.
+ */
+const SURFACES_ANGLE_DEG = 35;
+
+const SURFACES_VIEW = { minY: 40, width: 360, height: 268 };
+const SURFACES_LEFT = 30;
+const SURFACES_RIGHT = 310;
+
+/** Sile pind: kolm langemispunkti ühel sirgel. */
+const SMOOTH_Y = 130;
+const SMOOTH_HITS = [95, 170, 245];
+const SMOOTH_RAY = 62;
+
+/** Mattpind: sama kõrgus kui sile, aga sakiline joon. */
+const MATTE_BASE_Y = 270;
+const MATTE_STEP = 14;
+const MATTE_BUMP = 6;
+const MATTE_RAY = 58;
+
+/**
+ * Seeme on VALITUD, mitte suvaline: selle juures lahkuvad kolm kiirt
+ * ristsirge suhtes nurkade −20°, +17° ja +54° all ehk silmaga selgelt eri
+ * suundades. Juhuslik seeme andis kimbu, kus kõik kolm olid peaaegu koos, ja
+ * siis ei paista jooniselt seda, mille pärast ta üldse on.
+ *
+ * Fikseeritud nagu Simulation.tsx-is: joonis peab iga kord ühesugune olema
+ * (model.ts ei tohi anda samale sisendile kaht tulemust).
+ */
+const MATTE_SEED = 20261172;
+
+/** Mattpinna sakiline joon. Sakid on KAUNISTUS – füüsika on kiirte suundades. */
+function roughSurfacePath(left: number, right: number, baseY: number): string {
+  const points: string[] = [];
+  for (let index = 0; left + index * MATTE_STEP <= right; index += 1) {
+    points.push(`${left + index * MATTE_STEP} ${roughSurfaceY(index, baseY)}`);
+  }
+  return `M ${points.join(" L ")}`;
+}
+
+/** Saki kõrgus ühes punktis – kiired peavad maanduma TÄPSELT joone peale. */
+function roughSurfaceY(index: number, baseY: number): number {
+  return index % 2 === 0 ? baseY : baseY - MATTE_BUMP;
+}
+
+/** Langemispunktid mattpinnal: iga kolmas sakk, et kiired ei jookseks kokku. */
+const MATTE_HIT_INDEXES = [5, 10, 15];
+
+/**
+ * Kaks pinda kõrvuti: siledalt pinnalt lahkuvad kõrvuti tulnud kiired
+ * korrapäraselt, mattpinnalt eri suundades.
+ *
+ * Mõlemal joonisel on SAMA langemisnurk ja kiired tulevad kõrvuti – ainus
+ * vahe on pinnas. Just see teeb nähtavaks, et hajumine ei ole „teistsugune
+ * seadus": iga üksik kiir järgib ikka peegeldumisseadust, ainult mattpinna
+ * pisikesed tahud on eri kaldega (vt model.ts diffuseDirections).
+ */
+export function SurfaceComparisonFigure() {
+  const incidentUp = opposite(incidentDirection(SURFACES_ANGLE_DEG));
+  const reflectedUp = reflectedDirection(SURFACES_ANGLE_DEG);
+  // Hajunud suunad tulevad mudelist – siin ei arvutata ühtegi nurka.
+  const diffuse = diffuseDirections(
+    SURFACES_ANGLE_DEG,
+    MATTE_HIT_INDEXES.length,
+    MATTE_SEED,
+  );
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 ${SURFACES_VIEW.minY} ${SURFACES_VIEW.width} ${SURFACES_VIEW.height}`}
+        role="img"
+        aria-label="Kaks joonist üksteise all. Ülemisel langeb kolm kõrvuti kiirt siledale peeglile ja lahkub samuti kõrvuti, kõik ühes suunas. Alumisel langeb kolm samasugust kiirt sakilisele mattpinnale ja lahkub eri suundades laiali."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+
+        {/* --- Ülemine: sile pind --- */}
+        <text x={SURFACES_LEFT} y={58} className="fill-ink" fontSize={15} fontWeight={600}>
+          Sile pind (peegel)
+        </text>
+        <FlatSurface left={SURFACES_LEFT} right={SURFACES_RIGHT} y={SMOOTH_Y} />
+        {SMOOTH_HITS.map((hitX) => {
+          const hit = { x: hitX, y: SMOOTH_Y };
+          const source = pointAt(hit, incidentUp, SMOOTH_RAY);
+          const target = pointAt(hit, reflectedUp, SMOOTH_RAY);
+          return (
+            <g key={hitX}>
+              <path
+                d={rayPath(source, hit, 0.55)}
+                className="fill-none stroke-brand"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                markerMid={`url(#${ARROW_INCIDENT})`}
+              />
+              <path
+                d={rayPath(hit, target, 0.85)}
+                className="fill-none stroke-info"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                markerMid={`url(#${ARROW_REFLECTED})`}
+              />
+            </g>
+          );
+        })}
+        <text x={SURFACES_LEFT} y={158} className="fill-ink-soft" fontSize={13}>
+          Kiired jäävad ka pärast peegeldumist kõrvuti.
+        </text>
+
+        {/* --- Alumine: mattpind --- */}
+        <text x={SURFACES_LEFT} y={198} className="fill-ink" fontSize={15} fontWeight={600}>
+          Mattpind (paber, sein)
+        </text>
+        <path
+          d={roughSurfacePath(SURFACES_LEFT, SURFACES_RIGHT, MATTE_BASE_Y)}
+          className="fill-none stroke-ink"
+          strokeWidth={3}
+          strokeLinejoin="round"
+        />
+        <g className="stroke-ink-soft" strokeWidth={1.5} strokeLinecap="round">
+          {hatchXs(SURFACES_LEFT, SURFACES_RIGHT).map((x) => (
+            <line
+              key={x}
+              x1={x}
+              y1={MATTE_BASE_Y + 2}
+              x2={x - HATCH_STEP}
+              y2={MATTE_BASE_Y + 2 + HATCH_STEP}
+            />
+          ))}
+        </g>
+        {MATTE_HIT_INDEXES.map((hitIndex, rayIndex) => {
+          const hit = {
+            x: SURFACES_LEFT + hitIndex * MATTE_STEP,
+            y: roughSurfaceY(hitIndex, MATTE_BASE_Y),
+          };
+          const source = pointAt(hit, incidentUp, MATTE_RAY);
+          // Suund tuleb juba langemispunktist VÄLJA (sama kokkulepe mis
+          // reflectedDirection-il), seega siin ei ole opposite()-i vaja.
+          const target = pointAt(hit, diffuse[rayIndex], MATTE_RAY);
+          return (
+            <g key={hitIndex}>
+              <path
+                d={rayPath(source, hit, 0.55)}
+                className="fill-none stroke-brand"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                markerMid={`url(#${ARROW_INCIDENT})`}
+              />
+              <path
+                d={rayPath(hit, target, 0.85)}
+                className="fill-none stroke-info"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                markerMid={`url(#${ARROW_REFLECTED})`}
+              />
+            </g>
+          );
+        })}
+        <text x={SURFACES_LEFT} y={298} className="fill-ink-soft" fontSize={13}>
+          Kiired lahkuvad eri suundades – pind hajutab valgust.
+        </text>
+      </svg>
+
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Mõlemal joonisel on sama langemisnurk ja kiired tulevad kõrvuti. Ainus
+        vahe on pind: mattpinna pisikesed tahud on eri kaldega, seega järgib iga
+        kiir seadust oma tahu ristsirge suhtes ja lahkub teises suunas.
       </figcaption>
     </figure>
   );

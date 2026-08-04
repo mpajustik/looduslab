@@ -28,6 +28,9 @@ const steps: Step[] = [
       "Kui valguskiir jõuab siledale pinnale, ei jää ta sinna pidama: ta põrkab tagasi. Seda nimetatakse peegeldumiseks.",
       "Siledalt pinnalt (peegel, vaikne veepind) peegelduvad kõrvuti tulnud kiired korrapäraselt: nad jäävad ka pärast peegeldumist kõrvuti. Mattpind (paber, sein) saadab nad laiali eri suundadesse – seepärast näed peeglist oma nägu, seinast mitte.",
     ],
+    // Kaks pinda kõrvuti: sõnadest üksi ei tule vahe välja (katsetus
+    // 2026-08-04).
+    figure: "sile-ja-mattpind",
   },
   {
     type: "theory",
