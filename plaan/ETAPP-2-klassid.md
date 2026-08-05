@@ -151,9 +151,15 @@ supabase/functions/README.md.
 > nimed reaalajas. See on tunni alguse kriitiline hetk: 24 last peavad
 > liituma 2 minutiga.
 
-- [ ] Klass tekib, kood + QR kuvatakse, kood on kopeeritav
-- [ ] Projektorivaade on klassi tagant loetav; liitujad ilmuvad ekraanile
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] Klass tekib, kood + QR kuvatakse, kood on kopeeritav
+      (2026-08-05, commit f7101e2; kood elab ainult komponendi mälus –
+      lehe värskendamise järel tuleb genereerida uus)
+- [x] Projektorivaade on klassi tagant loetav; liitujad ilmuvad ekraanile
+      (Supabase Realtime `postgres_changes` tabelil `students`)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): CodeRabbit 5 +
+      Codex 2 leidu, neli parandatud (algseisu päring `SUBSCRIBED` sisse,
+      päringu vea kuvamine, migratsiooni vale kommentaar DELETE + RLS kohta,
+      projektorivaade päris modaaliks), kaks teadlikult jäetud
 
 **Riskisamm, mida plaan ette ei näinud:** projektorivaate „liitujad ilmuvad
 ekraanile" nõuab, et `students` oleks Supabase Realtime publikatsioonis –
@@ -177,8 +183,79 @@ liitumise UI valmimist.
 > kood ja pidurduse rakendumine.
 
 - [ ] Neli curl-testi annavad õiged tulemused
-- [ ] Baasis on ip_hash, mitte loetav IP; üle 24 h vanad read kaovad
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+      (2026-08-05 tehtud ja rohelised: õige kood 200, kordusliitumine 200
+      sama class_id-ga, vale kood 404, sessioonipiir 5 → 6. katse 429,
+      IP piir 10 → värske sessioon saab samuti 429, tühi nimi 400.
+      **Puudu:** aegunud kood ja õpetaja token 403 – vajavad SQL Editorit
+      ja brauseri tokenit)
+- [x] Baasis on ip_hash, mitte loetav IP; üle 24 h vanad read kaovad
+      (2026-08-05: `supabase/tests/01-skeem.sql` 14 kontrolli ja
+      `02-pidurdus.sql` 7 kontrolli rohelised – sh et pooleliolevad katsed
+      EI lähe turvapiiri arvesse ja et üle 24 h vana rida kaob juba
+      esimese kutse ajal, ilma pg_cronita)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`), kaks ringi:
+      esimene CodeRabbit 7 + Codex 3 (võidujooks pidurduses ja 24 h
+      säilitus kattusid), teine CodeRabbit 4 + Codex 3. Kokku 8 päris viga
+      parandatud, sh üks, mille tõi sisse alles esimese ringi parandus:
+      rida kirjutatakse enne koodi kontrolli, seega oleks 24 õiget
+      liitumist korraga IP piiri täis lugenud
+
+**Kontrollitud päris keskkonnas (mitte ainult koodi lugedes):**
+`anon` roll saab `register_join_attempt` kutsumisel `42501 permission
+denied` – EXECUTE äravõtmine töötab. Võltsitud `x-forwarded-for` päisega
+EI SAA pidurdusest mööda (värske sessioon + võltsitud päis → ikka 429),
+seega IP tuleb usaldusväärsest allikast.
+
+**Uus saladus:** `JOIN_IP_SALT` (≥32 märki), eraldi `CLASS_CODE_PEPPER`-ist –
+kui üks lekib, ei tohi see teist puudutada. Seadistus:
+supabase/functions/README.md. Samas failis on ka nõue lubada Supabase'i
+töölaual anonüümne sisselogimine.
+
+**Erinevus sammust 2.7:** `join_class` kasutab SERVICE-võtit, sest
+tabelitel `students` ja `join_attempts` ei ole INSERT-poliitikat (see on
+002_rls.sql-is tahtlik). Service-võti käib RLS-ist mööda, seega
+turvavõrku selles failis ei ole: õpilase id võetakse alati tokenist.
+
+**Plaanist erinev, ülevaatuse tulemus – migratsioon `005_join_throttle.sql`:**
+plaan nägi ette lihtsa loenduse IP kaupa. Ülevaatus näitas, et see ei pea
+kolmes kohas vett, seega kolib pidurdus andmebaasi:
+
+1. *Võidujooks.* „Loe arv, siis kirjuta rida" on kaks päringut ja nende
+   vahele mahub kogu rünne – 50 korraga saadetud päringut lugesid kõik
+   „katseid on 0". Nüüd teeb kontrolli ja logimise üks SQL-funktsioon
+   (`register_join_attempt`) nõuandeluku all.
+2. *Kooli NAT.* Ainult IP peale ehitatud piir sulgeks 10 näpuvea järel
+   liitumise kogu klassile. Nüüd on piir ka **sessiooni kohta: 5 katset**
+   (tabab äraarvajat), ja IP piir loeb ainult **kinnitatud
+   ebaõnnestumisi**, mitte kõiki päringuid.
+3. *Säilitus.* Koristus ainult ebaõnnestumise hetkel jättis vaiksel
+   perioodil IP-räsid baasi seisma. Nüüd lisaks pg_cron kord tunnis –
+   24 h on tagatis, mitte kõrvalmõju.
+
+**Kolmas piir, mille tõi kaasa atomaarsus ise:** rida kirjutatakse enne,
+kui koodi õigsust teatakse, seega on tunni alguses hetk, kus 24 ÕIGET
+liitumist on korraga „katsed". Kui neid loetaks turvapiiri sisse, saaks
+osa klassist 429 just siis, kui õpetajal on kõige vähem aega viga siluda.
+Seepärast on real `outcome`: õnnestunud liitumine kustutab oma rea,
+ebaõnnestunu märgitakse `failed`-iks, ja piirid on
+
+| piir | arv | mille vastu |
+| --- | --- | --- |
+| kinnitatud ebaõnnestumised sessiooni kohta | 5 / 10 min | äraarvaja |
+| kinnitatud ebaõnnestumised IP kohta | 10 / 10 min | sessioonide vahetaja |
+| pooleliolevad katsed IP kohta | 40 / 1 min | paralleelne puhang |
+
+**Klassivahetus:** sama seade tohib liikuda teise klassi ainult siis, kui
+sellega ei ole veel ühtegi moodulikäiku alustatud (409 vastasel juhul).
+Ilma selleta kaotaks vana õpetaja õpilase vastused oma vaatest ja uus
+õpetaja näeks vastuseid, mis anti hoopis teises klassis.
+
+**Kliendi IP tuleb usaldusväärsest päisest:** `x-forwarded-for` esimene
+kirje on see, mille klient ISE saatis (puhverserverid lisavad enda nähtud
+aadressi lõppu) – sealt lugemine oleks teinud pidurduse olematuks.
+Järjekord: `cf-connecting-ip` → `x-real-ip` → `x-forwarded-for` VIIMANE
+kirje. Logisse läheb ainult päise nimi, et saaks pärast deploy'd
+kontrollida, milline neist päriselt kohale jõuab.
 
 ## 2.10 Õpilase liitumise UI
 

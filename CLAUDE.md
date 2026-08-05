@@ -109,6 +109,8 @@ src/
     registry.ts               # id → () => import(...) – AINUS koht, mis teab kõiki mooduleid
     physics/<moodul>/         # manifest.ts, model.ts, Simulation.tsx, activities.ts, teacher.ts
 supabase/migrations/          # SQL migratsioonid (ainult koos kasutaja ülevaatusega!)
+supabase/tests/               # SQL kontrollskriptid – kopeeri SQL Editorisse,
+                              # ütlevad ise OK/VIGA (ei ole Vitesti testid)
 tests/                        # model.ts ja checker'i testid
 ```
 

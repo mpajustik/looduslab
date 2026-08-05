@@ -62,10 +62,21 @@ võiksid omavahel lahku minna. Nüüd on jaotus üheselt selge:
 ## Tugitabelid
 
 ```
-join_attempts id, code_prefix, ip_hash, created_at
+join_attempts id, code_prefix, ip_hash, student_id, created_at
               -- klassikoodi äraarvamise pidurdus (etapp 2.9)
-              -- ip_hash = SHA-256(IP + serveri sool), MITTE avatekstis IP
-              -- read kustutatakse automaatselt 24 h pärast (cron)
+              -- ip_hash = SHA-256(IP + JOIN_IP_SALT), MITTE avatekstis IP
+              -- student_id = anonüümne konto, kes katse tegi
+              -- outcome = 'pending' | 'failed' (õnnestunud liitumise rida
+              -- kustutatakse) – piirid loevad KINNITATUD ebaõnnestumisi:
+              -- 5 sessiooni ja 10 IP kohta 10 minutis, lisaks 40 poolelolevat
+              -- IP kohta 1 minutis (puhangupiir). Ainult IP peale ehitatud
+              -- piir sulgeks kooli NAT-i taga kogu klassi korraga; kõiki
+              -- päringuid lugev piir sööks 24 lapse liitumisega ise täis
+              -- kirjutab AINULT SQL-funktsioon register_join_attempt
+              -- (005_join_throttle.sql): kontroll ja logimine peavad olema
+              -- ÜKS atomaarne käik, muidu saab paralleelsusega piirist mööda
+              -- read kustutatakse 24 h pärast: pg_cron kord tunnis + sama
+              -- funktsioon iga katse juures
 feedback      id, module_id, module_version, student_id (nullable), body,
               created_at   -- „Märkasid viga?" vorm (etapp 4.6)
 ```
@@ -123,8 +134,9 @@ muudab kõik senised koodid kehtetuks – seda ei tehta niisama.
 
 **Pipar kaitseb AINULT andmebaasi lekke vastu.** Ta ei vähenda kuidagi seda,
 et kuuekohalisi koode on miljon ja neid saab võrgu kaudu ükshaaval proovida –
-seal on kaitseks hoopis `join_class` pidurdus (10 vale katset / 10 min IP
-kohta, `join_attempts` tabel), ühesugune veateade iga ebaõnnestumise puhul
+seal on kaitseks hoopis `join_class` pidurdus (10 minuti aknas 5 vale
+katset sessiooni ja 10 IP kohta, `join_attempts` tabel), ühesugune veateade
+iga ebaõnnestumise puhul
 („vale või aegunud kood", mitte „selline kood on olemas, aga aegunud") ja
 14 päeva aegumine. Need kaks kaitset on eri asjade vastu ja kumbki ei asenda
 teist.
@@ -215,8 +227,8 @@ Need on kompromissid, mis on tehtud lihtsuse kasuks. Ära lase AI-l neid
    klassiga pärast moodulite läbimist) EI OLE MVP-s. Külalise edenemine jääb
    seadmesse. Lisandub hiljem, kui vajadus on päriselt olemas.
 4. **Klassikoodi turvamudel:** 6-kohaline kood + räsi + 14 p aegumine +
-   pidurdus (10 vale katset / 10 min IP kohta). See on klassiruumi, mitte
-   panga turvatase – ja see on teadlikult nii.
+   pidurdus (10 minutis 5 valet katset sessiooni ja 10 IP kohta). See on
+   klassiruumi, mitte panga turvatase – ja see on teadlikult nii.
 5. **Realtime asemel 10 s intervall** õpetaja vaates – lihtsam, piisav.
 
 ## Kohustuslik turvatest (ENNE toodangukeskkonna loomist!)
