@@ -166,10 +166,9 @@ ekraanile" nõuab, et `students` oleks Supabase Realtime publikatsioonis –
 seega tekkis migratsioon `004_realtime_students.sql`. Migratsioon =
 riskisamm, seepärast on ülalpool nüüd ka Codexi rida.
 
-**Teadaolev auk kuni sammuni 2.10:** QR ja projektorivaate aadress viitavad
-marsruudile `/liitu/:kood`, mida veel EI OLE – skannimine viib praegu
-404-le. Projektorivaade muutub päriselt kasutatavaks alles pärast õpilase
-liitumise UI valmimist.
+**Auk suletud sammus 2.10:** QR ja projektorivaate aadress viitavad
+marsruudile `/liitu/:kood`, mis nüüd on olemas – skannimine viib
+liitumislehele, mitte enam 404-le.
 
 ## 2.9 Edge Function: liitumine
 
@@ -264,7 +263,11 @@ kontrollida, milline neist päriselt kohale jõuab.
 > kood, proovi hiljem). Pärast liitumist suunatakse kursuselehele; nimi
 > kuvatakse ülaribal.
 
-- [ ] Liitumine töötab telefonis; vale kood annab arusaadava teate
+- [x] Liitumine töötab telefonis; vale kood annab arusaadava teate
+      (2026-08-05: kontrollitud dev-keskkonnas 360 px ja töölaual;
+      anonüümne sisselogimine + join_class töötavad, päris kood viib
+      kursuselehele, vale kood annab „Vale või aegunud kood"; CodeRabbiti
+      ülevaatus 0 leidu – tavasamm, Codexit plaan ette ei näe)
 
 ## 2.11 Vastuste sünkroonimine
 

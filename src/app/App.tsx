@@ -18,6 +18,13 @@ import ReviewPage from "./pages/ReviewPage";
 const TeacherPage = lazy(() => import("./pages/TeacherPage"));
 
 /**
+ * Liitumisleht samast põhjusest laisalt: samuti vajab supabase-js't
+ * (signInAnonymously + join_class), aga esilehte, kursust ega mooduleid
+ * see kaasa ei too.
+ */
+const JoinPage = lazy(() => import("./pages/JoinPage"));
+
+/**
  * Marsruudid docs/ARHITEKTUUR.md järgi. /m/:slug on otselink, mida õpetaja
  * saab õpilastele jagada – seepärast on ta lühike ja püsiv.
  *
@@ -36,6 +43,14 @@ export default function App() {
                 päris moodul (/m/peegeldumisseadus, samm 1.13) katab nüüd
                 sama eesmärki, sh preview't saab katsuda `?eelvaade=1`-ga. */}
             <Route path="m/:slug" element={<ModulePage />} />
+            <Route
+              path="liitu/:kood"
+              element={
+                <Suspense fallback={<PageHeader title="Laen liitumislehte …" />}>
+                  <JoinPage />
+                </Suspense>
+              }
+            />
             <Route path="kordamine" element={<ReviewPage />} />
             <Route path="edenemine" element={<ProgressPage />} />
             <Route

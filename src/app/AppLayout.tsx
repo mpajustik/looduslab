@@ -1,5 +1,6 @@
-import { Link, NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { cn } from "../ui/cn";
+import { readStudentName } from "../lib/studentIdentity";
 import { NAV_ITEMS } from "./navigation";
 
 /**
@@ -12,6 +13,14 @@ import { NAV_ITEMS } from "./navigation";
  * kiri + ikoon), nagu ligipääsetavuse reegel nõuab.
  */
 export function AppLayout() {
+  // `useLocation` paneb AppLayout'i uuesti renderduma igal marsruudivahetusel
+  // – seega loeb see otse localStorage'ist (mitte Supabase'i sessioonist,
+  // et hoida supabase-js väljas põhipaketist, CLAUDE.md reegel 13) värske
+  // väärtuse ka siis, kui liitumisleht (samm 2.10) just nime kirjutas ja
+  // /kursus'ele suunas.
+  useLocation();
+  const studentName = readStudentName();
+
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <header className="sticky top-0 z-10 border-b border-line bg-white">
@@ -24,31 +33,36 @@ export function AppLayout() {
           </Link>
 
           {/* Ülariba nähtav alates 640 px – telefonis on all oma riba. */}
-          <nav aria-label="Peamenüü" className="hidden sm:block">
-            <ul className="flex items-center gap-1">
-              {NAV_ITEMS.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors duration-150",
-                        item.teacher
-                          ? "text-teacher hover:bg-teacher-soft"
-                          : "text-ink-soft hover:bg-brand-soft hover:text-brand",
-                        isActive &&
-                          (item.teacher
-                            ? "bg-teacher-soft font-semibold text-teacher"
-                            : "bg-brand-soft font-semibold text-brand"),
-                      )
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <div className="hidden items-center gap-4 sm:flex">
+            {studentName ? (
+              <span className="text-ink-soft">Tere, {studentName}!</span>
+            ) : null}
+            <nav aria-label="Peamenüü">
+              <ul className="flex items-center gap-1">
+                {NAV_ITEMS.map((item) => (
+                  <li key={item.to}>
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors duration-150",
+                          item.teacher
+                            ? "text-teacher hover:bg-teacher-soft"
+                            : "text-ink-soft hover:bg-brand-soft hover:text-brand",
+                          isActive &&
+                            (item.teacher
+                              ? "bg-teacher-soft font-semibold text-teacher"
+                              : "bg-brand-soft font-semibold text-brand"),
+                        )
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
         </div>
       </header>
 
