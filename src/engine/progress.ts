@@ -226,6 +226,22 @@ export type ProgressStore = {
 };
 
 /**
+ * Serverisse saatmine (samm 2.11). Mõlemad kutsed on „viska teele ja unusta":
+ * nad EI OOTA võrku ära, vaid panevad muudatuse järjekorda.
+ *
+ * Miks ilma `Promise`-ta: vastuse salvestamine ekraanil ei tohi kunagi oodata
+ * võrku. Kui kutsuja saaks siit lubaduse, tekiks kiusatus seda oodata – ja
+ * kehva wifiga kool tähendaks nuppu, mis „ei tööta".
+ *
+ * Kes päriselt saadab, elab src/lib/progressSync.ts-is: engine ei tea
+ * Supabase'ist midagi (docs/ARHITEKTUUR.md).
+ */
+export type ProgressSync = {
+  push(progress: ModuleProgress): void;
+  remove(moduleId: string): void;
+};
+
+/**
  * Ei kirjuta ega loe midagi – edenemine elab ainult selles seansis.
  *
  * Kaks kasutust: preview-režiim ja seade, kus localStorage'i ei saa kasutada.
@@ -243,11 +259,17 @@ const EPHEMERAL_STORE: ProgressStore = {
  *
  * `preview` saab tühja poe SIIN, ühes kohas – ükski kutsuja ei pea „ära
  * salvesta" lippu meeles pidama. Just unustatud lipp on see koht, kust
- * tekib fantoomõpilane õpetaja klassivaates (docs/ARHITEKTUUR.md).
+ * tekib fantoomõpilane õpetaja klassivaates (docs/ARHITEKTUUR.md). Sama
+ * rida katab nüüd ka serveri: preview ei jõua `sync`-ini kunagi.
+ *
+ * Seade ja server on TEINEUTEISEST SÕLTUMATUD: kui localStorage puudub
+ * (Safari privaatrežiim), läheb vastus ikka serverisse, ja kui võrku ei ole,
+ * jääb ta ikka seadmesse. Nii ei võta üks katkine pool teist kaasa.
  */
 export function createProgressStore(
   mode: ProgressMode,
   resolveStorage: () => StorageLike | null = browserStorage,
+  sync: ProgressSync | null = null,
 ): ProgressStore {
   // `resolveStorage` on funktsioon, mitte väärtus: preview EI TOHI kutsuda
   // `browserStorage()` isegi mitte proovikirjutuse jaoks (see teeb kohe
@@ -255,6 +277,26 @@ export function createProgressStore(
   // kirjuta MITTE KUHUGI" ilma erandita.
   if (mode === "preview") return EPHEMERAL_STORE;
 
+  const local = createLocalStore(resolveStorage);
+  if (sync === null) return local;
+
+  return {
+    read: (moduleId) => local.read(moduleId),
+    write: (progress) => {
+      local.write(progress);
+      sync.push(progress);
+    },
+    // „Alusta uuesti" kustutab käigu ka serverist: õpetaja ei tohi näha
+    // vastuseid, mille õpilane ise ära pühkis.
+    clear: (moduleId) => {
+      local.clear(moduleId);
+      sync.remove(moduleId);
+    },
+  };
+}
+
+/** Ainult seade – server on `createProgressStore`-i asi. */
+function createLocalStore(resolveStorage: () => StorageLike | null): ProgressStore {
   const storage = resolveStorage();
   if (storage === null) return EPHEMERAL_STORE;
 
@@ -332,7 +374,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isModuleProgress(value: unknown): value is ModuleProgress {
+/**
+ * Avalik, sest sünkroonimisjärjekord (src/engine/syncQueue.ts) hoiab samu
+ * objekte localStorage'is ja peab neid sama rangelt kontrollima.
+ */
+export function isModuleProgress(value: unknown): value is ModuleProgress {
   if (!isRecord(value)) return false;
   if (typeof value.moduleId !== "string") return false;
   if (typeof value.moduleVersion !== "string") return false;

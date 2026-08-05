@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { sharedProgressSync } from "../lib/progressRemote";
+import { browserStorage } from "../lib/storage";
 import type { AnswerPayload, Answers } from "./answers";
 import type { Step } from "./contract";
 import {
@@ -69,7 +71,18 @@ export function useModuleProgress({
   /** Vaikimisi salvestatakse. `preview` tuleb marsruudilt, mitte moodulist. */
   mode?: ProgressMode;
 }): ModuleProgressHandle {
-  const store = useMemo(() => createProgressStore(mode), [mode]);
+  // Server tuleb juurde ainult `persist` režiimis. `createProgressStore`
+  // jätaks preview puhul `sync` niikuinii kasutamata, aga siin on see ka
+  // nähtav: õpetaja „Vaata õpilasena" ei loo isegi järjekorda.
+  const store = useMemo(
+    () =>
+      createProgressStore(
+        mode,
+        browserStorage,
+        mode === "persist" ? sharedProgressSync() : null,
+      ),
+    [mode],
+  );
   const [progress, setProgress] = useState(() =>
     loadProgress(store, { moduleId, moduleVersion, steps }),
   );
