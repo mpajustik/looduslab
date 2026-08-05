@@ -1,5 +1,7 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { ErrorBoundary } from "../ui/ErrorBoundary";
+import { PageHeader } from "../ui/PageHeader";
 import { AppLayout } from "./AppLayout";
 import CoursePage from "./pages/CoursePage";
 import HomePage from "./pages/HomePage";
@@ -7,7 +9,13 @@ import ModulePage from "./pages/ModulePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProgressPage from "./pages/ProgressPage";
 import ReviewPage from "./pages/ReviewPage";
-import TeacherPage from "./pages/TeacherPage";
+
+/**
+ * Õpetaja leht laisalt (CLAUDE.md reegel 13): ta toob kaasa
+ * @supabase/supabase-js (~55 kB gzip), mida õpilase esileht ei vaja.
+ * Õpetajaid on klassitäie kohta üks – tema võib pool sekundit oodata.
+ */
+const TeacherPage = lazy(() => import("./pages/TeacherPage"));
 
 /**
  * Marsruudid docs/ARHITEKTUUR.md järgi. /m/:slug on otselink, mida õpetaja
@@ -30,7 +38,14 @@ export default function App() {
             <Route path="m/:slug" element={<ModulePage />} />
             <Route path="kordamine" element={<ReviewPage />} />
             <Route path="edenemine" element={<ProgressPage />} />
-            <Route path="opetaja" element={<TeacherPage />} />
+            <Route
+              path="opetaja"
+              element={
+                <Suspense fallback={<PageHeader title="Laen õpetaja ala …" />}>
+                  <TeacherPage />
+                </Suspense>
+              }
+            />
             {/* Ainult arenduses: siit saab veaekraani päriselt näha.
                 Toodangu buildi see rida ei jõua. */}
             {import.meta.env.DEV && (
