@@ -1,0 +1,26 @@
+-- 003_class_code_unique.sql – klassikood ei tohi viidata kahele klassile
+--
+-- MIKS SEE FAIL OLEMAS ON
+-- Edge Function create_class_code kontrollis enne kirjutamist ise, kas sama
+-- kood on juba käigus. See kontroll ei aita samaaegsete päringute vastu:
+-- kaks õpetajat võivad mõlemad näha koodi vabana ja mõlemad selle kirjutada.
+-- Tagajärg oleks vaikne ja halb – üks kood, kaks klassi, laps liitub vale
+-- klassiga. Ainus koht, kus „ei tohi korduda" päriselt jõustub, on andmebaas.
+--
+-- MIKS TÄIELIK, MITTE OSALINE INDEKS
+-- Loogiliselt piisaks unikaalsusest ainult AEGUMATA klasside seas
+-- (`where code_expires_at > now()`), aga Postgres ei luba indeksi tingimuses
+-- `now()` – see ei ole muutumatu funktsioon. Seega on indeks täielik ja kood
+-- jääb „kulutatuks" ka pärast aegumist. Kuuekohalisi koode on miljon, seega
+-- see ruum otsa ei saa; kokkupõrke korral proovib funktsioon uue koodi
+-- (viga 23505 → järgmine katse).
+--
+-- Indeks teenib ÜHTLASI liitumist (samm 2.9): join_class otsib klassi
+-- täpselt `code_hash` järgi ja unikaalne indeks on selleks kiireim tee.
+-- Eraldi indeksit sellele veerule seepärast vaja ei ole.
+
+-- `if not exists`, et faili saaks ohutult kaks korda käivitada – sammus 2.17
+-- jooksevad kõik migratsioonid prod-baasis uuesti. NB! Postgres kontrollib
+-- ainult NIME, mitte definitsiooni: kui muudad kunagi indeksi sisu, tuleb
+-- vana käsitsi maha võtta, muidu jääb ta vaikselt vanaks.
+create unique index if not exists classes_code_hash_key on classes (code_hash);

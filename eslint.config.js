@@ -5,7 +5,12 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "node_modules"] },
+  // supabase/functions on Deno-kood (npm: importid, `Deno` globaal) – seda
+  // kontrollib Supabase CLI deploy'mise ajal, mitte brauseri ESLint.
+  // NB! See tähendab, et roheline `npm run lint` EI ütle Edge Functionite
+  // kohta midagi. Nende kontroll = deploy + curl-test, vt
+  // supabase/functions/README.md „Teadaolev auk".
+  { ignores: ["dist", "node_modules", "supabase/functions"] },
   {
     files: ["**/*.{ts,tsx}"],
     extends: [

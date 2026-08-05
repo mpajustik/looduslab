@@ -43,7 +43,8 @@ create table classes (
 alter table classes enable row level security;
 
 comment on table classes is
-  'Klass; code_hash on bcrypt-räsi, avatekstis koodi baasis EI OLE.';
+  'Klass; code_hash on HMAC-SHA256(kood, CLASS_CODE_PEPPER) – pipar elab '
+  'ainult Edge Functioni keskkonnas. Avatekstis koodi baasis EI OLE.';
 
 create index classes_teacher_id_idx on classes (teacher_id);
 

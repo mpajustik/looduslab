@@ -120,8 +120,26 @@ SMTP (nt Resend, tasuta tase) – ära lahenda ette, aga tea, kus lahendus on.
 > kood genereeritakse serveris, salvestatakse räsi + aegumisaeg 14 p, kood
 > tagastatakse üks kord). Deploy Supabase CLI-ga. Testi curl-iga enne UI-d.
 
-- [ ] curl-test: funktsioon loob klassi rea, tagastab koodi, baasis on räsi
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] curl-test: funktsioon loob klassi rea, tagastab koodi, baasis on räsi
+      (2026-08-05: 6 testi rohelised – 200 loomine, 200 koodi uuendus uue
+      koodiga, 401 ilma tokenita, 400 vigane class_id, 400 mitte-objekt,
+      204 CORS-eelpäring `x-client-info`-ga. Baasis 64 märki hex-i, aegumine
+      +14 p, koodi uuendus EI tekitanud teist klassirida)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): CodeRabbit 9 +
+      Codex 2 leidu, kaks kattusid (CORS `x-client-info`; `code_hash`
+      unikaalsust ei jõustanud andmebaas). Mõlemad parandatud – teine tõi
+      kaasa migratsiooni `003_class_code_unique.sql`, mida plaan ette ei
+      näinud
+
+**Otsus, mis plaanist erineb:** klassikoodi räsi on HMAC-SHA256 + serveri
+pipar, mitte bcrypt (docs/ANDMEMUDEL.md „Klassikoodi voog"). Bcrypti sool
+teeb koodi järgi otsimise võimatuks – samm 2.9 peaks kõik aegumata klassid
+ükshaaval läbi käima. Funktsioon võtab ka `{ class_id }` ja uuendab
+olemasoleva klassi koodi, nii et samm 2.8 ei vaja teist Edge Functionit.
+
+**Teadaolev auk:** `npm run lint` ei kontrolli `supabase/functions` kausta
+(Deno-kood). Ainus kontroll on deploy + curl-test – vt
+supabase/functions/README.md.
 
 ## 2.8 Klassi loomise UI + QR
 

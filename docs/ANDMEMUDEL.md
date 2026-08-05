@@ -101,12 +101,38 @@ Põhimõtted:
 ## Klassikoodi voog
 
 1. Õpetaja loob klassi → Edge Function `create_class_code` genereerib
-   6-kohalise koodi, salvestab bcrypt-räsi + aegumisaja (14 päeva), tagastab
+   6-kohalise numbrikoodi, salvestab räsi + aegumisaja (14 päeva), tagastab
    koodi üks kord
 2. Õpilane avab `/liitu/:kood` → anonüümne sisselogimine
    (`signInAnonymously`) → Edge Function `join_class` kontrollib koodi räsi
    vastu ja loob `students` rea
 3. Koodi EI kontrollita kunagi brauseris
+
+**Räsi on HMAC-SHA256, mitte bcrypt.** Bcrypt-räsi sisaldab juhuslikku
+soola, seega sama kood annab iga kord erineva räsi ja koodi järgi EI SAA rida
+üles otsida – `join_class` peaks kõik aegumata klassid ükshaaval läbi käima
+(~100 ms räsi kohta). Liitumine peab mahtuma tunni algusesse, seega valisime
+determinstliku räsi: `code_hash = HMAC-SHA256(kood, CLASS_CODE_PEPPER)` →
+liitumine on üks indekseeritud päring.
+
+Kiire räsi on ka ründajale kiire, seepärast on selle turvalisus **pipras**:
+`CLASS_CODE_PEPPER` on juhuslik ≥32-märgiline saladus, mis elab AINULT Edge
+Functionite keskkonnas (`supabase secrets set`), mitte andmebaasis ega koodis.
+Ainuüksi andmebaasi leke ei anna seega ühtegi koodi kätte. Pipra vahetamine
+muudab kõik senised koodid kehtetuks – seda ei tehta niisama.
+
+**Pipar kaitseb AINULT andmebaasi lekke vastu.** Ta ei vähenda kuidagi seda,
+et kuuekohalisi koode on miljon ja neid saab võrgu kaudu ükshaaval proovida –
+seal on kaitseks hoopis `join_class` pidurdus (10 vale katset / 10 min IP
+kohta, `join_attempts` tabel), ühesugune veateade iga ebaõnnestumise puhul
+(„vale või aegunud kood", mitte „selline kood on olemas, aga aegunud") ja
+14 päeva aegumine. Need kaks kaitset on eri asjade vastu ja kumbki ei asenda
+teist.
+
+`classes.code_hash` on unikaalne indeks (`003_class_code_unique.sql`) – üks
+kood ei tohi kunagi viidata kahele klassile. Unikaalsust ei jõusta
+rakenduskood, vaid andmebaas: „kontrolli, siis kirjuta" jätaks kahe
+samaaegse päringu vahele augu.
 
 ## RLS-reeglid (iga tabel, enne esimest päris kasutajat!)
 
