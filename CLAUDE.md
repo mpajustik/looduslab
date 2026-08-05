@@ -20,8 +20,9 @@ oma otsuseid lühidalt ja eesti keeles.
 - Vitest (testid), majutus: Cloudflare Workers staatiliste failidena
   (wrangler devDependency'na, seadistus wrangler.jsonc – Cloudflare suunab
   uued projektid Pages'i asemel Workersisse; sama CDN, sama git-põhine deploy)
-- qrcode (klassikoodi QR, etapp 2), vite-plugin-pwa (etapp 4),
-  @sentry/react (veaseire, etapp 2)
+- qrcode + @types/qrcode (klassikoodi QR, etapp 2 – pakett ise tüüpe kaasa
+  ei anna, strict TS ei kompileeriks ilma tüübipaketita),
+  vite-plugin-pwa (etapp 4), @sentry/react (veaseire, etapp 2)
 
 Need paketid on eelnevalt heaks kiidetud – reegel 4 (küsi enne uut
 sõltuvust) kehtib kõigele, mida siin loendis EI ole. Kui plaanifail

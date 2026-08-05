@@ -153,6 +153,17 @@ supabase/functions/README.md.
 
 - [ ] Klass tekib, kood + QR kuvatakse, kood on kopeeritav
 - [ ] Projektorivaade on klassi tagant loetav; liitujad ilmuvad ekraanile
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+
+**Riskisamm, mida plaan ette ei näinud:** projektorivaate „liitujad ilmuvad
+ekraanile" nõuab, et `students` oleks Supabase Realtime publikatsioonis –
+seega tekkis migratsioon `004_realtime_students.sql`. Migratsioon =
+riskisamm, seepärast on ülalpool nüüd ka Codexi rida.
+
+**Teadaolev auk kuni sammuni 2.10:** QR ja projektorivaate aadress viitavad
+marsruudile `/liitu/:kood`, mida veel EI OLE – skannimine viib praegu
+404-le. Projektorivaade muutub päriselt kasutatavaks alles pärast õpilase
+liitumise UI valmimist.
 
 ## 2.9 Edge Function: liitumine
 
