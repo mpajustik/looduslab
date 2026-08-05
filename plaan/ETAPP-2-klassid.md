@@ -102,7 +102,13 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 > OLEK juhatab kahe sammuga: „1. Proovi üht tundi ise õpilasena" (link
 > moodulile) ja „2. Loo oma esimene klass" – mitte tühi valge ala.
 
-- [ ] Magic link jõuab e-postile ja sisselogimine töötab
+- [x] Magic link jõuab e-postile ja sisselogimine töötab
+      (2026-08-05, commit 1855b28; Supabase URL Configuration'isse lisatud
+      lubatud suunamis-URL `http://localhost:5173/**`)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): samm käitleb
+      sessiooni ja e-posti aadressi (isikuandmed), seega langeb skilli
+      riskiloendi alla. Rida lisati tagantjärele, et plaan ja skill ütleksid
+      sama. Leiud: CodeRabbit 1 + Codex 3, kõik päris vead, kõik parandatud
 
 **Teadaolev risk:** Supabase'i vaikimisi e-post võib minna rämpsposti ja
 päevalimiit on väike. Kui pilootõpetajatel tekib probleeme, seadista oma
