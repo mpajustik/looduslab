@@ -24,6 +24,9 @@ const TeacherPage = lazy(() => import("./pages/TeacherPage"));
  */
 const JoinPage = lazy(() => import("./pages/JoinPage"));
 
+/** Klassivaade samast põhjusest laisalt (supabase-js + moodulite register). */
+const ClassLivePage = lazy(() => import("./pages/ClassLivePage"));
+
 /**
  * Marsruudid docs/ARHITEKTUUR.md järgi. /m/:slug on otselink, mida õpetaja
  * saab õpilastele jagada – seepärast on ta lühike ja püsiv.
@@ -58,6 +61,14 @@ export default function App() {
               element={
                 <Suspense fallback={<PageHeader title="Laen õpetaja ala …" />}>
                   <TeacherPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="opetaja/klass/:id"
+              element={
+                <Suspense fallback={<PageHeader title="Laen klassivaadet …" />}>
+                  <ClassLivePage />
                 </Suspense>
               }
             />

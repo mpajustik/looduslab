@@ -279,17 +279,32 @@ kontrollida, milline neist päriselt kohale jõuab.
 > `mode: "preview"` ei kirjuta ka siin MITTE MIDAGI. Moodulite koodi EI
 > muudeta.
 
-- [ ] Õpilase vastused ilmuvad dev-projekti tabelitesse koos versiooniga
-- [ ] Ühe mooduli läbimine tekitab TÄPSELT ÜHE attempts rea (mitte ühe
+- [x] Õpilase vastused ilmuvad dev-projekti tabelitesse koos versiooniga
+      (2026-08-05, commit 182ec64; src/lib/progressRemote.ts + progressSync.ts,
+      järjekord võrguvea puhuks src/engine/syncQueue.ts, testid
+      tests/progressSync.test.ts)
+- [x] Ühe mooduli läbimine tekitab TÄPSELT ÜHE attempts rea (mitte ühe
       sammu kohta) ja mitu responses rida
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+      (upsert saadab iga kord kogu käigu hetkeseisu, mitte muudatust –
+      kordussaatmine on kahjutu)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): CodeRabbit 2 +
+      Codex 1 leidu, kattuv leid 23503 kohta (andmebaasi viga ei tohi
+      vastust ära visata, kuna veakoodi järgi ei saa eristada „ei kuulu
+      siia" ja „ei kuulu siia VEEL"). Parandatud
 
 ## 2.12 Klassivaade: elav vaade
 
 > **Prompt AI-le:** /opetaja/klass/:id: õpilaste nimekiri, mitmes samm
 > igaühel pooleli, uuendus iga 10 s. Amber-märgistus (õpetaja-ala).
 
-- [ ] Kahe seadme test: telefonis vastad, arvutis näed 10 s jooksul
+- [x] Kood valmis (2026-08-05, /opetaja/klass/:id): õpilaste nimekiri +
+      `current_step` tõlgitud sammu numbriks mooduli activities.steps
+      järgi, poll iga 10 s. CodeRabbiti ülevaatus – tavasamm: 3 leidu,
+      kõik päris vead, kõik parandatud (poll-vastuste võidujooks vale
+      järjekorra korral, ebaõnnestunud mooduli laadimine jäi vahemällu
+      igaveseks ega proovinud kunagi uuesti, tagasilingi klikiala alla 44 px)
+- [ ] **Puudu, vajab kasutaja kätt:** kahe seadme test dev-keskkonnas –
+      telefonis vastad, arvutis näed muutust 10 s jooksul
 
 ## 2.13 Klassivaade: vastused
 

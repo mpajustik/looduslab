@@ -518,6 +518,9 @@ function ClassCard({
               <Button type="button" onClick={onShowProjector}>
                 Näita klassile
               </Button>
+              <Link to={`/opetaja/klass/${klass.id}`} className={buttonClasses("secondary")}>
+                Klassi vaade
+              </Link>
             </div>
           </div>
         </div>
