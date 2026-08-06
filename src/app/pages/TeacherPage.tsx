@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router";
-import { LogOut, Mail, X } from "lucide-react";
+import { Eye, LogOut, Mail, X } from "lucide-react";
 import QRCode from "qrcode";
 import { Button } from "../../ui/Button";
 import { Card, CardDescription, CardTitle } from "../../ui/Card";
@@ -20,10 +20,12 @@ import {
   mergeStudents,
 } from "../../lib/classDesk";
 import type { JoinedStudent } from "../../lib/classDesk";
+import { modulePreviewPath, moduleUrl } from "../../lib/shareLinks";
 import { isTeacherSession, useSession } from "../../lib/useSession";
+import { allModuleIds, useModuleManifests } from "../moduleManifests";
 
 /** Moodul, mida õpetajale tühjas olekus proovimiseks pakume. */
-const DEMO_MODULE_PATH = "/m/peegeldumisseadus?eelvaade=1";
+const DEMO_MODULE_PATH = modulePreviewPath("peegeldumisseadus");
 
 export default function TeacherPage() {
   const { status, session } = useSession();
@@ -204,6 +206,10 @@ function TeacherDesk({ email }: { email: string | null }) {
         <li>
           <ClassesSection />
         </li>
+
+        <li>
+          <ShareSection />
+        </li>
       </ol>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4 text-ink-soft">
@@ -222,30 +228,156 @@ function TeacherDesk({ email }: { email: string | null }) {
 }
 
 /**
- * QR-pilt liitumislingist. Tagastab koodi KOOS pildiga, et kutsuja saaks
- * kontrollida, kas pilt käib jooksva koodi kohta – QR valmib asünkroonselt
- * ja vahepeal võib kood juba vahetunud olla („Uuenda koodi").
+ * QR-pilt ette antud aadressist. Tagastab AADRESSI koos pildiga, et kutsuja
+ * saaks kontrollida, kas pilt käib jooksva aadressi kohta – QR valmib
+ * asünkroonselt ja vahepeal võib kood juba vahetunud olla („Uuenda koodi").
+ *
+ * Aadress tuleb kutsujalt, mitte koodist: sama hook teeb nüüd nii
+ * liitumislingi kui ka mooduli jagamislingi QR-i (samm 2.14).
  */
-function useQrCode(code: string | undefined, width: number) {
-  const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
+function useQrCode(address: string | undefined, width: number) {
+  const [qr, setQr] = useState<{ address: string; url: string } | null>(null);
 
   useEffect(() => {
-    if (!code) return;
+    if (!address) return;
     let active = true;
-    QRCode.toDataURL(joinUrl(code, window.location.origin), { width, margin: 1 })
+    QRCode.toDataURL(address, { width, margin: 1 })
       .then((url) => {
-        if (active) setQr({ code, url });
+        if (active) setQr({ address, url });
       })
       .catch(() => {
-        // QR ei valminud – kood on ikka numbritena ekraanil, õpilane saab
-        // selle käsitsi sisestada.
+        // QR ei valminud – aadress on ikka tekstina ekraanil ja kopeeritav.
       });
     return () => {
       active = false;
     };
-  }, [code, width]);
+  }, [address, width]);
 
   return qr;
+}
+
+/**
+ * Lõikelaud + „Kopeeritud!" tagasiside, mis kaob ise ära.
+ *
+ * Kolm nuppu kasutavad sama mustrit (klassikood, mooduli link, mooduli
+ * link projektorivaates) – ja kõik kolm peavad ka SIIS töötama, kui
+ * lõikelauda ei ole: siis jääb tekst lihtsalt ekraanile käsitsi kopeerida.
+ */
+function useCopy(): { copied: boolean; copy: (text: string) => void } {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Lahkumisel jäänud taimer kutsuks setState'i kadunud komponendile.
+  useEffect(() => {
+    return () => {
+      if (timer.current !== null) clearTimeout(timer.current);
+    };
+  }, []);
+
+  const copy = useCallback((text: string) => {
+    navigator.clipboard
+      ?.writeText(text)
+      .then(() => {
+        setCopied(true);
+        if (timer.current !== null) clearTimeout(timer.current);
+        timer.current = setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        // Lõikelaud pole saadaval (vana brauser, HTTP) – tekst on ekraanil.
+      });
+  }, []);
+
+  return { copied, copy };
+}
+
+/**
+ * Tunni jagamine (samm 2.14): otselink + QR iga mooduli juurde ja nupp
+ * „Vaata õpilasena".
+ *
+ * See on ÕPETAJA ala – siin ja ainult siin on jagamine olemas. Õpilase
+ * vaates ühtegi jagamisnuppu ei ole (docs/LISATOOTED.md sama mõte:
+ * õpilasele ei turundata ega jagata midagi).
+ */
+function ShareSection() {
+  const manifests = useModuleManifests();
+  const known = allModuleIds
+    .map((id) => manifests[id])
+    .filter((manifest) => manifest !== undefined);
+
+  return (
+    <Card className="flex flex-col items-start gap-4">
+      <div className="flex flex-col gap-1">
+        <CardTitle>3. Jaga üksikut tundi</CardTitle>
+        <CardDescription>
+          Link viib õpilase OTSE sellesse tundi. Kui ta ei ole veel klassiga
+          liitunud, küsitakse enne klassikoodi.
+        </CardDescription>
+      </div>
+
+      {known.length === 0 ? (
+        <p className="text-ink-soft">Laen tunde …</p>
+      ) : (
+        <ul className="flex w-full flex-col gap-3">
+          {known.map((manifest) => (
+            <li key={manifest.id}>
+              <ShareCard title={manifest.title} slug={manifest.slug} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function ShareCard({ title, slug }: { title: string; slug: string }) {
+  const [showQr, setShowQr] = useState(false);
+  const { copied, copy } = useCopy();
+  const address = moduleUrl(slug, window.location.origin);
+  // QR tehakse alles siis, kui õpetaja teda küsib – muidu teeks see leht
+  // kohe iga tunni kohta ühe pildi, mida keegi ei vaata.
+  const qr = useQrCode(showQr ? address : undefined, 320);
+
+  return (
+    <Card className="flex flex-col gap-3 bg-brand-soft/40">
+      <CardTitle>{title}</CardTitle>
+      {/* wrap-break-word: pikk aadress ei tohi 360 px vaates kaardist välja
+          joosta (reegel 10). */}
+      <p className="wrap-break-word font-mono text-ink-soft">{address}</p>
+
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="secondary" onClick={() => copy(address)}>
+          {copied ? "Kopeeritud!" : "Kopeeri link"}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          aria-expanded={showQr}
+          onClick={() => setShowQr((previous) => !previous)}
+        >
+          {showQr ? "Peida QR" : "Näita QR-i"}
+        </Button>
+        <Link
+          to={modulePreviewPath(slug)}
+          className={buttonClasses("secondary")}
+        >
+          <Eye aria-hidden="true" className="size-5" />
+          Vaata õpilasena
+        </Link>
+      </div>
+
+      {showQr ? (
+        qr && qr.address === address ? (
+          <img
+            src={qr.url}
+            alt={`QR-kood, mis avab tunni „${title}”`}
+            className="size-40 rounded-lg border border-line bg-white p-2"
+          />
+        ) : (
+          <p className="text-ink-soft">Valmistan QR-koodi …</p>
+        )
+      ) : null}
+    </Card>
+  );
 }
 
 /** Klassi rida `classes` tabelist – ilma koodita, see EI OLE baasis. */
@@ -453,11 +585,14 @@ function ClassCard({
 }) {
   const [rotating, setRotating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  // QR hoitakse koos koodiga, mille pealt ta tehti: nii ei jää koodi
+  const { copied, copy } = useCopy();
+  // QR hoitakse koos aadressiga, mille pealt ta tehti: nii ei jää koodi
   // uuendamise ja uue pildi valmimise vahele hetke, kus ekraanil on uus
   // number ja vana QR.
-  const qr = useQrCode(known?.code, 320);
+  const joinAddress = known
+    ? joinUrl(known.code, window.location.origin)
+    : undefined;
+  const qr = useQrCode(joinAddress, 320);
 
   async function handleRotate() {
     setRotating(true);
@@ -479,18 +614,6 @@ function ClassCard({
     setRotating(false);
   }
 
-  async function handleCopy() {
-    if (!known) return;
-    try {
-      await navigator.clipboard.writeText(known.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Lõikelaud pole saadaval (nt vana brauser) – kood on ikka ekraanil
-      // näha ja käsitsi kopeeritav, seega vaikne vebamine piisab.
-    }
-  }
-
   return (
     <Card className="flex flex-col gap-3 bg-brand-soft/40">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -500,7 +623,7 @@ function ClassCard({
 
       {known ? (
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-          {qr?.code === known.code ? (
+          {qr && qr.address === joinAddress ? (
             <img
               src={qr.url}
               alt={`QR-kood, mis avab liitumislehe koodiga ${known.code}`}
@@ -512,7 +635,11 @@ function ClassCard({
               {known.code}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" onClick={handleCopy}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => copy(known.code)}
+              >
                 {copied ? "Kopeeritud!" : "Kopeeri kood"}
               </Button>
               <Button type="button" onClick={onShowProjector}>
@@ -562,7 +689,8 @@ function ProjectorView({
   code: string;
   onClose: () => void;
 }) {
-  const qr = useQrCode(code, 480);
+  const joinAddress = joinUrl(code, window.location.origin);
+  const qr = useQrCode(joinAddress, 480);
   const [students, setStudents] = useState<JoinedStudent[]>([]);
   const [studentsError, setStudentsError] = useState<string | null>(null);
 
@@ -698,7 +826,7 @@ function ProjectorView({
         {className}
       </h1>
 
-      {qr?.code === code ? (
+      {qr && qr.address === joinAddress ? (
         <img
           src={qr.url}
           alt={`QR-kood, mis avab liitumislehe koodiga ${code}`}

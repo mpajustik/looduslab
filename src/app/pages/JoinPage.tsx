@@ -1,12 +1,13 @@
 import { useId, useState } from "react";
 import type { FormEvent } from "react";
-import { Navigate, useNavigate, useParams } from "react-router";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router";
 import { Button } from "../../ui/Button";
 import { Card, CardDescription, CardTitle } from "../../ui/Card";
 import { PageHeader } from "../../ui/PageHeader";
 import { supabase } from "../../lib/supabase";
 import { classCodeErrorMessage, CLASS_CODE_NETWORK_ERROR } from "../../lib/classDesk";
-import { writeStudentName } from "../../lib/studentIdentity";
+import { safeNextPath } from "../../lib/shareLinks";
+import { writeJoinedClass, writeStudentName } from "../../lib/studentIdentity";
 import { isTeacherSession, useSession } from "../../lib/useSession";
 
 type JoinResult = {
@@ -24,7 +25,12 @@ type JoinResult = {
  */
 export default function JoinPage() {
   const { kood } = useParams<{ kood: string }>();
+  const [params] = useSearchParams();
   const navigate = useNavigate();
+  // Kuhu pärast liitumist? Jagatud lingilt tulnu tahab TAGASI sellesse tundi,
+  // mille pärast ta üldse tuli. Väärtus tuleb aadressiribalt, seega läbib ta
+  // enne `safeNextPath` kontrolli (avatud ümbersuunamine – vt shareLinks.ts).
+  const next = safeNextPath(params.get("edasi") ?? "") ?? "/kursus";
   const { status, session } = useSession();
   const fieldId = useId();
   const [name, setName] = useState("");
@@ -71,7 +77,10 @@ export default function JoinPage() {
 
     const result = data as JoinResult;
     writeStudentName(result.display_name);
-    navigate("/kursus", { replace: true });
+    // Klassi märge seadmesse: nii ei küsi jagatud lingi värav (ModulePage)
+    // sellelt õpilaselt enam koodi.
+    writeJoinedClass(result.class_name);
+    navigate(next, { replace: true });
   }
 
   const isTeacher = status === "ready" && isTeacherSession(session);

@@ -366,9 +366,33 @@ eraldi samm, kui see reaalselt probleemiks osutub.
 > avab mooduli engine'i preview-režiimis (valmis juba sammust 1.6) – TÄPSELT
 > sama vaade, mida õpilane näeb, aga mitte midagi ei salvestata kuhugi.
 
-- [ ] Link telefonis → moodul avaneb ilma navigeerimiseta
-- [ ] „Vaata õpilasena" töötab ja EI tekita andmeid klassivaatesse
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] Kood valmis (2026-08-06): õpetaja alas uus sektsioon „3. Jaga üksikut
+      tundi" – iga mooduli otselink, „Kopeeri link", QR nõudmisel ja „Vaata
+      õpilasena" (`?eelvaade=1`). Jagatud lingi avanemisel küsib `/m/:slug`
+      klassiga liitumata õpilaselt koodi (`JoinGate`) või laseb edasi
+      külalisena; liitumine viib `?edasi=` kaudu TAGASI samasse tundi.
+      Liitumise olek loetakse SEADMEST, mitte serverist – jagatud link ei
+      tohi enne avanemist supabase-js't (207 kB) alla laadida (reegel 13).
+      Aadressid on ühes failis: src/lib/shareLinks.ts.
+- [ ] **Puudu, vajab kasutaja kätt:** link telefonis (360 px) → moodul
+      avaneb ilma navigeerimiseta; „Vaata õpilasena" ei tekita klassivaatesse
+      ridu (kontrolli klassivaatest pärast läbimängu)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+      (2026-08-06: CodeRabbit 1 + Codex 1 leid, EI kattunud, mõlemad päris
+      vead, mõlemad parandatud. (1) Codex: „Jätka külalisena" oli IGAVENE
+      otsus – õpilane, kes ühe korra külalist valis, ei näinud enam kunagi
+      koodiküsimist ja kogu ta töö kadus õpetaja klassivaatest vaikselt.
+      Nüüd on külalise olek nähtav riba peal ja tagasipööratav („Liitu
+      klassiga" → `clearGuest`). (2) CodeRabbit: `key` ei sisaldanud
+      režiimi, seega `?eelvaade=1` lisamine sama tee peal jättis vana
+      `membership`-i alles ja preview-vaates avanenud värav oleks
+      localStorage'i kirjutanud – vastuolus reegliga 14.)
+
+**Avatud ümbersuunamine:** `?edasi=` tuleb aadressiribalt ehk võõrast
+kohast ja läheb otse `navigate()`-ile. `safeNextPath` (src/lib/shareLinks.ts)
+lubab ainult rakenduse sisese tee – `//vale-sait.ee`, `/\vale-sait.ee`,
+skeemid ja juhtsümbolid kukuvad välja ning kutsuja läheb `/kursus`-le.
+Testid katavad iga piirjuhu (tests/shareLinks.test.ts).
 
 ## 2.15 Privaatsus ja kustutamine
 
