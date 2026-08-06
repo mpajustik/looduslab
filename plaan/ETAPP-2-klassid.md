@@ -88,8 +88,16 @@ Iga samm = üks töösessioon (30–90 min) = üks commit.
 > jookseb arvutis/CI-s, MITTE rakenduses – rakendus ainult loeb modules
 > tabelit. Service-võti .env failist (gitignore!).
 
-- [ ] Mõlemad pilootmoodulid on modules tabelis; skripti uuesti käivitamine
+- [x] Mõlemad pilootmoodulid on modules tabelis; skripti uuesti käivitamine
       ei tekita duplikaate
+      (2026-08-06: käivitatud päriselt esimest korda – `.env.local`-is
+      puudusid seni `SUPABASE_URL` ja `SUPABASE_SERVICE_ROLE_KEY` (ainult
+      `VITE_`-eesliitega muutujad olid olemas), seega ei olnud skript kunagi
+      baasi kirjutanud. Tagajärg: `attempts.module_id` võõrvõti põrkas iga
+      õpilase esimese vastuse peal (23503), vastus jäi seadmesse
+      järjekorda ega jõudnud kunagi õpetaja vaatesse – vt samm 2.11
+      „andmebaasi viga ei tohi vastust ära visata". Nüüd sünkitud 2
+      moodulit, orpaneid ei leitud)
 - [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 
 **Miks:** attempts viitab module_id-le – ilma selle sammuta pole tabelis
@@ -315,10 +323,40 @@ kontrollida, milline neist päriselt kohale jõuab.
 > eri major-versiooni vastuseid, näita neid eraldi ja märgi see ära. Grupeeri
 > question_id järgi, mitte küsimuse teksti järgi.
 
-- [ ] Õpetaja näeb ühe pilguga, mis küsimus valmistas raskusi
-- [ ] Kahe eri major-versiooni vastused ei ole ühte tulpa liidetud
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): vale koond
+- [x] Õpetaja näeb ühe pilguga, mis küsimus valmistas raskusi
+      (2026-08-05: /opetaja/klass/:id sai teise saki „Vastused" –
+      ennustus↔selgitus paarid, väljumispiletid, valede vastuste koond
+      väärarusaama siltide kaupa. Väärarusaama silt ja arvvariandi lahendus
+      tulevad taaskasutatud checker/resolve funktsioonidest (src/checker,
+      src/engine/resolve.ts), mitte uuest loogikast – õigsus ise loetakse
+      salvestatud `responses.is_correct`-ist, mitte arvutatud uuesti (reegel 3))
+- [x] Kahe eri major-versiooni vastused ei ole ühte tulpa liidetud
+      (rühmitus on module_id + major-versioon; kui klassis on rohkem kui
+      üks major, näidatakse seda ka õpetajale tekstina)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): vale koond
       on vaikne viga, õpetaja usub seda
+      (2026-08-05: CodeRabbit 3 + Codex 4 leidu, üks kattus (mooduli
+      tõlgendus laeb alati praeguse koodi, mitte salvestatud
+      `module_version`-i – vt „Teadaolev auk" allpool). Kokku 6 päris viga
+      parandatud: pikk vabatekst ei murdnud kaardis (`wrap-break-word`),
+      klassi vahetus võis hetkeks näidata eelmise klassi vastuseid
+      (`key={id}` sunnib ümbermontaaži), sama õpilase kaks vastust samale
+      küsimusele (patch/minor vahepeal) luges koondis kaheks vastanuks
+      (dedup värskeima järgi), arvvastuse ühik kuvati topelt kui õpilane
+      tippis selle ise kaasa, ennustuse sammu teine küsimus („Miks sa nii
+      arvad?") jäi vaatest täiesti välja, kui `recallQuestion` viitas ainult
+      esimesele)
+
+**Teadaolev auk:** küsimuse tõlgendus (vastuse õigsuse põhjendus,
+väärarusaama silt, arvvariandi tekst) laeb ALATI praeguse mooduli koodi,
+mitte seda versiooni, mis oli elus vastuse andmise hetkel. Kuni major ei
+muutu, on see docs/MOODULILEPING.md „Versioonimine" reegli järgi tahtlik
+(vana vastus PEAB jääma sama koodiga võrreldavaks). Vahetult MAJOR-piiri
+ületanud küsimuse puhul ei ole see aga enam õige – vastus visatakse kas
+välja (kui küsimus kadus) või tõlgendatakse UUE (mitte päris-vastamis-
+hetke) definitsiooni järgi. Täislahendus vajaks küsimuste definitsioonide
+versioonipõhist hetktõmmist (nt `modules` tabelisse), mida praegu ei ole –
+eraldi samm, kui see reaalselt probleemiks osutub.
 
 ## 2.14 Jagamislink
 

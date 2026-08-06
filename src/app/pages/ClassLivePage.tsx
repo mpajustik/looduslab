@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Card, CardTitle } from "../../ui/Card";
 import { PageHeader } from "../../ui/PageHeader";
+import { cn } from "../../ui/cn";
 import { supabase } from "../../lib/supabase";
 import { moduleRegistry } from "../../modules/registry";
+import ClassResponsesTab from "./ClassResponsesTab";
 
 /** Nii tihti värskendame – piisavalt tihe, et tunni jooksul tunduda "elav". */
 const POLL_INTERVAL_MS = 10_000;
@@ -133,6 +135,7 @@ function useStepProgress(
  */
 export default function ClassLivePage() {
   const { id } = useParams<{ id: string }>();
+  const [tab, setTab] = useState<"elav" | "vastused">("elav");
   const [students, setStudents] = useState<StudentRow[] | null>(null);
   const [attempts, setAttempts] = useState<ActiveAttemptRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -181,8 +184,12 @@ export default function ClassLivePage() {
       </p>
 
       <PageHeader
-        title="Klassi elav vaade"
-        lead="Nimekiri uueneb iga 10 sekundi järel."
+        title="Klass"
+        lead={
+          tab === "elav"
+            ? "Nimekiri uueneb iga 10 sekundi järel."
+            : "Ennustused, selgitused ja väärarusaamad."
+        }
       />
 
       <Link
@@ -192,40 +199,76 @@ export default function ClassLivePage() {
         ← Tagasi klasside juurde
       </Link>
 
-      {error ? (
-        <p role="alert" className="text-ink">
-          <strong className="text-retry">Ei õnnestunud.</strong> {error}
-        </p>
-      ) : null}
+      <div role="tablist" className="flex w-fit gap-1 rounded-lg border border-line bg-white p-1">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "elav"}
+          onClick={() => setTab("elav")}
+          className={cn(
+            "min-h-11 rounded-md px-4 text-base font-medium",
+            tab === "elav" ? "bg-teacher-soft text-teacher" : "text-ink-soft",
+          )}
+        >
+          Elav vaade
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "vastused"}
+          onClick={() => setTab("vastused")}
+          className={cn(
+            "min-h-11 rounded-md px-4 text-base font-medium",
+            tab === "vastused" ? "bg-teacher-soft text-teacher" : "text-ink-soft",
+          )}
+        >
+          Vastused
+        </button>
+      </div>
 
-      {students === null ? (
-        <p className="text-ink-soft">Laen klassi …</p>
-      ) : students.length === 0 ? (
-        <Card>
-          <p className="text-ink-soft">
-            Selles klassis ei ole veel ühtegi õpilast liitunud.
-          </p>
-        </Card>
+      {tab === "vastused" ? (
+        // `key={id}` sunnib täieliku ümbermontaaži klassi vahetusel – ilma
+        // selleta jääks eelmise klassi vastused hetkeks uue klassi pealkirja
+        // alla nähtavaks, kuni uus päring jõuab kohale (CodeRabbiti leid).
+        id ? <ClassResponsesTab key={id} classId={id} /> : null
       ) : (
-        <ul className="flex flex-col gap-3">
-          {students.map((student) => {
-            const progress = stepProgress[student.id];
-            return (
-              <li key={student.id}>
-                <Card className="flex flex-wrap items-center justify-between gap-2">
-                  <CardTitle>{student.display_name}</CardTitle>
-                  <span className="text-ink-soft">
-                    {!progress
-                      ? "Pole veel alustanud"
-                      : progress.kind === "progress"
-                        ? `${progress.title} – ${progress.stepLabel}`
-                        : "Mooduli andmeid ei õnnestunud laadida"}
-                  </span>
-                </Card>
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          {error ? (
+            <p role="alert" className="text-ink">
+              <strong className="text-retry">Ei õnnestunud.</strong> {error}
+            </p>
+          ) : null}
+
+          {students === null ? (
+            <p className="text-ink-soft">Laen klassi …</p>
+          ) : students.length === 0 ? (
+            <Card>
+              <p className="text-ink-soft">
+                Selles klassis ei ole veel ühtegi õpilast liitunud.
+              </p>
+            </Card>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {students.map((student) => {
+                const progress = stepProgress[student.id];
+                return (
+                  <li key={student.id}>
+                    <Card className="flex flex-wrap items-center justify-between gap-2">
+                      <CardTitle>{student.display_name}</CardTitle>
+                      <span className="text-ink-soft">
+                        {!progress
+                          ? "Pole veel alustanud"
+                          : progress.kind === "progress"
+                            ? `${progress.title} – ${progress.stepLabel}`
+                            : "Mooduli andmeid ei õnnestunud laadida"}
+                      </span>
+                    </Card>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );
