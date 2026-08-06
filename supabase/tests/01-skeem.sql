@@ -232,6 +232,20 @@ with kontrollid as (
   from join_attempts
   where outcome = 'pending'
     and created_at < now() - interval '1 hour'
+
+  union all
+
+  -- 15. Klassikood ise ei tohi baasis olla loetav. `code_hash` on
+  --     HMAC-SHA256 hex ehk täpselt 64 märki a–f ja 0–9. Päris kood on
+  --     lühike ja sisaldab suurtähti – kui siit tuleb VIGA, on kuskil
+  --     avatekstis kood ja iga baasi näinud inimene saab klassiga liituda.
+  select
+    'code_hash on räsi (64 hex-märki)',
+    '0 valet rida',
+    count(*)::text,
+    case when count(*) = 0 then 'OK' else 'VIGA' end
+  from classes
+  where code_hash !~ '^[0-9a-f]{64}$'
 )
 
 select kontroll, ootus, tegelik, seis

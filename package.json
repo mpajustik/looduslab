@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "lint": "eslint . && tsc --noEmit",
     "sync-modules": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/sync-modules.mjs",
+    "turvakontroll": "node scripts/turvakontroll.mjs",
     "review": "codex exec -s read-only -o codex-ulevaatus.md \"Loe fail AGENTS.md ja tee tapselt seal kirjeldatud ulevaatus. Vaadata tuleb koiki commitimata muudatusi: git status --porcelain -uall, git diff HEAD, ning uued (jalgimata) failid loe tervikuna labi. Vasta eesti keeles.\""
   },
   "dependencies": {

@@ -14,6 +14,9 @@ midagi püsivalt ja neid tohib jooksutada nii mitu korda kui tahad.
 02-pidurdus.sql    kas liitumise pidurdus KÄITUB õigesti (kirjutab ja koristab)
 03-kustutamine.sql kas klassi kustutamine viib kõik seotud read kaasa
                    (kirjutab, aga võtab kõik lõpuks tagasi – rollback)
+04-rls-brauseris.js  kas RLS peab PÄRIS brauserist, päris sessiooniga
+                   (ainult loeb; EI OLE SQL – käib brauseri konsooli,
+                    F12 → Console, mitte SQL Editorisse)
 ```
 
 ## Kuidas kasutada
@@ -33,6 +36,28 @@ Skript koristab oma testiread ise ära ka siis, kui ta läbi kukub.
 **`03-kustutamine.sql`** töötab samamoodi: vaikus on hea uudis. Kogu skript
 on ühe transaktsiooni sees ja lõpeb `rollback`-iga, seega testiklassi ega
 -õpilast baasi ei jää ka õnnestumise korral.
+
+**`04-rls-brauseris.js`** ei ole SQL. Ta käib brauseri konsooli (F12 →
+Console) sellel lehel, kus rakendus jookseb, ja küsib hoopis teist küsimust
+kui SQL-failid: mitte „kas poliitika on olemas", vaid „kas keegi saab minu
+andmed kätte, kui ta väga tahab". Faili alguses on kaks rida, mis tuleb
+`.env.local` failist täita (URL ja anon-võti – anon-võti on avalik, ta on
+niikuinii igas brauseris). Kasutusjuhend on faili enda alguses.
+
+Miks konsool ja mitte SQL: SQL Editor jookseb service-võtmega, kes RLS-ist
+üle sõidab. Poliitikat saab ainult sealt kontrollida, kust õpilane päriselt
+tuleb – brauserist, oma sessiooniga.
+
+## Turvatest (plaan 2.16) – kust iga punkt kontrolli saab
+
+| Plaani punkt | Kust |
+| --- | --- |
+| Kaks anonüümset õpilast ei näe teineteise ridu | `04-rls-brauseris.js`, `llKontrolli` |
+| Teine õpetaja ei näe esimese klasse | `04-rls-brauseris.js`, `llKontrolli` |
+| Ilma sessioonita päring ei anna ridu (v.a `modules`) | `04-rls-brauseris.js`, jookseb kohe kleepimisel |
+| Kood ja IP on baasis räsina | `01-skeem.sql` kontrollid „code_hash on räsi" ja „ip_hash on räsi" |
+| Aegunud koodiga ei saa liituda; pidurdus rakendub | `supabase/functions/README.md` curl-testid 4 ja 5; `02-pidurdus.sql` |
+| Service-võti ei ole repos ega brauseris | `npm run turvakontroll` |
 
 ## Millal neid jooksutada
 

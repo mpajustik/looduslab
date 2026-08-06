@@ -459,17 +459,61 @@ Turvatest käib ENNE toodangukeskkonda: prod luuakse alles siis, kui on
 tõestatud, et RLS peab. Vastupidine järjekord tähendaks, et internetis on
 (kasvõi tühi) andmebaas, mille turvalisust pole keegi kontrollinud.
 
-- [ ] Kaks anonüümset kasutajat (2 inkognito akent): kumbki EI näe teise
+- [x] **Tööriistad valmis (2026-08-06):** `supabase/tests/04-rls-brauseris.js`
+      (kleebitakse brauseri konsooli) ja `npm run turvakontroll`. Kust iga
+      punkt kontrolli saab, on tabelis `supabase/tests/README.md`-s.
+- [x] Kaks anonüümset kasutajat (2 inkognito akent): kumbki EI näe teise
       attempts/responses ridu otse supabase-js päringuga (testi konsoolist!)
-- [ ] Teine õpetajakonto EI näe esimese klasse ega andmeid
-- [ ] Ilma sessioonita päring ei tagasta ridu ühestki tabelist peale
+      → `04-rls-brauseris.js`, käsk `llKontrolli` (2026-08-06, kasutaja: RLS pidas)
+- [x] Teine õpetajakonto EI näe esimese klasse ega andmeid
+      → sama skript, kaks õpetajakontot (2026-08-06, kasutaja)
+- [x] Ilma sessioonita päring ei tagasta ridu ühestki tabelist peale
       `modules` (see on teadlikult avalik kataloog)
-- [ ] Klassikood andmebaasis on räsi, mitte avatekst; join_attempts-is on
+      → `04-rls-brauseris.js` (2026-08-06, kasutaja)
+- [x] Klassikood andmebaasis on räsi, mitte avatekst; join_attempts-is on
       IP räsi, mitte avatekst
-- [ ] Aegunud koodiga ei saa liituda; pidurdus rakendub
-- [ ] Service-võti EI ole repos ega brauseris (otsi koodist läbi!)
+      → `01-skeem.sql` kontrollid „code_hash on räsi" ja „ip_hash on räsi"
+      (2026-08-06, kasutaja: kõik read OK)
+- [x] `03-kustutamine.sql` uuesti läbi (2026-08-06, kasutaja) – cascade-ahel
+      peab ka pärast selle sammu muudatusi.
+- [x] Aegunud koodiga ei saa liituda; pidurdus rakendub (2026-08-06).
+      Pidurdus: `02-pidurdus.sql` läbis. Aegumine: curl-test 4 tehti
+      kolmes osas, sest ainult nii ta midagi tõestab – (1) kood 260221
+      KEHTIS, HTTP 200 + class_name; (2) kasutaja tegi ta SQL-is aegunuks;
+      (3) sama kood andis HTTP 404 ja `{"error":"Vale või aegunud kood.
+      Küsi õpetajalt uus."}` – **täht-tähelt sama, mis olematu kood
+      000000**. Vahepealne samm on oluline: ilma selleta oleks 404 võinud
+      tulla ka lihtsalt sellest, et koodi pole olemas, ja aegumise haru
+      jääks proovimata.
+- [x] Service-võti EI ole repos ega brauseris (2026-08-06, `npm run
+      turvakontroll`): puhas. Skript otsib .env.local saladuste VÄÄRTUSI nii
+      git'i jälgitavatest failidest kui ka build'itud bundle'ist, lisaks
+      JWT-kujulisi stringe koodis ja `VITE_`-eesliitega saladusi (Vite
+      saadab need automaatselt igasse brauserisse).
 
 **Kui üksainus punkt ebaõnnestub, siis etapp EI OLE valmis.**
+
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): tööriistad ise
+      käitlevad saladusi ja nende „roheline tuli" on see, mille peale plaani
+      linnuke pannakse (2026-08-06: CodeRabbit 3 + Codex 4 leidu, ei
+      kattunud üheski reas, aga MÕLEMAD leidsid sama klassi vea: test ütleb
+      „puhas" olukorras, kus ta tegelikult ei kontrollinud. Viis parandatud.
+      (1) `04` luges iga ebaõnnestunud päringu (400 vigane filter, 500) „0
+      rida = OK" alla – kirjaviga skriptis oleks andnud rohelise tule; nüüd
+      loeb ainult 401/403 „RLS pidas" alla. (2) `turvakontroll` lõpetas
+      edukoodiga ka siis, kui `dist/` puudus ehk bundle jäi vaatamata; nüüd
+      POOLIK + exit 1. (3) `profiles` puudus `04` kontrollide hulgast –
+      õpetaja nimi on samuti isikuandmed. (4) Vahelejäänud kontroll kuvati
+      pealkirjas „kõik OK" all; nüüd „test on POOLIK". (5) `turvakontroll`
+      vaatas ainult `.env`/`.env.local`, aga Vite laeb build'i ajal ka
+      `.env.production`. CodeRabbiti kolmas leid – `code_hash` NULL-ide
+      arvestamine – EI olnud viga: veerul on `not null`.)
+
+**Miks brauserikonsool ja mitte SQL Editor:** SQL Editor jookseb
+service-võtmega, kes sõidab RLS-ist üle – seal näed alati kõike ja test
+ütleks alati „korras". Poliitikat saab kontrollida ainult sealt, kust
+õpilane päriselt tuleb: brauserist, oma sessiooniga. Seepärast on 04 ainus
+fail selles kaustas, mis ei ole SQL.
 
 ## 2.17 Toodangukeskkond, varundus ja seire
 

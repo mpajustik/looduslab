@@ -36,6 +36,7 @@ npm run dev        # arendusserver
 npm run test       # Vitest testid
 npm run build      # toodangu build (peab alati õnnestuma enne commit'i)
 npm run lint       # ESLint + tüübikontroll (tsc --noEmit)
+npm run turvakontroll # kas service-võti on lekkinud repo või bundle'i (samm 2.16)
 npm run coverage      # ainekava katvuse raport (valmib etapis 4.0)
 npm run sync-modules  # manifestid → Supabase modules tabelisse (etapp 2.5)
 ```
