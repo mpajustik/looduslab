@@ -1,13 +1,29 @@
 import { cn } from "./cn";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "dangerGhost";
 export type ButtonSize = "md" | "lg";
 
-/** Värvid tulevad semantilistest tokenitest (src/index.css), mitte teal-700-st. */
+/**
+ * Värvid tulevad semantilistest tokenitest (src/index.css), mitte teal-700-st.
+ *
+ * `danger` ja `dangerGhost` on olemas selleks, et hävitava nupu punast EI
+ * pandaks `className`-iga peale: `cn` ei lahenda vastuolulisi Tailwindi
+ * klasse (vt src/ui/cn.ts), seega `bg-brand` + `bg-retry` koos annaks selle
+ * värvi, mis juhtub stiililehes tagapool olema. Kustutamise nupp, mis
+ * renderdub tealina, on täpselt see viga, mida keegi ei märka enne, kui
+ * keegi valesti klõpsab (Codexi leid, 2026-08-06).
+ */
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: "bg-brand text-white hover:bg-brand-strong",
   secondary: "border border-line bg-white text-ink hover:bg-brand-soft",
   ghost: "text-brand hover:bg-brand-soft",
+  danger: "bg-retry text-white hover:bg-retry-strong",
+  dangerGhost: "text-retry hover:bg-retry-soft",
 };
 
 /**

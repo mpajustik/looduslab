@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router";
-import { Eye, LogOut, Mail, X } from "lucide-react";
+import { Eye, LogOut, Mail, Trash2, X } from "lucide-react";
 import QRCode from "qrcode";
 import { Button } from "../../ui/Button";
 import { Card, CardDescription, CardTitle } from "../../ui/Card";
@@ -17,11 +17,13 @@ import {
   classCodeErrorMessage,
   formatExpiry,
   joinUrl,
+  matchesClassName,
   mergeStudents,
 } from "../../lib/classDesk";
 import type { JoinedStudent } from "../../lib/classDesk";
 import { modulePreviewPath, moduleUrl } from "../../lib/shareLinks";
 import { isTeacherSession, useSession } from "../../lib/useSession";
+import { useDialogKeys } from "../../ui/useDialogKeys";
 import { allModuleIds, useModuleManifests } from "../moduleManifests";
 
 /** Moodul, mida õpetajale tühjas olekus proovimiseks pakume. */
@@ -411,6 +413,7 @@ function ClassesSection() {
   const [projectorClassId, setProjectorClassId] = useState<string | null>(
     null,
   );
+  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     fetchClasses()
@@ -444,8 +447,25 @@ function ClassesSection() {
     setCodes((prev) => ({ ...prev, [classId]: { code, expiresAt } }));
   }
 
+  /**
+   * Klass on baasist kustutatud – võta ta nimekirjast ja ka mällu jäänud
+   * koodide hulgast välja. Koodi ununemine on siin oluline, mitte
+   * koristusküsimus: kustutatud klassi kood ei tohi ekraanile alles jääda.
+   */
+  function handleDeleted(classId: string) {
+    setClasses((prev) => (prev ?? []).filter((c) => c.id !== classId));
+    setCodes((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([id]) => id !== classId),
+      ),
+    );
+    setDeletingClassId(null);
+    if (projectorClassId === classId) setProjectorClassId(null);
+  }
+
   const projectorClass = classes?.find((c) => c.id === projectorClassId);
   const projectorCode = projectorClassId ? codes[projectorClassId] : undefined;
+  const deletingClass = classes?.find((c) => c.id === deletingClassId);
 
   return (
     <Card className="flex flex-col items-start gap-4">
@@ -479,6 +499,7 @@ function ClassesSection() {
                   handleRotated(klass.id, expiresAt, code)
                 }
                 onShowProjector={() => setProjectorClassId(klass.id)}
+                onDelete={() => setDeletingClassId(klass.id)}
               />
             </li>
           ))}
@@ -491,6 +512,14 @@ function ClassesSection() {
           className={projectorClass.name}
           code={projectorCode.code}
           onClose={() => setProjectorClassId(null)}
+        />
+      ) : null}
+
+      {deletingClass ? (
+        <DeleteClassDialog
+          klass={deletingClass}
+          onClose={() => setDeletingClassId(null)}
+          onDeleted={() => handleDeleted(deletingClass.id)}
         />
       ) : null}
     </Card>
@@ -577,11 +606,13 @@ function ClassCard({
   known,
   onRotated,
   onShowProjector,
+  onDelete,
 }: {
   klass: ClassRow;
   known: KnownCode | undefined;
   onRotated: (expiresAt: string, code: string) => void;
   onShowProjector: () => void;
+  onDelete: () => void;
 }) {
   const [rotating, setRotating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -658,9 +689,16 @@ function ClassCard({
         </CardDescription>
       )}
 
-      <div>
+      {/* Kustutamine on hävitav ja seisab seepärast teistest nuppudest
+          eemal, oma real – mitte „Näita klassile" kõrval, kust ta saaks
+          tunni alguses kogemata pihta. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Button type="button" variant="ghost" onClick={handleRotate} disabled={rotating}>
           {rotating ? "Uuendan …" : "Uuenda koodi"}
+        </Button>
+        <Button type="button" variant="dangerGhost" onClick={onDelete}>
+          <Trash2 aria-hidden="true" className="size-5" />
+          Kustuta klass
         </Button>
       </div>
 
@@ -670,6 +708,194 @@ function ClassCard({
         </p>
       ) : null}
     </Card>
+  );
+}
+
+/**
+ * Klassi kustutamise kinnitus (samm 2.15).
+ *
+ * KAKS asja, mis siin tahtlikult „ebamugavad" on:
+ *
+ * 1. Õpetaja peab klassi nime ise trükkima. Üks „Kas oled kindel?" klõps
+ *    ei sobi, sest kustutamine on pöördumatu ja võtab kaasa TEISTE inimeste
+ *    töö – kaks sarnast klassi nimekirjas kõrvuti on tavaline olukord.
+ * 2. Ekraanil on enne kustutamist õpilaste arv. „Kustutan 24 õpilase töö"
+ *    on hoopis teine lause kui „kustutan tühja klassi" ja õpetaja peab
+ *    nägema, kumb see on.
+ *
+ * Kustutamine ise on üks päring `classes` tabelisse: õpilased, katsed,
+ * vastused ja kordamiskaardid tulevad kaasa ON DELETE CASCADE kaudu
+ * (001_tables.sql). Eraldi Edge Functionit siin EI OLE, sest RLS-poliitika
+ * `classes_own` lubab õpetajal kustutada AINULT oma klassi – server otsustab
+ * õiguse, mitte see vorm.
+ */
+function DeleteClassDialog({
+  klass,
+  onClose,
+  onDeleted,
+}: {
+  klass: ClassRow;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const titleId = useId();
+  const warningId = useId();
+  const fieldId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [typed, setTyped] = useState("");
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Kui päring on juba teele läinud, ei ole „Jäta katki" enam aus nupp:
+   * DELETE jookseb serveris lõpuni ja klass kaob ka siis, kui dialoog
+   * vahepeal sulgus. Õpetaja jääks uskuma, et ta peatas kustutamise
+   * (Codexi leid, 2026-08-06). Seepärast on kustutamise ajal nii Esc kui
+   * ka „Jäta katki" kinni – ootamine on ainus aus valik.
+   */
+  const closeIfIdle = useCallback(() => {
+    if (deleting) return;
+    onClose();
+  }, [deleting, onClose]);
+
+  useDialogKeys({ dialogRef, initialFocusRef: inputRef, onClose: closeIfIdle });
+
+  // Õpilaste arv on hoiatuse kõige olulisem sõna – kui päring ei õnnestu,
+  // jääb see number lihtsalt näitamata (kustutamist see ei blokeeri).
+  useEffect(() => {
+    let active = true;
+    void supabase
+      .from("students")
+      .select("id", { count: "exact", head: true })
+      .eq("class_id", klass.id)
+      .then(({ count, error: countError }) => {
+        if (!active || countError) return;
+        setStudentCount(count ?? 0);
+      });
+    return () => {
+      active = false;
+    };
+  }, [klass.id]);
+
+  const confirmed = matchesClassName(typed, klass.name);
+
+  async function handleDelete() {
+    if (!confirmed) return;
+    setDeleting(true);
+    setError(null);
+
+    // `.select("id")` EI ole siin ilustus: kui RLS rea kinni paneb, tuleb
+    // DELETE tagasi ilma veata ja NULL ridadega – ilma selleta ütleks vorm
+    // „kustutatud" ka siis, kui baasis ei muutunud mitte midagi.
+    const { data, error: deleteError } = await supabase
+      .from("classes")
+      .delete()
+      .eq("id", klass.id)
+      .select("id");
+
+    if (deleteError) {
+      setError(
+        "Kustutamine ei õnnestunud. Kontrolli internetiühendust ja proovi uuesti.",
+      );
+      setDeleting(false);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      setError(
+        "Klassi ei kustutatud – võib-olla on see juba kustutatud või sinu sisselogimine aegus. Värskenda lehte.",
+      );
+      setDeleting(false);
+      return;
+    }
+
+    onDeleted();
+  }
+
+  return (
+    // Taust: klõps modaalist mööda EI sulge – hävitava dialoogi juhuslik
+    // sulgemine on väiksem häda kui juhuslik kustutamine, aga segane
+    // poolikult suletud olek on mõlemast halvem.
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 sm:items-center">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="flex max-h-full w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-2xl bg-white p-5 shadow-lg"
+      >
+        <h2 id={titleId} className="text-lg font-semibold text-ink">
+          Kustuta klass „{klass.name}”?
+        </h2>
+
+        <div id={warningId} className="flex flex-col gap-2 text-ink">
+          <p>
+            <strong className="text-retry">Seda ei saa tagasi võtta.</strong>{" "}
+            Kaovad kõik selle klassi õpilased ja nende vastused.
+          </p>
+          {studentCount === null ? (
+            <p className="text-ink-soft">Loen õpilaste arvu …</p>
+          ) : studentCount === 0 ? (
+            <p className="text-ink-soft">Selle klassiga ei ole keegi liitunud.</p>
+          ) : (
+            <p className="text-ink-soft">
+              Klassiga on liitunud <strong>{studentCount}</strong> õpilast.
+              Nende töö kustub koos klassiga.
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor={fieldId} className="font-medium text-ink">
+            Kinnituseks kirjuta klassi nimi: {klass.name}
+          </label>
+          <input
+            ref={inputRef}
+            id={fieldId}
+            type="text"
+            autoComplete="off"
+            value={typed}
+            onChange={(event) => setTyped(event.target.value)}
+            aria-describedby={warningId}
+            className="min-h-11 w-full rounded-lg border border-line px-4 text-base text-ink"
+          />
+        </div>
+
+        {error ? (
+          <p role="alert" className="text-ink">
+            <strong className="text-retry">Ei õnnestunud.</strong> {error}
+          </p>
+        ) : null}
+
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={closeIfIdle}
+            disabled={deleting}
+          >
+            Jäta katki
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={handleDelete}
+            disabled={!confirmed || deleting}
+          >
+            <Trash2 aria-hidden="true" className="size-5" />
+            {deleting ? "Kustutan …" : "Kustuta jäädavalt"}
+          </Button>
+        </div>
+
+        {deleting ? (
+          <p aria-live="polite" className="text-right text-ink-soft">
+            Kustutamist ei saa enam katkestada. Oota, kuni see lõpeb.
+          </p>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -755,50 +981,10 @@ function ProjectorView({
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  /**
-   * Modaali klaviatuurikäitumine: Esc sulgeb, Tab jääb modaali sisse ja
-   * fookus naaseb sulgemisel sinna nupule, millelt tuldi.
-   *
-   * Ilma fookuselõksuta rändab Tab nähtamatult modaali taha jäänud töölauale
-   * – klaviatuuriga või ekraanilugejaga kasutaja satub siis vaatesse, mida
-   * ta ei näe (docs/DISAINIJUHIS.md → Ligipääsetavus).
-   */
-  useEffect(() => {
-    // Element, mis oli fookuses avamise hetkel – sinna tuleb tagasi minna.
-    const openedFrom = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-
-      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusable || focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      // Ringi otsad kokku: viimaselt edasi → esimene, esimeselt tagasi → viimane.
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      openedFrom?.focus();
-    };
-  }, [onClose]);
+  // Esc sulgeb, Tab jääb modaali sisse, fookus naaseb sulgemisel sinna
+  // nupule, millelt tuldi (src/ui/useDialogKeys.ts – sama hook hoiab ka
+  // kustutamise kinnitust).
+  useDialogKeys({ dialogRef, initialFocusRef: closeRef, onClose });
 
   return (
     <div

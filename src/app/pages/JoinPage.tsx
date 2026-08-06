@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import type { FormEvent } from "react";
-import { Navigate, useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router";
 import { Button } from "../../ui/Button";
 import { Card, CardDescription, CardTitle } from "../../ui/Card";
 import { PageHeader } from "../../ui/PageHeader";
@@ -123,6 +123,19 @@ export default function JoinPage() {
               </p>
             ) : null}
           </form>
+
+          {/* Nimi antakse ÄRA just siin – seega peab siin, mitte ainult
+              jaluses, olema näha, mis sellega edasi juhtub (samm 2.15). */}
+          <p className="text-ink-soft">
+            Salvestame sinu eesnime, klassi ja vastused.{" "}
+            <Link
+              to="/privaatsus"
+              className="rounded text-brand underline underline-offset-2"
+            >
+              Vaata, mida me sinu kohta salvestame
+            </Link>
+            .
+          </p>
         </Card>
       )}
     </div>

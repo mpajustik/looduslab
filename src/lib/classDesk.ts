@@ -76,6 +76,33 @@ export function mergeStudents(
   return added.length === 0 ? current : [...current, ...added];
 }
 
+/**
+ * Kas õpetaja trükkis kinnituseks klassi nime õigesti (samm 2.15)?
+ *
+ * Klassi kustutamine on PÖÖRDUMATU ja võtab kaasa teiste inimeste (õpilaste)
+ * töö – seepärast ei piisa siin ühest „Kas oled kindel?" klõpsust. Nime
+ * trükkimine sunnib vaatama, MILLIST klassi parasjagu kustutatakse; kaks
+ * sarnast nime („8.a füüsika" ja „8.b füüsika") on just see koht, kus
+ * lohakas klõps läheb valesti.
+ *
+ * Võrdlus on leebe seal, kus eksimine on kahjutu (algustäht, tühikud otstes
+ * ja sees), ja range seal, kus see on oluline (tähed ja numbrid ise).
+ */
+export function matchesClassName(input: string, className: string): boolean {
+  // `normalize("NFC")` EI ole siin ilustus: iOS-i ja macOS-i klaviatuur
+  // saadab „ü" tihti kahe märgina (u + täpid), Windows ühe märgina. Ilma
+  // selleta ei loeks õigesti trükitud „8.a füüsika" õigeks ja õpetaja ei
+  // saaks oma klassi iPadist üldse kustutada (CodeRabbiti leid, 2026-08-06).
+  const normalize = (value: string) =>
+    value.normalize("NFC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("et");
+
+  const wanted = normalize(className);
+  // Tühja nimega klassi ei ole (vorm ei luba), aga kui ta kuidagi tekiks,
+  // ei tohi tühi väli olla kehtiv kinnitus.
+  if (wanted.length === 0) return false;
+  return normalize(input) === wanted;
+}
+
 /** Üldine teade, kui vastust ei õnnestunud lugeda (võrguviga, aegumine). */
 export const CLASS_CODE_NETWORK_ERROR =
   "Ei õnnestunud ühendust luua. Kontrolli internetiühendust ja proovi uuesti.";

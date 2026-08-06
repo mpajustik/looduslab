@@ -29,6 +29,8 @@
   --color-correct-soft: var(--color-green-50);
   --color-retry: var(--color-red-600);
   --color-retry-soft: var(--color-red-50);
+  /* retry-strong on hävitava nupu hover (nagu brand → brand-strong) */
+  --color-retry-strong: var(--color-red-700);
 
   /* Tekst: ink = põhitekst, ink-soft = teisene */
   --color-ink: var(--color-slate-900);

@@ -3,6 +3,7 @@ import {
   classCodeErrorMessage,
   formatExpiry,
   joinUrl,
+  matchesClassName,
   mergeStudents,
 } from "../src/lib/classDesk";
 
@@ -89,5 +90,53 @@ describe("classCodeErrorMessage", () => {
     await expect(classCodeErrorMessage({ context })).resolves.toBe(
       "Ei õnnestunud ühendust luua. Kontrolli internetiühendust ja proovi uuesti.",
     );
+  });
+});
+
+describe("matchesClassName", () => {
+  it("võtab vastu täpselt sama nime", () => {
+    expect(matchesClassName("8.a füüsika", "8.a füüsika")).toBe(true);
+  });
+
+  it("annab andeks tühikud otstes ja teise algustähe", () => {
+    expect(matchesClassName("  8.A Füüsika ", "8.a füüsika")).toBe(true);
+  });
+
+  it("annab andeks topelttühiku sees", () => {
+    expect(matchesClassName("8.a  füüsika", "8.a füüsika")).toBe(true);
+  });
+
+  it("EI võta vastu naaberklassi nime (üks täht erineb)", () => {
+    expect(matchesClassName("8.b füüsika", "8.a füüsika")).toBe(false);
+  });
+
+  it("EI võta vastu poolikut nime", () => {
+    expect(matchesClassName("8.a", "8.a füüsika")).toBe(false);
+  });
+
+  it("EI võta vastu tühja välja", () => {
+    expect(matchesClassName("", "8.a füüsika")).toBe(false);
+    expect(matchesClassName("   ", "8.a füüsika")).toBe(false);
+  });
+
+  it("EI kinnita midagi, kui klassi nimi ise on tühi", () => {
+    expect(matchesClassName("", "")).toBe(false);
+    expect(matchesClassName("  ", "   ")).toBe(false);
+  });
+
+  it("tunneb ära täpitähed suur- ja väiketähena", () => {
+    expect(matchesClassName("ÜHENDATUD RÜHM", "ühendatud rühm")).toBe(true);
+  });
+
+  it("tunneb ära lahku kirjutatud täpitähe (iPadi klaviatuur, NFD)", () => {
+    // Sama nimi kahes Unicode'i kujus: "ü" ühe märgina (NFC, Windows) ja
+    // "u" + täpid eraldi märgina (NFD, mida iOS/macOS klaviatuur saadab).
+    // Ilma normaliseerimiseta ei loeks õigesti trükitud nimi õigeks ja
+    // õpetaja ei saaks oma klassi üldse kustutada.
+    const nfc = "8.a füüsika".normalize("NFC");
+    const nfd = "8.a füüsika".normalize("NFD");
+    expect(nfc).not.toBe(nfd);
+    expect(matchesClassName(nfd, nfc)).toBe(true);
+    expect(matchesClassName(nfc, nfd)).toBe(true);
   });
 });

@@ -7,6 +7,7 @@ import CoursePage from "./pages/CoursePage";
 import HomePage from "./pages/HomePage";
 import ModulePage from "./pages/ModulePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import ProgressPage from "./pages/ProgressPage";
 import ReviewPage from "./pages/ReviewPage";
 
@@ -54,6 +55,10 @@ export default function App() {
                 </Suspense>
               }
             />
+            {/* Privaatsusleht on ainult teksti ja EI ole `lazy`: ta avaneb
+                sageli kõige esimesena (link liitumislehelt) ja peab tulema
+                kohe, ka kehva ühendusega telefonis. */}
+            <Route path="privaatsus" element={<PrivacyPage />} />
             <Route path="kordamine" element={<ReviewPage />} />
             <Route path="edenemine" element={<ProgressPage />} />
             <Route

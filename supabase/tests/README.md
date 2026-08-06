@@ -12,6 +12,8 @@ midagi püsivalt ja neid tohib jooksutada nii mitu korda kui tahad.
 ```text
 01-skeem.sql       kas tabelid, õigused ja indeksid on paigas (ainult loeb)
 02-pidurdus.sql    kas liitumise pidurdus KÄITUB õigesti (kirjutab ja koristab)
+03-kustutamine.sql kas klassi kustutamine viib kõik seotud read kaasa
+                   (kirjutab, aga võtab kõik lõpuks tagasi – rollback)
 ```
 
 ## Kuidas kasutada
@@ -27,6 +29,10 @@ Supabase → **SQL Editor** → **New query** → kleebi kogu faili sisu → **R
 - punane veateade = üks kontroll kukkus läbi ja teade ütleb, milline.
 
 Skript koristab oma testiread ise ära ka siis, kui ta läbi kukub.
+
+**`03-kustutamine.sql`** töötab samamoodi: vaikus on hea uudis. Kogu skript
+on ühe transaktsiooni sees ja lõpeb `rollback`-iga, seega testiklassi ega
+-õpilast baasi ei jää ka õnnestumise korral.
 
 ## Millal neid jooksutada
 

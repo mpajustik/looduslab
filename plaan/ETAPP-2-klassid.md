@@ -403,9 +403,53 @@ Testid katavad iga piirjuhu (tests/shareLinks.test.ts).
 > (2) Õpetaja saab klassi kustutada: kustutab õpilased, attempts, responses,
 > review_items (kinnitusdialoogiga). Kontrolli, et FK-d on ON DELETE CASCADE.
 
-- [ ] Privaatsusleht olemas; klassi kustutamine viib kõik seotud read kaasa
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): kustutamine
+- [x] Kood valmis (2026-08-06): `/privaatsus` (src/app/pages/PrivacyPage.tsx)
+      on puhas tekstileht ILMA `lazy`-ta – ta avaneb sageli esimesena
+      (link liitumislehelt) ja peab tulema kohe. Link on jaluses (AppLayout,
+      igal lehel) ja liitumisvormi all, kus laps oma nime just ära annab.
+      Kustutamine on üks päring `classes` tabelisse: RLS `classes_own` lubab
+      ainult oma klassi ja ON DELETE CASCADE viib kaasa students → attempts
+      → responses ja review_items. Uut migratsiooni EI olnud vaja – cascade
+      oli 001_tables.sql-is juba paigas; `supabase/tests/03-kustutamine.sql`
+      tõestab selle ära (loob testiklassi, kustutab, kontrollib orbe,
+      lõpetab `rollback`-iga).
+- [ ] **Puudu, vajab kasutaja kätt:** jooksuta
+      `supabase/tests/03-kustutamine.sql` dev-projektis; kustuta päris
+      testklass (kontrolli, et õpilaste arv dialoogis klapib ja et pärast
+      kustutamist ei ava klassivaade enam ridu); privaatsuslehe
+      kontaktaadress üle vaadata (praegu isiklik gmail)
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): kustutamine
       on pöördumatu, orvuks jäänud read jäävad märkamata
+      (2026-08-06: CodeRabbit 3 + Codex 4 leidu, EI kattunud üheski punktis,
+      kuus parandatud. Olulisemad kaks: (1) Codex – „Jäta katki" ja Esc
+      sulgesid dialoogi ka siis, kui DELETE oli juba teele läinud; klass kadus
+      ikka, aga õpetaja uskus, et ta peatas selle. Nüüd on kustutamise ajal
+      mõlemad kinni ja ekraanil on seda ka öeldud. (2) Codex – kustutusnupu
+      punane tuli `className` kaudu, aga `cn` EI lahenda vastuolulisi
+      Tailwindi klasse (src/ui/cn.ts ütleb seda ise): `bg-brand` + `bg-retry`
+      võitja otsustanuks stiililehe järjekord ja hävitav nupp võinuks
+      renderduda tealina. Nüüd on `danger`/`dangerGhost` variandid
+      buttonStyles.ts-is. Ülejäänud neli: privaatsuslehe lubadus ei katnud
+      seadmesse jäävat koopiat ega tehnilist ID-d (kaks eraldi leidu),
+      klassinime kinnitus ei normaliseerinud täpitähti NFC-sse – iPadi
+      klaviatuurilt ei saanuks õpetaja oma klassi üldse kustutada –, ja
+      fookus läks pärast kustutamist kadunud nupule. CodeRabbiti „major"
+      leid (SQL-test peaks kontrollima auth.users rea kadumist) EI olnud viga:
+      rida jääb tahtlikult alles, kontroll ütleb seda nüüd testis välja.)
+
+**Miks nime trükkimine, mitte üks „Kas oled kindel?":** kustutamine võtab
+kaasa TEISTE inimeste (õpilaste) töö ja tagasivõtmise nuppu ei ole. Kaks
+sarnast nime nimekirjas kõrvuti („8.a füüsika" / „8.b füüsika") on tavaline,
+seega peab kinnitus sundima vaatama, MILLIST klassi kustutatakse. Dialoog
+näitab ka õpilaste arvu – „kustutan 24 õpilase töö" on hoopis teine lause
+kui „kustutan tühja klassi".
+
+**Teadlikult alles:** anonüümsed `auth.users` read jäävad pärast klassi
+kustutamist alles (students rea kustutamine ei kustuta auth-kasutajat –
+cascade käib teistpidi). Isikuandmeid nad ei sisalda: ei e-posti, ei nime,
+ainult id ja ajatempel – nimi elas `students.display_name`-is, mis kustus.
+Nende koristamine nõuaks service-võtmega Edge Functionit; teeme selle siis,
+kui kontode arv reaalselt segama hakkab.
 
 ## 2.16 TURVATEST dev-keskkonnas (kohustuslik – ENNE prod-i loomist!)
 

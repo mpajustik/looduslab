@@ -66,10 +66,27 @@ export function AppLayout() {
         </div>
       </header>
 
-      {/* pb-24 hoiab sisu alumise riba alt välja (ainult telefonis). */}
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 pb-24 sm:pb-8">
+      {/* pb-8 sm:pb-8 – telefonis hoiab sisu alumise riba alt välja hoopis
+          jaluse enda pb-24 (jalus on nüüd main'i järel). */}
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
         <Outlet />
       </main>
+
+      {/* Privaatsuslink peab olema IGAL lehel leitav (samm 2.15) – ka siis,
+          kui laps tuli otse jagatud lingiga ega näinud liitumislehte.
+          Navigatsiooni teda panna ei tohi: seal on lubatud maksimaalselt neli
+          valikut (docs/DISAINIJUHIS.md) ja need on õppimiseks. */}
+      <footer className="mx-auto w-full max-w-4xl px-4 pb-24 text-ink-soft sm:pb-6">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-4">
+          <NavLink
+            to="/privaatsus"
+            className="flex min-h-11 items-center rounded-lg underline underline-offset-2 hover:text-brand"
+          >
+            Privaatsus
+          </NavLink>
+          <span>LoodusLab AI</span>
+        </div>
+      </footer>
 
       <nav
         aria-label="Peamenüü"
