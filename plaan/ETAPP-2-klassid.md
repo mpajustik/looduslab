@@ -413,11 +413,13 @@ Testid katavad iga piirjuhu (tests/shareLinks.test.ts).
       oli 001_tables.sql-is juba paigas; `supabase/tests/03-kustutamine.sql`
       tõestab selle ära (loob testiklassi, kustutab, kontrollib orbe,
       lõpetab `rollback`-iga).
-- [ ] **Puudu, vajab kasutaja kätt:** jooksuta
-      `supabase/tests/03-kustutamine.sql` dev-projektis; kustuta päris
-      testklass (kontrolli, et õpilaste arv dialoogis klapib ja et pärast
-      kustutamist ei ava klassivaade enam ridu); privaatsuslehe
-      kontaktaadress üle vaadata (praegu isiklik gmail)
+- [x] `supabase/tests/03-kustutamine.sql` jooksutatud dev-projektis
+      (2026-08-06, kasutaja): kõik kontrollid läbisid ehk cascade-ahel on
+      päriselt baasis, mitte ainult migratsiooni kavatsuses.
+- [ ] **Puudu, vajab kasutaja kätt:** kustuta päris testklass rakendusest
+      (kontrolli, et õpilaste arv dialoogis klapib ja et pärast kustutamist
+      ei ava klassivaade enam ridu); kustutusdialoog 360 px vaates;
+      privaatsuslehe kontaktaadress üle vaadata (praegu isiklik gmail)
 - [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): kustutamine
       on pöördumatu, orvuks jäänud read jäävad märkamata
       (2026-08-06: CodeRabbit 3 + Codex 4 leidu, EI kattunud üheski punktis,
