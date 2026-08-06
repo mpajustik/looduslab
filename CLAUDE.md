@@ -181,6 +181,10 @@ tests/                        # model.ts ja checker'i testid
 - Tokenikulu ja töökiirus: docs/TOKENIKULU.md (mõõdetud arvud – üks samm =
   üks sessioon, ekraanipilt on lõppkontroll, brauser ainult visuaali-sammudel,
   kirjuta fail korraga valmis)
+- Toodangukeskkonna püstipanek: docs/TOODANG.md (samm-sammult juhend –
+  prod-projekt, migratsioonid, Edge Functionite saladused, Cloudflare,
+  varundus. Prod-i võtmed elavad failis `.env.prod.local`, MITTE
+  `.env.production.local` – vt juhendi 2.2)
 - Kursused ja sisu jagamine: docs/SISUHALDUS.md
 - Lisatooted ja ristmüük: docs/LISATOOTED.md (ristmüük AINULT õpetaja-alas,
   õpilasele ei turundata kunagi midagi)

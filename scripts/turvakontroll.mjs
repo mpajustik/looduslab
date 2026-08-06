@@ -36,7 +36,19 @@ function leid(tekst) {
 // ---------------------------------------------------------------------------
 // Vite laeb build'i ajal KÕIK need failid – seega võib saladus bundle'isse
 // sattuda ka .env.production kaudu, mitte ainult .env.local-ist.
-const ENV_FAILID = [".env", ".env.local", ".env.production", ".env.production.local"];
+// `.env.prod*` on prod-keskkonna võtmed (docs/TOODANG.md). MÕLEMAD nimed
+// peavad siin olema: `--mode prod` puhul laeb Vite nii `.env.prod` kui ka
+// `.env.prod.local`. Kui siin oleks ainult `.local`, jääks `.env.prod`-i
+// pandud service-võti leidmata ja kontroll ütleks „puhas" – täpselt siis, kui
+// bundle'isse läheks PRODUKTSIOONI võti, mis on kõige kallim leke üldse.
+const ENV_FAILID = [
+  ".env",
+  ".env.local",
+  ".env.production",
+  ".env.production.local",
+  ".env.prod",
+  ".env.prod.local",
+];
 
 const saladused = [];
 for (const fail of ENV_FAILID) {

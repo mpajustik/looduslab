@@ -517,7 +517,12 @@ fail selles kaustas, mis ei ole SQL.
 
 ## 2.17 Toodangukeskkond, varundus ja seire
 
-- [ ] Käivita mõlemad migratsioonid prod-projektis; sync-modules prod-i
+**Samm-sammult juhend: docs/TOODANG.md** (2026-08-06). Konsoolitöö osa on
+seal lahti kirjutatud koos „mida sa pead nägema" kontrollidega – allolev
+loend on kokkuvõte, juhend on tõe allikas.
+
+- [ ] Käivita KÕIK viis migratsiooni prod-projektis (001…005, järjekorras);
+      sync-modules prod-i
 - [ ] Korda turvatesti punktid 1–3 prod-is (kiirversioon: 15 min – RLS on
       sama SQL, aga kontrolli, et see ka päriselt käivitatud sai)
 - [ ] Cloudflare Workers: production saab prod-võtmed, eelvaated dev-võtmed
