@@ -1,6 +1,8 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { cn } from "../ui/cn";
+import { devClockAvailable } from "../lib/devClock";
 import { readStudentName } from "../lib/studentIdentity";
+import { DevClockPanel } from "./DevClockPanel";
 import { NAV_ITEMS } from "./navigation";
 
 /**
@@ -118,6 +120,11 @@ export function AppLayout() {
           })}
         </ul>
       </nav>
+
+      {/* Ajakerimine (samm 3.5) ainult arenduses. `devClockAvailable` on
+          `import.meta.env.DEV`, mille Vite asendab toodangus `false`-iga –
+          seega langeb nii see rida kui ka riba enda kood buildist välja. */}
+      {devClockAvailable ? <DevClockPanel /> : null}
     </div>
   );
 }

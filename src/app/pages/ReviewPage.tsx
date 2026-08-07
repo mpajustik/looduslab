@@ -11,6 +11,7 @@ import {
   type ReviewItem,
   type ReviewResult,
 } from "../../engine/review";
+import { appNow } from "../../lib/devClock";
 import { sharedReviewSync } from "../../lib/reviewRemote";
 import { browserStorage } from "../../lib/storage";
 import { moduleRegistry } from "../../modules/registry";
@@ -71,7 +72,9 @@ export default function ReviewPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const now = new Date();
+    // `appNow`, mitte `new Date()`: arenduses saab aega edasi kerida
+    // (src/lib/devClock.ts), toodangus on see täpselt praegune hetk.
+    const now = appNow();
     const all = store.list();
     const due = all.filter((item) => isDue(item, now));
     const moduleIds = [...new Set(due.map((item) => item.moduleId))];
@@ -152,7 +155,10 @@ export default function ReviewPage() {
   }
 
   const grade = (result: ReviewResult) => {
-    store.grade(item.moduleId, item.cardId, result);
+    // Ka hindamine käib nihutatud kella järgi – muidu arvutaks „+7 päeva"
+    // režiimis antud hinnang uue tähtaja päris tänasest ja kaart kaoks
+    // nädalaks ära.
+    store.grade(item.moduleId, item.cardId, result, appNow());
     setFlipped(false);
     setIndex((current) => current + 1);
   };

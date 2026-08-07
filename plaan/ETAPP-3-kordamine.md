@@ -134,7 +134,27 @@ lisatud tagantjärele, et failiteede loend ja plaan ei läheks lahku.
 > **Prompt AI-le:** Lisa dev-režiimi (ainult localhost) nupp „Keri aega
 > +1 päev", et kordamisintervalle saaks testida ilma nädalat ootamata.
 
-- [ ] Ajakerimisega saab kogu intervalliloogika 10 minutiga läbi testida
+- [x] Ajakerimisega saab kogu intervalliloogika 10 minutiga läbi testida
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+
+**Tehtud 2026-08-07.** Kell on src/lib/devClock.ts (`appNow`), riba
+src/app/DevClockPanel.tsx (nupud +1 päev / +7 päeva / Nulli). Kolm otsust:
+
+1. **Nihe on päevades, mitte kuupäev.** „Keri +7" on see, mida testimisel
+   päriselt vaja on; absoluutse kuupäeva sisestamine annaks juurde ainult
+   uue viisi vale väärtus sisse kirjutada.
+2. **`appNow()` on rakenduse serva asi.** Engine'i funktsioonid võtavad `now`
+   juba praegu sisendina, seega nihe puudutab AINULT neid kohti, mis seni
+   kutsusid `new Date()`: ReviewPage (valik + hindamine), ProgressPage
+   (ülevaade), useModuleProgress (kaartide sünd). Engine ei tea ajakerimisest
+   midagi ja tema testid jäävad puhtaks.
+3. **Edenemise ajatemplid jäävad päris kellast.** `startedAt`/`finishedAt`
+   lähevad õpetaja koondvaatesse – arendustööriist ei tohi sinna tulevikku
+   kirjutada. Nihkuvad ainult kordamiskaartide kuupäevad.
+
+Toodangus riba EI OLE: `devClockAvailable` on `import.meta.env.DEV`, mille
+Vite asendab `false`-iga – kontrollitud, et `dist/`-is ei ole ei riba teksti
+ega salvestusvõtit.
 
 ## 3.6 Kaardid serverist tagasi seadmesse
 

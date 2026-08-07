@@ -12,6 +12,7 @@ import {
 } from "../../engine/overview";
 import { createProgressStore } from "../../engine/progress";
 import { createReviewStore } from "../../engine/review";
+import { appNow } from "../../lib/devClock";
 import { browserStorage } from "../../lib/storage";
 import { moduleRegistry } from "../../modules/registry";
 import { buttonClasses } from "../../ui/buttonStyles";
@@ -98,6 +99,9 @@ function readOverview(): CourseOverview {
     reviewItems: createReviewStore("persist", browserStorage)
       .list()
       .filter((item) => moduleRegistry[item.moduleId]),
+    // Sama kell, mis kordamislehel (src/lib/devClock.ts): kui ajakerimine
+    // näitab kordamislehel kolme kaarti, peab siin olema seesama kolm.
+    now: appNow(),
   });
 }
 

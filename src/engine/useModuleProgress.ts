@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { appNow } from "../lib/devClock";
 import { sharedProgressSync } from "../lib/progressRemote";
 import { sharedReviewSync } from "../lib/reviewRemote";
 import { browserStorage } from "../lib/storage";
@@ -197,9 +198,15 @@ export function useModuleProgress({
         // kahjutu – `addCards` jätab olemasoleva kaardi puutumata, nii et
         // kolme nädala pikkuseks kasvanud intervall ei lähe nulli.
         if (next !== current) {
+          // Kaardi tähtaeg tuleb `appNow`-st (src/lib/devClock.ts): arenduses
+          // saab mooduli lõpetada „nädal hiljem" ja vaadata, kus kaart maandub.
+          // Edenemise ajatemplid (`startedAt`, `finishedAt`) jäävad PÄRIS
+          // kellast – need lähevad õpetaja koondvaatesse ja seal ei tohi
+          // arendustööriist kunagi tulevikku kirjutada.
           reviewStore.addCards(
             moduleId,
             reviewCards.map((card) => card.id),
+            appNow(),
           );
         }
         return next;
