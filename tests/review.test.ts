@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   applyReviewResult,
   createReviewStore,
+  DAILY_CARD_LIMIT,
   dateKey,
   dueDateAfter,
+  dueReviewItems,
   isDue,
   newReviewItems,
   nextIntervalDays,
@@ -200,6 +202,139 @@ describe("isDue", () => {
     expect(isDue({ ...CARD, dueDate: "2026-08-07" }, NOW)).toBe(true);
     expect(isDue({ ...CARD, dueDate: "2026-08-01" }, NOW)).toBe(true);
     expect(isDue({ ...CARD, dueDate: "2026-08-08" }, NOW)).toBe(false);
+  });
+});
+
+describe("dueReviewItems", () => {
+  /** `count` kaarti ühest moodulist, kõik ootel (eilne kuupäev). */
+  function due(moduleId: string, count: number): ReviewItem[] {
+    return Array.from({ length: count }, (_, index) => ({
+      ...CARD,
+      moduleId,
+      cardId: `rc-${index + 1}`,
+      dueDate: "2026-08-06",
+    }));
+  }
+
+  it("võtab ainult ootel kaardid", () => {
+    const items = [
+      { ...CARD, cardId: "rc-1", dueDate: "2026-08-07" },
+      { ...CARD, cardId: "rc-2", dueDate: "2026-08-09" },
+    ];
+    expect(dueReviewItems({ items, now: NOW }).map((item) => item.cardId)).toEqual([
+      "rc-1",
+    ]);
+  });
+
+  it("ei anna päevas üle kümne kaardi", () => {
+    const items = due("physics.a", 25);
+    expect(dueReviewItems({ items, now: NOW })).toHaveLength(DAILY_CARD_LIMIT);
+  });
+
+  it("segab moodulid: kümne kaardi sisse mahuvad mõlemad", () => {
+    // Kaks moodulit, kummalgi rohkem kaarte kui piir lubab. Ilma
+    // ringiratast-jaotuseta võiks üks moodul kogu päeva ära võtta – see on
+    // täpselt see, mida etapi eesmärk keelab („mõlemast moodulist segamini").
+    const picked = dueReviewItems({
+      items: [...due("physics.a", 8), ...due("physics.b", 8)],
+      now: NOW,
+    });
+    const modules = new Set(picked.map((item) => item.moduleId));
+    expect(picked).toHaveLength(DAILY_CARD_LIMIT);
+    expect(modules).toEqual(new Set(["physics.a", "physics.b"]));
+  });
+
+  it("ei anna sama kaarti kaks korda", () => {
+    const picked = dueReviewItems({
+      items: [...due("physics.a", 3), ...due("physics.b", 4)],
+      now: NOW,
+    });
+    const keys = picked.map((item) => `${item.moduleId}:${item.cardId}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toHaveLength(7);
+  });
+
+  it("sama päev annab sama järjekorra, uus päev uue", () => {
+    const items = [...due("physics.a", 5), ...due("physics.b", 5)];
+    const ids = (now: Date) =>
+      dueReviewItems({ items, now }).map((item) => `${item.moduleId}:${item.cardId}`);
+
+    // Lehe värskendamine ei tohi kaarte ümber segada.
+    expect(ids(NOW)).toEqual(ids(new Date(2026, 7, 7, 20, 0, 0)));
+    expect(ids(NOW)).not.toEqual(ids(new Date(2026, 7, 8, 12, 0, 0)));
+  });
+
+  it("üks moodul üksinda tuleb ikka välja", () => {
+    const picked = dueReviewItems({ items: due("physics.a", 4), now: NOW });
+    expect(picked).toHaveLength(4);
+  });
+
+  it("täna juba hinnatud kaardid söövad päevapiiri ära", () => {
+    // Codexi ülevaatuse leid 2026-08-07: ilma selleta annaks lehe
+    // VÄRSKENDAMINE kohe järgmised kümme kaarti ja „max 10 päevas" ei peaks.
+    const graded = Array.from({ length: 4 }, (_, index) => ({
+      ...CARD,
+      cardId: `tehtud-${index}`,
+      // Hinnatud kaart on juba homse peal – ootel ta ei ole.
+      dueDate: "2026-08-10",
+      lastResult: "good" as const,
+      updatedAt: new Date(2026, 7, 7, 9, 0, 0).toISOString(),
+    }));
+
+    const picked = dueReviewItems({ items: [...graded, ...due("physics.a", 25)], now: NOW });
+    expect(picked).toHaveLength(DAILY_CARD_LIMIT - 4);
+  });
+
+  it("eile hinnatud kaardid ei vähenda tänast päeva", () => {
+    const yesterday = [
+      {
+        ...CARD,
+        cardId: "eilne",
+        dueDate: "2026-08-14",
+        lastResult: "good" as const,
+        updatedAt: new Date(2026, 7, 6, 9, 0, 0).toISOString(),
+      },
+    ];
+    const picked = dueReviewItems({
+      items: [...yesterday, ...due("physics.a", 25)],
+      now: NOW,
+    });
+    expect(picked).toHaveLength(DAILY_CARD_LIMIT);
+  });
+
+  it("päev täis = tänaseks ei tule ühtegi kaarti juurde", () => {
+    const graded = Array.from({ length: DAILY_CARD_LIMIT }, (_, index) => ({
+      ...CARD,
+      cardId: `tehtud-${index}`,
+      dueDate: "2026-08-10",
+      lastResult: "hard" as const,
+      updatedAt: NOW.toISOString(),
+    }));
+    expect(dueReviewItems({ items: [...graded, ...due("physics.a", 5)], now: NOW })).toEqual(
+      [],
+    );
+  });
+
+  it("täna SÜNDINUD kaart ei ole veel hinnatud ega vähenda piiri", () => {
+    // Mooduli lõpetamine paneb `updatedAt`-i tänaseks, aga `lastResult` jääb
+    // null-iks. Vastasel juhul kaotaks moodulit lõpetav õpilane oma
+    // kordamispäeva ära.
+    const born = newReviewItems({
+      existing: [],
+      moduleId: "physics.b",
+      cardIds: ["rc-1", "rc-2"],
+      now: NOW,
+    });
+    expect(
+      dueReviewItems({ items: [...born, ...due("physics.a", 25)], now: NOW }),
+    ).toHaveLength(DAILY_CARD_LIMIT);
+  });
+
+  it("tühi loend ja null-piir ei krahhi", () => {
+    expect(dueReviewItems({ items: [], now: NOW })).toEqual([]);
+    expect(dueReviewItems({ items: due("physics.a", 5), now: NOW, limit: 0 })).toEqual(
+      [],
+    );
   });
 });
 

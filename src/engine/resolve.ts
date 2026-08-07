@@ -2,6 +2,7 @@ import { formatNumber } from "../lib/format";
 import type { AnswerPayload, Answers } from "./answers";
 import type { ChoiceQuestion, NumericQuestion, Question, Step } from "./contract";
 import { fillPlaceholders } from "./placeholders";
+import { hash32, randomFrom, shuffled } from "./random";
 
 /**
  * Sama moodul teist korda – teised arvud ja teine järjekord.
@@ -31,20 +32,11 @@ import { fillPlaceholders } from "./placeholders";
  */
 
 /**
- * 32-bitine räsi tekstist (FNV-1a).
- *
- * Miks räsi, mitte lihtsalt arv: seeme peab olema seotud NII moodulikäigu kui
- * ka küsimusega. Ilma küsimuse id-ta saaksid kõik ühe sammu valikküsimused
- * sama „loosi" ja segaksid end ühtemoodi.
+ * Räsi ja segamine elavad ./random.ts-is, sest sama kolmikut vajab ka
+ * kordamine (`review.ts` segab tänaseid kaarte). Seeme on siin seotud NII
+ * moodulikäigu kui ka küsimusega: ilma küsimuse id-ta saaksid kõik ühe sammu
+ * valikküsimused sama „loosi" ja segaksid end ühtemoodi.
  */
-function hash32(text: string): number {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
 
 /**
  * Moodulikäigu seeme selle algusajast.
@@ -56,34 +48,6 @@ function hash32(text: string): number {
  */
 export function attemptSeed(startedAt: string): number {
   return hash32(startedAt);
-}
-
-/**
- * Korratav juhuslikkus (mulberry32) – sama seeme annab alati sama jada.
- *
- * Sama algoritm on ka `model.ts`-is (mattpinna kiired). Ta on siin uuesti,
- * mitte imporditud: engine ei tohi sõltuda ühestki moodulist
- * (docs/ARHITEKTUUR.md) ja kaheksa rida matemaatikat on odavam kui sõltuvus
- * vales suunas.
- */
-function randomFrom(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** Fisher–Yates: iga järjekord on võrdselt tõenäoline. Algset loendit ei muuda. */
-function shuffled<T>(items: readonly T[], random: () => number): T[] {
-  const result = [...items];
-  for (let i = result.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
 }
 
 /**

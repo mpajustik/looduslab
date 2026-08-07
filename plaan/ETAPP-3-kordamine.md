@@ -68,7 +68,41 @@ järgmisi samme puudutavad:
 > Arvutuskaardil checker. Kui kaarte pole: sõbralik tühi olek soovitusega
 > jätkata kursusega. Sega eri moodulite kaardid.
 
-- [ ] Kaardid tulevad segamini, hindamine muudab järgmist kuupäeva
+- [x] Kaardid tulevad segamini, hindamine muudab järgmist kuupäeva
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+
+**Tehtud 2026-08-07.** Leht on src/app/pages/ReviewPage.tsx, päeva kaartide
+valik `dueReviewItems` (src/engine/review.ts, `DAILY_CARD_LIMIT = 10`).
+Kolm otsust:
+
+1. **Moodulid vahelduvad ringiratast**, mitte ei segune pelgalt juhuslikult.
+   Puhas segamine võiks kümne kaardi piiri sisse jätta ainult ühe mooduli –
+   etapi eesmärk nõuab just mõlemat.
+2. **Päev on seeme** (`hash32("kordamine:2026-08-07")`): lehe värskendamine ei
+   sega kaarte ümber ega too juba hinnatud kaarti tagasi. Päevapiiri hoiab
+   `reviewedToday` – täna juba hinnatud kaardid söövad kümnest osa ära, nii et
+   ka lehe värskendamine ei anna uut kümmet (Codexi ülevaatuse leid). Loendame
+   selle kaartide endi pealt (`lastResult` + tänane `updatedAt`), mitte
+   omaette päevaloendurist – üks tõe allikas vähem.
+3. **Checkerit kaardil EI OLE.** Plaan lubas arvutuskaardile checkeri, aga
+   `reviewCardSchema` (src/engine/contractSchema.ts) hoiab vastust ainult
+   TEKSTINA („70° (90° − 20°)") – ilma arvu, ühiku ja tolerantsita ei ole
+   checkeril midagi kontrollida. Hinnangu annab praegu õpilane ise
+   („vaata → pööra → hinda"). Vt allpool 3.7.
+
+Ülevaatuse teine leid: kui mooduli sisu ei laadi (kehv võrk), ütles leht
+vaikselt „ei ole midagi korrata". Nüüd on kolm eri tühja päeva – laadimisviga
+(oma teade + „Proovi uuesti"), päev tehtud ja päriselt tühi.
+
+## 3.7 Arvutuskaardile checker (otsustamata)
+
+> **Prompt AI-le:** ainult siis, kui kasutaja seda soovib. `reviewCardSchema`
+> saaks `calc`-kaardile valikulised väljad (`value`, `unit`, `tolerance`) ja
+> kordamisleht arvusisestuse, mida kontrollib olemasolev
+> `checkNumericAnswer`. See on moodulilepingu muudatus: skeem, docs/
+> MOODULILEPING.md ja mõlema pilootmooduli `activities.ts`.
+
+- [ ] Otsus tehtud: kas kaart jääb pööratavaks või saab arvutuskaart checkeri
 
 ## 3.4 Minu edenemine
 

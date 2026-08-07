@@ -1,5 +1,6 @@
 import { browserStorage, type StorageLike } from "../lib/storage";
 import type { ProgressMode } from "./progress";
+import { hash32, randomFrom, shuffled } from "./random";
 
 /**
  * Kordamiskaartide seis: mis kaardid on õpilasel olemas ja millal nad ootavad.
@@ -178,6 +179,105 @@ export function applyReviewResult(
  */
 export function isDue(item: ReviewItem, now: Date = new Date()): boolean {
   return item.dueDate <= dateKey(now);
+}
+
+// ---------------------------------------------------------------------------
+// Tänane kordamine: mis kaardid ja mis järjekorras (samm 3.3)
+// ---------------------------------------------------------------------------
+
+/**
+ * Mitu kaarti päevas kõige rohkem.
+ *
+ * Piir on pedagoogiline, mitte tehniline: kolme kuu pärast oleks ühel päeval
+ * ootel nelikümmend kaarti ja õpilane jätaks kordamise sootuks tegemata.
+ * Ülejäänud ei kao – nad on „ootel" ka homme (`isDue` võtab ka eilse kaardi).
+ */
+export const DAILY_CARD_LIMIT = 10;
+
+/**
+ * Mitu kaarti on täna juba hinnatud.
+ *
+ * Loeme selle kaartide endi pealt, mitte omaette päevaloendurist: hinnatud
+ * kaardil on `lastResult` täidetud ja `updatedAt` hindamise hetkest. Üks tõe
+ * allikas vähem – ja päevaloendur läheks niikuinii teises seadmes valeks.
+ *
+ * Kuupäeva võrdleme KOHALIKU aja järgi (`dateKey`), sest õpilase päev algab
+ * tema südaööl. Katkine `updatedAt` (vana kuju, käsitsi muudetud) ei tohi
+ * kordamist ära lõhkuda – siis loeme kaardi lihtsalt tänasesse mitte kuuluvaks.
+ */
+export function reviewedToday(items: ReviewItem[], now: Date = new Date()): number {
+  const today = dateKey(now);
+  let count = 0;
+  for (const item of items) {
+    if (item.lastResult === null) continue;
+    const updated = new Date(item.updatedAt);
+    if (Number.isFinite(updated.getTime()) && dateKey(updated) === today) count += 1;
+  }
+  return count;
+}
+
+/**
+ * Tänased kaardid: ootel olevad, moodulid segamini, kõige rohkem `limit` tükki.
+ *
+ * Kolm reeglit, mis loendit kujundavad:
+ *
+ * 1. **Moodulid vahelduvad.** Kaardid jagatakse mooduli kaupa hunnikutesse ja
+ *    võetakse ringiratast üks igast. Pelk segamine annaks juhuslikult ka
+ *    „kõik peegeldumise kaardid ette, siis kõik rõhu omad" – ja kümne kaardi
+ *    piir võiks teise mooduli hoopis välja jätta. Segunemine ise on
+ *    kordamise mõte: teadmine peab tulema ilma teemasildita.
+ * 2. **Päev annab seemne.** Sama päev = sama järjekord, seega lehe
+ *    värskendamine ei sega kaarte uuesti ega too juba tehtud kaarti tagasi.
+ *    Homme on seeme uus.
+ * 3. **Täna juba tehtud kaardid söövad piiri ära** (`reviewedToday`). Ilma
+ *    selleta oleks päevapiir näiline: kakskümmend võlgu kaarti tähendaks
+ *    kümmet kaarti, siis lehe värskendamist ja kohe veel kümmet. Loendamiseks
+ *    ei ole vaja uut salvestust – hinnatud kaardil on `lastResult` täidetud ja
+ *    `updatedAt` tänane (Codexi ülevaatuse leid 2026-08-07).
+ *
+ * Puhas funktsioon: ei loe kella ega salvestust, `now` tuleb kutsujalt.
+ */
+export function dueReviewItems(args: {
+  items: ReviewItem[];
+  now?: Date;
+  limit?: number;
+}): ReviewItem[] {
+  const now = args.now ?? new Date();
+  const limit = (args.limit ?? DAILY_CARD_LIMIT) - reviewedToday(args.items, now);
+  if (limit <= 0) return [];
+
+  const random = randomFrom(hash32(`kordamine:${dateKey(now)}`));
+
+  // Hunnik mooduli kohta, iga hunnik omaette segatud. `Map` hoiab lisamise
+  // järjekorra, aga sellele me ei toetu – moodulite järjekorra loosime allpool.
+  const byModule = new Map<string, ReviewItem[]>();
+  for (const item of args.items) {
+    if (!isDue(item, now)) continue;
+    const bucket = byModule.get(item.moduleId);
+    if (bucket) bucket.push(item);
+    else byModule.set(item.moduleId, [item]);
+  }
+
+  const buckets = shuffled([...byModule.values()], random).map((bucket) =>
+    shuffled(bucket, random),
+  );
+
+  const picked: ReviewItem[] = [];
+  // Ringiratast: iga vooruga üks kaart igast hunnikust, kuni limiit täis või
+  // kaardid otsas. Tühjaks saanud hunnik jäetakse lihtsalt vahele.
+  for (let round = 0; picked.length < limit; round += 1) {
+    let added = false;
+    for (const bucket of buckets) {
+      const item = bucket[round];
+      if (item === undefined) continue;
+      picked.push(item);
+      added = true;
+      if (picked.length === limit) break;
+    }
+    if (!added) break;
+  }
+
+  return picked;
 }
 
 // ---------------------------------------------------------------------------
