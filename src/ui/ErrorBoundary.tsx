@@ -1,5 +1,6 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
+import { teataViga } from "../lib/seire";
 import { Button } from "./Button";
 
 type Props = { children: ReactNode };
@@ -10,7 +11,10 @@ type State = { hasError: boolean };
  * sõbralikku lehte, MITTE valget tühja ekraani.
  *
  * Peab olema klass – Reactis ei ole veapüüdmiseks hook'i.
- * Etapis 2 lisandub siia Sentry teavitus; praegu piisab konsoolist.
+ *
+ * Viga läheb ka seiresse (`teataViga`): toodangus jõuab ta Sentrysse,
+ * arenduses ainult konsooli. Nii saame teada ka vigadest, millest ükski
+ * õpilane meile ei kirjuta.
  */
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
@@ -20,7 +24,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("Püütud viga:", error, info.componentStack);
+    console.error("Komponendipuu:", info.componentStack);
+    teataViga(error, "ErrorBoundary");
   }
 
   handleRetry = () => {

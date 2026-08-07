@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useId, useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { ArrowRight, Info } from "lucide-react";
 import { Button } from "../../ui/Button";
 import { Card, CardDescription, CardTitle } from "../../ui/Card";
@@ -145,7 +145,6 @@ function ModuleEntry({
  */
 function JoinGate({ slug, onGuest }: { slug: string; onGuest: () => void }) {
   const fieldId = useId();
-  const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -156,7 +155,15 @@ function JoinGate({ slug, onGuest }: { slug: string; onGuest: () => void }) {
       setError("Kirjuta klassikood, mille õpetaja ekraanil näitab.");
       return;
     }
-    navigate(joinPath(trimmed, `/m/${slug}`));
+    /*
+     * Täislaadimine, mitte `navigate` (samm 2.17 ülevaatus). Klassikood on
+     * järgmise lehe TEE sees ja Cloudflare'i külastusloendur saadab iga
+     * SPA-teevahetuse juures välja tee, millelt lahkuti. Täislaadimine
+     * lõpetab selle lehe – uuel lehel loendurit ei käivitatagi
+     * (src/lib/statistika.ts). Hind: pool sekundit laadimist ühel korral
+     * tunnis, kasu: klassikood ei jõua välisesse aruandesse.
+     */
+    window.location.assign(joinPath(trimmed, `/m/${slug}`));
   }
 
   return (

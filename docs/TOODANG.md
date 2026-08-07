@@ -517,16 +517,85 @@ kogum sinu arvutis.
 
 ---
 
-## 8. peatükk: mis jääb koodi (eraldi sammud)
+## 8. peatükk: seire ja statistika (15 min)
 
-Kaks punkti plaani 2.17-st ei ole konsoolitöö, vaid koodimuudatus.
-Neid siin juhendis ei ole:
+Kood on olemas (`src/lib/seire.ts` ja `src/lib/statistika.ts`). Puudu on
+kaks märgist, mille pead ise võtma – ja need lähevad Cloudflare'i **build
+variables** alla, samasse kohta, kus 6.2 muutujad.
 
-- **Sentry veaseire** – ilma selleta sa ei saa kunagi teada, et õpilasel
-  läks midagi katki. Laps ei kirjuta sulle, ta lihtsalt loobub.
-- **Cloudflare Web Analytics** – küpsisevaba külastusstatistika.
+> **Mõlemad on vabatahtlikud.** Kui märgist ei ole, ei juhtu midagi
+> halba: rakendus töötab, lihtsalt vaikib. Sentry pakki (450 kB) ei panda
+> siis buildi üldse – ta läheb kaasa ainult siis, kui DSN on olemas.
 
-Need teeme koos, kui sa selle juhendi läbi oled teinud.
+### 8.1 Sentry (veaseire)
+
+1. <https://sentry.io> → loo tasuta konto
+2. **Create project** → platvorm **React** → nimi `looduslab`
+3. **Data region: Europe** – vali see kohe konto loomisel. Hiljem ei saa
+   regiooni muuta ja privaatsuslehe lubadus on kirjutatud EL-i peale.
+4. **Settings → Projects → looduslab → Client Keys (DSN)** → kopeeri DSN
+   (kujul `https://<võti>@o<number>.ingest.de.sentry.io/<number>`)
+
+DSN ei ole saladus – ta on nagunii bundle'is nähtav. Ta lubab ainult
+vigu **saata**, mitte lugeda.
+
+### 8.2 Cloudflare Web Analytics (külastused)
+
+<https://dash.cloudflare.com> → **Analytics** → **Web Analytics** →
+**Add a site** → vali oma `workers.dev` aadress. Vali **Manual
+installation** ja otsi antud JS-lõigust `"token": "…"` – seda 32-märgilist
+stringi sul vaja ongi (mitte kogu `<script>` rida, selle paneb kood ise
+kokku).
+
+Küpsist ta ei pane ja kasutajat üle lehtede ei jälgi – seepärast ei ole
+vaja nõusolekubännerit.
+
+### 8.3 Pane märgised Cloudflare'i
+
+**Settings → Build → build variables and secrets**, **Production**
+keskkonda (mitte Preview – katsetuste vead ja külastused ei tohi päris
+statistikat rikkuda):
+
+| Nimi | Väärtus |
+| --- | --- |
+| `VITE_SENTRY_DSN` | Sentry DSN |
+| `VITE_CF_ANALYTICS_TOKEN` | Web Analytics token |
+
+Vajuta uus deploy käima (Cloudflare'is **Retry deployment** või tee üks
+commit) – ilma uue buildita neid muutujaid kuhugi ei kirjutata.
+
+### 8.4 Kontroll: kas seire päriselt töötab
+
+Seadmata seire on hullem kui seire puudumine – sa arvad, et sind
+teavitatakse, ja sind ei teavitata. Seepärast tekita üks viga meelega.
+
+Ava päris leht, ava brauseri konsool (F12) ja kirjuta:
+
+```js
+setTimeout(() => { throw new Error("Seire kontroll – see on meelega"); });
+```
+
+**Mida sa pead nägema:** Sentry projektis tekib minuti jooksul uus
+Issue nimega „Seire kontroll – see on meelega".
+
+Vaata see Issue lahti ja **kontrolli ka privaatsust**:
+
+- **User** sektsiooni ei ole (või on tühi) – me ei saada, kes vea sai
+- **URL** ei sisalda klassikoodi ega küsimärgi-osa
+
+Külastusstatistika kohta: Web Analytics näitab esimesi numbreid umbes
+poole tunni jooksul – seal ei ole midagi kiiret kontrollida.
+
+**Üks asi jääb statistikas teadlikult lugemata.** Liitumislehte
+(`/liitu/:kood`) ja õpetaja klassivaadet loendur EI mõõda. Cloudflare
+logib lehe TEE, ja meie teede sees on klassikood – see ei tohi kolmanda
+teenuse aruandesse jõuda. Seega on külastuste arv veidi väiksem kui
+tegelikkus, ja nii peabki olema. Kui sa kunagi imestad, miks
+liitumislehte tabelis ei ole: see ei ole rike.
+
+> **Miks konsoolis, mitte lihtsalt oodates:** kui sa jätad kontrollimata,
+> saad tõe teada alles esimeses päris tunnis, kui kellelgi läheb midagi
+> katki ja sa ei saa sellest teada.
 
 ---
 
@@ -540,6 +609,8 @@ Need teeme koos, kui sa selle juhendi läbi oled teinud.
       (`VITE_`-muutujad on **build**-aja pool, mitte runtime)
 - [ ] Varunduses on KAKS faili ja `andmed-*.sql`-ist leiab päris nime
 - [ ] Varukoopia on väljaspool repot, pilvesünkroonist eemal, parooliga
+- [ ] Meelega tekitatud viga jõudis Sentrysse ja seal EI ole kasutajat
+      ega klassikoodi (8.4)
 - [ ] Testklass kustutatud
 - [ ] `npx supabase projects list` – **link on tagasi dev-i peal**, et
       järgmine katsetus ei läheks kogemata prod-i

@@ -529,12 +529,19 @@ loend on kokkuvõte, juhend on tõe allikas.
 - [ ] Varundus: pg_dump skript + juhend (või kontrolli Supabase varunduse
       olemasolu oma plaanil) – enne esimest päris klassi peab olema viis
       andmeid taastada
-- [ ] **Veaseire:** Sentry (tasuta tase) – brauseri vead jõuavad sinuni.
+- [x] **Veaseire:** Sentry (tasuta tase) – brauseri vead jõuavad sinuni.
       Ilma selleta ei saa sa KUNAGI teada, et õpilasel läks midagi katki –
       õpilane ei kirjuta sulle, ta lihtsalt loobub. Isikuandmeid vearaportisse
-      ei saadeta (maski vabatekstid)
-- [ ] **Kasutusstatistika:** Cloudflare Web Analytics (küpsisevaba, tasuta) –
-      näed lehtede külastusi ilma nõusolekubännerita
+      ei saadeta (maski vabatekstid).
+      *Kood valmis 2026-08-07 (`src/lib/seire.ts`, maskimisel testid).
+      Pakk laaditakse alles vea hetkel – tavaõpilane ei lae seda kunagi.
+      Puudu on ainult DSN Cloudflare'i build-muutujasse: TOODANG.md 8.1.*
+- [x] **Kasutusstatistika:** Cloudflare Web Analytics (küpsisevaba, tasuta) –
+      näed lehtede külastusi ilma nõusolekubännerita.
+      *Kood valmis 2026-08-07 (`src/lib/statistika.ts`); puudu on ainult
+      token Cloudflare'i build-muutujasse: TOODANG.md 8.2. Liitumislehte
+      ja klassivaadet teadlikult ei loendata – klassikood on tee sees.
+      Codexi ülevaatus tehtud – **riskisamm** (isikuandmed).*
 - [ ] Kontroll: dev-katsetused EI jõua kunagi prod-andmebaasi
 
 ## 2.18 Kasutajatest päris õpetajaga

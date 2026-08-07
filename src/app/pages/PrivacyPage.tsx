@@ -114,6 +114,21 @@ export default function PrivacyPage() {
       </Card>
 
       <Card className="flex flex-col gap-3">
+        <CardTitle>Vead ja külastuste lugemine</CardTitle>
+        <p className="text-ink">
+          Kui midagi läheb katki, saadab rakendus meile veateate, et me
+          oskaksime selle ära parandada. Selles on kirjas, mis läks katki ja
+          millisel lehel – <strong>ilma sinu nimeta</strong>, ilma sinu
+          vastusteta ja ilma klassikoodita.
+        </p>
+        <p className="text-ink-soft">
+          Lisaks loeme kokku, kui palju lehti avatakse. See lugemine ei pane
+          sinu seadmesse küpsist ega jälgi sind teistel veebilehtedel – me näeme
+          ainult numbreid, mitte inimesi.
+        </p>
+      </Card>
+
+      <Card className="flex flex-col gap-3">
         <CardTitle>Õpetaja kohta</CardTitle>
         <p className="text-ink">
           Õpetajast salvestame e-posti aadressi (sellega ta logib sisse) ja
