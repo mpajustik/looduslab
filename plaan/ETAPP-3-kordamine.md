@@ -17,9 +17,28 @@
 > Kordamise kirjutamisloogika elab engine'is (docs/ARHITEKTUUR.md), mitte
 > moodulites – moodulite koodi EI muudeta.
 
-- [ ] Mooduli lõpetamine tekitab kordamiskaardid
-- [ ] Preview-režiimis lõpetamine EI tekita review_items ridu
+- [x] Mooduli lõpetamine tekitab kordamiskaardid
+- [x] Preview-režiimis lõpetamine EI tekita review_items ridu
 - [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+
+- [x] Klassiga liitunud õpilase kaardid jõuavad `review_items` tabelisse
+
+**Tehtud 2026-08-07.** Kaardid elavad seadmes (`looduslab:review`,
+src/engine/review.ts) JA serveris (`review_items`). Kolm otsust, mis
+järgmisi samme puudutavad:
+
+1. Kaardil on oma saatmisjärjekord (src/engine/reviewQueue.ts +
+   src/lib/reviewSync.ts). Edenemise oma ei sobinud: seal on üks kirje
+   mooduli kohta, kaardi võti on `moodul + kaart`. Teele läheb üks päring
+   MOODULI kohta – nii ei peata sünkimata mooduli võõrvõtmeviga teiste
+   moodulite kaarte.
+2. Serverisse kirjutatakse „lisa, kui veel ei ole" (`ignoreDuplicates`).
+   Tavaline upsert lükkaks teises seadmes kolme nädala peale kasvanud
+   intervalli tagasi homsele. **Hinnangu salvestamine (3.2) on TEINE tehe**
+   ja peab rea meelega üle kirjutama.
+3. Sessioonikontroll („kelle nimel kirjutame") kolis
+   src/lib/remoteSession.ts-i – edenemine ja kordamine kasutavad sama.
+   Külalise ja õpetaja seadmes ei teki serverisse ridu.
 
 ## 3.2 Ajastusloogika
 
@@ -54,3 +73,14 @@
 > +1 päev", et kordamisintervalle saaks testida ilma nädalat ootamata.
 
 - [ ] Ajakerimisega saab kogu intervalliloogika 10 minutiga läbi testida
+
+## 3.6 Kaardid serverist tagasi seadmesse
+
+> **Prompt AI-le:** praegu liiguvad kaardid ainult ÜHES suunas (seade →
+> server). Teises seadmes avatud kordamine peab nägema serveris olevaid
+> kaarte: lugemine `review_items`-ist ja liitmine seadmes olevaga (uuem
+> `updated_at` võidab). Tee see alles siis, kui 3.2–3.3 on valmis – enne
+> seda ei ole teada, mis kujul kaardid päriselt muutuvad.
+
+- [ ] Telefonis lõpetatud moodul annab kaardid ka kooli arvutis
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)

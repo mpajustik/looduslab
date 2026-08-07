@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { sharedProgressSync } from "../lib/progressRemote";
+import { sharedReviewSync } from "../lib/reviewRemote";
 import { browserStorage } from "../lib/storage";
 import type { AnswerPayload, Answers } from "./answers";
-import type { Step } from "./contract";
+import type { ReviewCard, Step } from "./contract";
 import {
   answeredVariants,
   answersForCurrentVariants,
@@ -21,6 +22,7 @@ import {
   type ProgressMode,
   type ProgressStore,
 } from "./progress";
+import { createReviewStore } from "./review";
 
 /**
  * Mooduli edenemine Reactile: pooleli samm, vastused ja nende salvestus.
@@ -63,11 +65,20 @@ export function useModuleProgress({
   moduleId,
   moduleVersion,
   steps,
+  reviewCards = [],
   mode = "persist",
 }: {
   moduleId: string;
   moduleVersion: string;
   steps: Step[];
+  /**
+   * Mooduli kordamiskaardid (`activities.reviewCards`). Mooduli lõpetamine
+   * paneb need ootele (src/engine/review.ts) – moodul ise ei tea sellest
+   * midagi ega salvesta kunagi ise (docs/ARHITEKTUUR.md).
+   *
+   * Vaikimisi tühi: sammuraami demol (`/m/test`) kaarte ei ole.
+   */
+  reviewCards?: ReviewCard[];
   /** Vaikimisi salvestatakse. `preview` tuleb marsruudilt, mitte moodulist. */
   mode?: ProgressMode;
 }): ModuleProgressHandle {
@@ -80,6 +91,18 @@ export function useModuleProgress({
         mode,
         browserStorage,
         mode === "persist" ? sharedProgressSync() : null,
+      ),
+    [mode],
+  );
+  // Kordamiskaartide hoidla saab režiimi samast kohast: preview ei tekita
+  // ühtegi kaarti ei seadmesse ega serverisse, ka siis, kui õpetaja demo
+  // lõpuni klõpsib (reegel 14).
+  const reviewStore = useMemo(
+    () =>
+      createReviewStore(
+        mode,
+        browserStorage,
+        mode === "persist" ? sharedReviewSync() : null,
       ),
     [mode],
   );
@@ -165,7 +188,22 @@ export function useModuleProgress({
           variantId: resolved.variantIds[questionId],
         }),
       ),
-    finish: () => commit((current) => withCompleted(current)),
+    finish: () =>
+      commit((current) => {
+        const next = withCompleted(current);
+        // Kaardid sünnivad ainult ESIMESEL lõpetamisel: `withCompleted`
+        // tagastab juba läbitud moodulil sama objekti. Kordusvajutus (ja
+        // React StrictMode, mis uuendaja kaks korda läbi jooksutab) on siiski
+        // kahjutu – `addCards` jätab olemasoleva kaardi puutumata, nii et
+        // kolme nädala pikkuseks kasvanud intervall ei lähe nulli.
+        if (next !== current) {
+          reviewStore.addCards(
+            moduleId,
+            reviewCards.map((card) => card.id),
+          );
+        }
+        return next;
+      }),
     restart: () => {
       store.clear(moduleId);
       setProgress(

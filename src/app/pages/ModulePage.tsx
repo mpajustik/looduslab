@@ -276,6 +276,10 @@ function ModuleLoader({ id, mode }: { id: string; mode: ProgressMode }) {
         moduleTitle={manifest.title}
         moduleGoal={manifest.goal}
         steps={activities.steps}
+        // Kaardid lähevad engine'ile: mooduli lõpetamine paneb nad ootele
+        // (src/engine/review.ts). Ekraanil neid praegu ei näidata – see on
+        // /kordamine lehe töö (samm 3.3).
+        reviewCards={activities.reviewCards}
         mode={mode}
         Simulation={moduleSimulations[manifest.id]}
         figures={moduleFigures[manifest.id]}

@@ -1,4 +1,4 @@
-import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ModuleProgress } from "../engine/progress";
 import {
   createProgressSync,
@@ -6,6 +6,7 @@ import {
   type PushResult,
   type RemoteProgress,
 } from "./progressSync";
+import { classify, currentStudent, loadClient } from "./remoteSession";
 
 /**
  * Õpilase edenemise kirjutamine Supabase'i (samm 2.11).
@@ -17,33 +18,10 @@ import {
  * Iga saatmine on kogu käigu HETKESEIS, mitte muudatus: `upsert` kirjutab
  * rea üle. Nii on kordussaatmine kahjutu ja järjekord (progressSync.ts)
  * ei pea muudatusi õiges järjekorras hoidma.
- */
-
-/**
- * Supabase'i klient tuleb kohale alles siis, kui on midagi saata.
  *
- * See `import()` on siin MEELEGA (CLAUDE.md reegel 13): supabase-js on
- * ~200 kB ja moodulileht ei tohi seda esilehe bundle'iga kaasa tirida.
- * Külalise seadmes laaditakse ta esimese vastuse peale taustal alla ja
- * saadetakse siis minema (`skipped`) – ekraani see ei peata.
+ * Klient, sessioonikontroll ja veaotsus elavad ./remoteSession.ts-is – neid
+ * jagab meiega kordamiskaartide saatja (reviewRemote.ts).
  */
-let client: Promise<SupabaseClient> | null = null;
-
-function loadClient(): Promise<SupabaseClient> {
-  client ??= import("./supabase").then(
-    (module) => module.supabase,
-    (error: unknown) => {
-      // Ebaõnnestunud allalaadimine EI TOHI vahemällu jääda: chunki toomine
-      // luhtub just kehva võrguga, ehk täpselt siis, kui järjekord peaks
-      // tööle hakkama. Vahemällu jäänud tagasilükatud lubadus tähendaks, et
-      // ükski hilisem saatmine ei proovi enam kunagi – kuni lehe
-      // värskendamiseni (CodeRabbiti ülevaatuse leid).
-      client = null;
-      throw error;
-    },
-  );
-  return client;
-}
 
 export function createSupabaseRemote(
   getClient: () => Promise<SupabaseClient> = loadClient,
@@ -80,7 +58,7 @@ export function createSupabaseRemote(
         .select("id")
         .single();
 
-      if (attempt.error) return classify(attempt.error);
+      if (attempt.error) return classify(attempt.error, "Edenemise");
 
       const rows = Object.values(progress.responses)
         .filter((response) => response !== undefined)
@@ -106,7 +84,7 @@ export function createSupabaseRemote(
         .from("responses")
         .upsert(rows, { onConflict: "attempt_id,question_id,module_version" });
 
-      return responses.error ? classify(responses.error) : "ok";
+      return responses.error ? classify(responses.error, "Edenemise") : "ok";
     },
 
     async remove(moduleId: string): Promise<PushResult> {
@@ -135,57 +113,7 @@ async function deleteAttempt(
     .eq("student_id", studentId)
     .eq("module_id", moduleId);
 
-  return error ? classify(error) : "ok";
-}
-
-type StudentCheck = { ok: true; id: string } | { ok: false; result: PushResult };
-
-/**
- * Kelle nimel me kirjutame.
- *
- * Kirjutame AINULT anonüümse sessiooni nimel: õpilane on anonüümne
- * auth-kasutaja (samm 2.10). Sisselogitud õpetajal ei ole `students` rida,
- * seega tema seadmes läbi proovitud moodul ei tohi üldse serverisse minna –
- * muidu põrkaks iga saatmine võõrvõtme vastu. Sama kontroll on RLS-i pool
- * `public.is_teacher_account()` – liides ja andmebaas peavad ütlema sama.
- */
-async function currentStudent(client: SupabaseClient): Promise<StudentCheck> {
-  const { data, error } = await client.auth.getSession();
-  // Katkine seansisalvestus või võrguviga tokeni uuendamisel: proovime hiljem
-  // uuesti, mitte ei viska vastust minema.
-  if (error) return { ok: false, result: "retry" };
-
-  const session = data.session;
-  if (!session) return { ok: false, result: "skipped" };
-  if (session.user.is_anonymous !== true) return { ok: false, result: "skipped" };
-
-  return { ok: true, id: session.user.id };
-}
-
-/**
- * Andmebaasi viga EI VISKA vastust kunagi ära – ta läheb alati uuesti teele.
- *
- * Kiusatus on veakoodi järgi otsustada „seda rida ei saa siia kunagi
- * kirjutada", aga koodid seda ei erista. Võõrvõti `23503` tähendab kas
- * „õpilane ei ole ühegi klassiga liitunud" (jäädav) VÕI „moodulit ei ole
- * veel `modules` tabelis, sest sync-modules on käivitamata" (paraneb ise
- * ära) – ja teisel juhul kaoks vastus vaikselt: õpilane näeb teda oma
- * seadmes, õpetaja klassivaatesse ta enam kunagi ei jõua (ülevaatuse leid,
- * mille tõid nii Codex kui CodeRabbit).
- *
- * Ainus jäädav „ära saada" tuleb `currentStudent`-ist, kus me sessiooni
- * PÄRISELT teame: külaline ilma sessioonita ja õpetaja oma seadmes. Oletamine
- * jääb sinna, kus oletada ei ole vaja.
- *
- * Hind: kirjutamatu rida jääb järjekorda ja iga klõps proovib teda uuesti.
- * See on üks tühi päring, mitte kadunud vastus – õige pool eksida.
- */
-function classify(error: PostgrestError): PushResult {
-  // Jälg konsooli (hiljem Sentrysse, samm 2.17): kirjutamatu rida proovib
-  // nüüd igavesti uuesti ja ilma selle reata ei saaks keegi teada, MIKS ta
-  // ei õnnestu. Õpilase vastust siia EI panda – see on isikuandmed.
-  console.warn("Edenemise salvestamine ebaõnnestus:", error.code, error.message);
-  return "retry";
+  return error ? classify(error, "Edenemise") : "ok";
 }
 
 let shared: ProgressSyncHandle | null = null;

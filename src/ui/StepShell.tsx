@@ -8,7 +8,12 @@ import {
 } from "react";
 import { ArrowLeft, ArrowRight, Check, Lock, RotateCcw } from "lucide-react";
 import { isStepAnswered } from "../engine/answers";
-import { stepQuestions, type Step, type StepType } from "../engine/contract";
+import {
+  stepQuestions,
+  type ReviewCard,
+  type Step,
+  type StepType,
+} from "../engine/contract";
 import type { ModuleFigures } from "../engine/figures";
 import type { ProgressMode } from "../engine/progress";
 import { recallAnswer } from "../engine/recall";
@@ -38,6 +43,7 @@ export function StepShell({
   moduleTitle,
   moduleGoal,
   steps: moduleSteps,
+  reviewCards,
   mode = "persist",
   Simulation,
   figures,
@@ -58,6 +64,12 @@ export function StepShell({
   /** Õpieesmärk õpilase keeles (manifest.goal) – kokkuvõtteekraani jaoks. */
   moduleGoal?: string;
   steps: Step[];
+  /**
+   * Mooduli kordamiskaardid (`activities.reviewCards`). Vaade ei tee nendega
+   * ekraanil midagi – ta annab nad engine'ile edasi, kes mooduli lõpetamisel
+   * kaardid ootele paneb. Sammuraami demol kaarte ei ole.
+   */
+  reviewCards?: ReviewCard[];
   /** `preview` ei salvesta mitte kuhugi. Tuleb marsruudilt, mitte moodulist. */
   mode?: ProgressMode;
   /**
@@ -82,6 +94,7 @@ export function StepShell({
     moduleId,
     moduleVersion,
     steps: moduleSteps,
+    reviewCards,
     mode,
   });
   /**
