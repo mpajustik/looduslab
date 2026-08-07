@@ -221,6 +221,16 @@ type ProgressFile = {
 
 export type ProgressStore = {
   read(moduleId: string): ModuleProgress | null;
+  /**
+   * Kõik seadmes olevad moodulikäigud. Vajab „Minu edenemine" (samm 3.4):
+   * tema küsimus ei ole „kuidas läheb SELLES moodulis", vaid „kus ma kursusel
+   * olen" – ühe mooduli kaupa lugemine tähendaks localStorage'i parsimist iga
+   * mooduli kohta eraldi.
+   *
+   * Järjekorda EI lubata: kursuse järjekord elab kursusefailis, mitte
+   * salvestuses (docs/SISUHALDUS.md).
+   */
+  list(): ModuleProgress[];
   write(progress: ModuleProgress): void;
   clear(moduleId: string): void;
 };
@@ -250,6 +260,7 @@ export type ProgressSync = {
  */
 const EPHEMERAL_STORE: ProgressStore = {
   read: () => null,
+  list: () => [],
   write: () => {},
   clear: () => {},
 };
@@ -282,6 +293,7 @@ export function createProgressStore(
 
   return {
     read: (moduleId) => local.read(moduleId),
+    list: () => local.list(),
     write: (progress) => {
       local.write(progress);
       sync.push(progress);
@@ -320,6 +332,8 @@ function createLocalStore(resolveStorage: () => StorageLike | null): ProgressSto
 
   return {
     read: (moduleId) => readFile().modules[moduleId] ?? null,
+    list: () =>
+      Object.values(readFile().modules).filter((item) => item !== undefined),
     write: (progress) => {
       const file = readFile();
       writeFile({ ...file, modules: { ...file.modules, [progress.moduleId]: progress } });

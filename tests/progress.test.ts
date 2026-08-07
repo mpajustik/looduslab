@@ -306,6 +306,28 @@ describe("createProgressStore – persist", () => {
     store.write(fresh());
     expect(store.read("physics.demo")).toBeNull();
   });
+
+  it("list annab kõik seadmes olevad moodulikäigud", () => {
+    const { storage } = memoryStorage();
+    const store = createProgressStore("persist", () => storage);
+    const first = fresh();
+    const second = startProgress({
+      moduleId: "physics.teine",
+      moduleVersion: "1.0.0",
+      currentStep: "theory-1",
+    });
+
+    store.write(first);
+    store.write(second);
+
+    expect(store.list()).toEqual([first, second]);
+  });
+
+  it("tühja salvestuse list on tühi loend, mitte viga", () => {
+    const { storage } = memoryStorage();
+    expect(createProgressStore("persist", () => storage).list()).toEqual([]);
+    expect(createProgressStore("persist", () => null).list()).toEqual([]);
+  });
 });
 
 describe("createProgressStore – preview", () => {
@@ -323,6 +345,7 @@ describe("createProgressStore – preview", () => {
     const { storage } = memoryStorage();
     createProgressStore("persist", () => storage).write(fresh());
 
+    expect(createProgressStore("preview", () => storage).list()).toEqual([]);
     expect(createProgressStore("preview", () => storage).read("physics.demo")).toBeNull();
   });
 

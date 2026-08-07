@@ -110,7 +110,24 @@ vaikselt „ei ole midagi korrata". Nüüd on kolm eri tühja päeva – laadimi
 > läbitud/pooleli), kordamise seis (kaarte ootel), „järgmine soovitus" (üks
 > selge nupp: jätka X). EI mingit punktisüsteemi ega edetabelit.
 
-- [ ] Õpilane näeb ühe pilguga, kus ta on ja mida järgmisena teha
+- [x] Õpilane näeb ühe pilguga, kus ta on ja mida järgmisena teha
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+
+**Tehtud 2026-08-07.** Arvutus on src/engine/overview.ts (`courseOverview`),
+leht src/app/pages/ProgressPage.tsx ainult joonistab. Kolm otsust:
+
+1. **Soovitusi on täpselt üks** ja tähtsusjärjekord on kirjas koodis:
+   pooleli tund → tänased kaardid → järgmine alustamata tund → kõik tehtud.
+   Pooleli tund on ees, sest lõpetamata moodul ei anna ka kordamiskaarte;
+   kordamine on uue tunni ees, sest kordamispäev ei oota, uus tund ootab.
+2. **Kursuse järjekord tuleb sisendina** (`OverviewBlock[]`), mitte impordina –
+   engine ei tohi teada, et parasjagu on üks kursus nimega fyysika-8.
+   `ProgressStore` sai selle jaoks `list()`-i (preview tagastab tühja loendi).
+3. **Ei mingit serveripäringut.** Leht loeb ainult seadet, seega avaneb ka
+   ilma võrguta. Serveris olev seis jõuab seadmesse sammuga 3.6.
+
+Riskisammu rida oli plaanis puudu, kuigi samm puudutab `src/engine/**` –
+lisatud tagantjärele, et failiteede loend ja plaan ei läheks lahku.
 
 ## 3.5 Testimiskiirendus
 
@@ -136,3 +153,12 @@ TINGIMUSETA. Kaks seadet samal päeval → hilisem päring võidab, ka siis, kui
 tema `updated_at` on vanem. Õige lahendus on „võidab uuem `updated_at`", aga
 see nõuab SQL-i (PostgREST upsert tingimust ei oska) ja kuulub kokku siinse
 liitmisloogikaga (CodeRabbiti ülevaatuse leid 2026-08-07).
+
+**Ja sammust 3.4 edasi lükatud leid:** /edenemine loeb kaartide arvu seadme
+pealt, /kordamine viskab lisaks välja kaardid, mille TEKST on kadunud.
+Arhiveeritud mooduli kaardid on nüüd mõlemal pool väljas (filter registri
+järgi, ProgressPage.tsx `readOverview`), aga kaardi eemaldamine ALLES OLEVA
+mooduli `activities.ts`-ist jääb ikka lahku: seda näeb alles siis, kui mooduli
+sisu on laaditud. Õige lahendus on üks jagatud „mis kaardid on päriselt
+olemas" abifunktsioon mõlemale lehele – tee see koos siinse liitmisloogikaga
+(Codexi ülevaatuse leid 2026-08-07).
