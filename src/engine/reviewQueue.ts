@@ -19,8 +19,26 @@ export const REVIEW_QUEUE_KEY = "looduslab:review-queue";
 /** Sama mõte mis mujal: vana kuju peab olema äratuntav. */
 const FILE_VERSION = 1;
 
-/** `moodul:kaart` → saatmata kaart. */
-export type ReviewQueue = Record<string, ReviewItem>;
+/**
+ * Kaks tehet, mis serveris EI OLE sama asi:
+ *
+ * - `create` – uus kaart, „lisa, kui veel ei ole". Olemasolevat rida ei
+ *   puutu, sest seal võib teine seade intervalli juba kasvatanud olla.
+ * - `update` – hinnatud kaart, rida kirjutatakse meelega üle.
+ *
+ * Sama kaardi kohta on järjekorras alati üks kirje ja `update` võidab: üle
+ * kirjutatud rida sisaldab ka seda, mida `create` oleks lisanud (upsert lisab
+ * puuduva rea), aga vastupidi mitte.
+ */
+export type ReviewOp = "create" | "update";
+
+export type ReviewEntry = {
+  item: ReviewItem;
+  op: ReviewOp;
+};
+
+/** `moodul:kaart` → saatmata kaart koos tehtega. */
+export type ReviewQueue = Record<string, ReviewEntry>;
 
 type QueueFile = {
   version: number;
@@ -51,13 +69,27 @@ export function parseReviewQueue(raw: string | null): ReviewQueue {
 
   const pending: ReviewQueue = {};
   for (const [key, value] of Object.entries(parsed.pending)) {
+    const entry = toEntry(value);
     // Ka võti peab klappima – muidu saadaks järjekord serverisse kaardi,
     // mille id ei ole see, mille all ta siin seisab.
-    if (isReviewItem(value) && reviewKey(value.moduleId, value.cardId) === key) {
-      pending[key] = value;
+    if (entry && reviewKey(entry.item.moduleId, entry.item.cardId) === key) {
+      pending[key] = entry;
     }
   }
   return pending;
+}
+
+/**
+ * Kirje kahes kujus: uus `{ item, op }` ja sammu 3.1 oma, kus väärtus OLI
+ * kaart ise. Vana kuju loeme `create`-ks – nii ei kao eelmise seansi saatmata
+ * kaardid siis, kui õpilane uue versiooni peale satub.
+ */
+function toEntry(value: unknown): ReviewEntry | null {
+  if (isReviewItem(value)) return { item: value, op: "create" };
+  if (!isRecord(value)) return null;
+  if (value.op !== "create" && value.op !== "update") return null;
+  if (!isReviewItem(value.item)) return null;
+  return { item: value.item, op: value.op };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

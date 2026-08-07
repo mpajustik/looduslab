@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyReviewResult,
   createReviewStore,
   dateKey,
   dueDateAfter,
+  isDue,
   newReviewItems,
+  nextIntervalDays,
   parseReviewFile,
   REVIEW_KEY,
   type ReviewItem,
@@ -107,6 +110,99 @@ describe("newReviewItems", () => {
   });
 });
 
+describe("nextIntervalDays", () => {
+  it("„teadsin“ viib redelil ühe astme edasi: 1 → 3 → 7 → 21", () => {
+    expect(nextIntervalDays(1, "good")).toBe(3);
+    expect(nextIntervalDays(3, "good")).toBe(7);
+    expect(nextIntervalDays(7, "good")).toBe(21);
+  });
+
+  it("tipust edasi ei liigu – 21 päeva jääb pikimaks", () => {
+    expect(nextIntervalDays(21, "good")).toBe(21);
+  });
+
+  it("„raskelt“ jätab intervalli samaks", () => {
+    expect(nextIntervalDays(7, "hard")).toBe(7);
+    expect(nextIntervalDays(21, "hard")).toBe(21);
+  });
+
+  it("„ei mäletanud“ viib igalt astmelt tagasi ühele päevale", () => {
+    expect(nextIntervalDays(21, "again")).toBe(1);
+    expect(nextIntervalDays(1, "again")).toBe(1);
+  });
+
+  it("redeliväline arv leiab ikka järgmise astme", () => {
+    // Nii juhtub siis, kui localStorage'is on käsitsi muudetud või vanemast
+    // versioonist pärit intervall.
+    expect(nextIntervalDays(5, "good")).toBe(7);
+    expect(nextIntervalDays(100, "good")).toBe(21);
+  });
+
+  it("null ega murdosa ei tee kaarti, mis tuleb samal päeval igavesti", () => {
+    expect(nextIntervalDays(0, "hard")).toBe(1);
+    expect(nextIntervalDays(-5, "good")).toBe(3);
+    expect(nextIntervalDays(1.5, "hard")).toBe(1);
+  });
+
+  it("„raskelt“ ei jäta alles redelist pikemat intervalli", () => {
+    // Rikutud või vanast versioonist pärit 100 päeva ei tohi kaardi juures
+    // igaveseks kinni jääda – pikim aste on 21 päeva.
+    expect(nextIntervalDays(100, "hard")).toBe(21);
+  });
+
+  it("NaN ja lõpmatus annavad ikka päris arvu", () => {
+    // Ilma selleta läheks arv kuupäeva arvutusse ja `dueDate` oleks
+    // „NaN-NaN-NaN": kaart kaoks järgmisel lugemisel vaikselt ära
+    // (CodeRabbiti ülevaatuse leid 2026-08-07).
+    expect(nextIntervalDays(Number.NaN, "hard")).toBe(1);
+    expect(nextIntervalDays(Number.POSITIVE_INFINITY, "hard")).toBe(1);
+    expect(nextIntervalDays(Number.NaN, "good")).toBe(3);
+  });
+});
+
+describe("applyReviewResult", () => {
+  it("„teadsin“ lükkab kaardi kolme päeva pärast ette", () => {
+    const graded = applyReviewResult(CARD, "good", NOW);
+
+    expect(graded.intervalDays).toBe(3);
+    expect(graded.dueDate).toBe("2026-08-10");
+    expect(graded.lastResult).toBe("good");
+    expect(graded.updatedAt).toBe(NOW.toISOString());
+  });
+
+  it("uus kuupäev arvutatakse hindamise päevast, mitte vanast tähtajast", () => {
+    // Kaart ootas 8. augustil, õpilane korrab teda alles 20. augustil.
+    // Vanast tähtajast arvutades tuleks ta 23. augustil, ehk kohe uuesti.
+    const hiline = new Date(2026, 7, 20, 12);
+    const graded = applyReviewResult(CARD, "good", hiline);
+
+    expect(graded.dueDate).toBe("2026-08-23");
+  });
+
+  it("„ei mäletanud“ toob kaardi homme tagasi ka pika intervalli pealt", () => {
+    const kaugel: ReviewItem = { ...CARD, intervalDays: 21, dueDate: "2026-08-28" };
+    const graded = applyReviewResult(kaugel, "again", NOW);
+
+    expect(graded.intervalDays).toBe(1);
+    expect(graded.dueDate).toBe("2026-08-08");
+  });
+
+  it("ei muuda kaardi identiteeti", () => {
+    const graded = applyReviewResult(CARD, "hard", NOW);
+
+    expect(graded.moduleId).toBe(CARD.moduleId);
+    expect(graded.cardId).toBe(CARD.cardId);
+  });
+});
+
+describe("isDue", () => {
+  it("tänane ja eilne kaart ootavad, homne mitte", () => {
+    expect(isDue({ ...CARD, dueDate: "2026-08-07" }, NOW)).toBe(true);
+    expect(isDue({ ...CARD, dueDate: "2026-08-01" }, NOW)).toBe(true);
+    expect(isDue({ ...CARD, dueDate: "2026-08-08" }, NOW)).toBe(false);
+  });
+});
+
 describe("createReviewStore", () => {
   it("salvestab kaardid ja loeb nad tagasi", () => {
     const { storage, data } = memoryStorage();
@@ -154,6 +250,70 @@ describe("createReviewStore", () => {
 
     expect(store.addCards(CARD.moduleId, ["rc-1"], NOW)).toEqual([]);
     expect(store.list()).toEqual([]);
+  });
+
+  it("hindamine muudab kaardi kuupäeva ja jääb püsima", () => {
+    const { storage } = memoryStorage();
+    const store = createReviewStore("persist", () => storage);
+    store.addCards(CARD.moduleId, ["rc-1", "rc-2"], NOW);
+
+    const graded = store.grade(CARD.moduleId, "rc-1", "good", new Date(2026, 7, 8, 12));
+
+    expect(graded?.dueDate).toBe("2026-08-11");
+    // Uues hoidlas (sama salvestus) on sama seis – kirjutati päriselt ära.
+    const uus = createReviewStore("persist", () => storage);
+    expect(uus.list().find((item) => item.cardId === "rc-1")?.intervalDays).toBe(3);
+    // Teine kaart jäi puutumata.
+    expect(uus.list().find((item) => item.cardId === "rc-2")?.dueDate).toBe("2026-08-08");
+  });
+
+  it("olematu kaardi hindamine annab null, mitte uue kaardi", () => {
+    const { storage } = memoryStorage();
+    const store = createReviewStore("persist", () => storage);
+
+    expect(store.grade(CARD.moduleId, "rc-1", "good", NOW)).toBeNull();
+    expect(store.list()).toEqual([]);
+  });
+
+  it("preview ei salvesta ka hinnangut", () => {
+    // Kaart ON seadmes olemas – muidu väljuks `grade` kohe „sellist kaarti ei
+    // ole" haru kaudu ja test ei puudutakski preview-režiimi
+    // (CodeRabbiti ülevaatuse leid 2026-08-07).
+    const { storage, data } = memoryStorage();
+    createReviewStore("persist", () => storage).addCards(CARD.moduleId, ["rc-1"], NOW);
+    const enne = data.get(REVIEW_KEY);
+
+    const store = createReviewStore("preview", () => storage);
+
+    expect(store.grade(CARD.moduleId, "rc-1", "good", NOW)).toBeNull();
+    expect(store.list()).toEqual([]);
+    expect(data.get(REVIEW_KEY)).toBe(enne);
+  });
+
+  it("täis ketas ei võta hinnangut ära – kordamine saab edasi minna", () => {
+    // Lugemine töötab, kirjutamine mitte (kvoot täis). Hinnang läks serverisse,
+    // seega `null` valetaks kutsujale, et midagi ei juhtunud.
+    const { data } = memoryStorage();
+    const täisKetas: StorageLike = {
+      getItem: (key) => data.get(key) ?? null,
+      setItem: (key, value) => {
+        if (key === REVIEW_KEY && data.has(key)) throw new Error("QuotaExceeded");
+        data.set(key, value);
+      },
+      removeItem: (key) => void data.delete(key),
+    };
+    const store = createReviewStore("persist", () => täisKetas);
+    store.addCards(CARD.moduleId, ["rc-1"], NOW);
+
+    const graded = store.grade(CARD.moduleId, "rc-1", "good", new Date(2026, 7, 8, 12));
+
+    expect(graded?.dueDate).toBe("2026-08-11");
+    // Sama seansi sees on uus seis nähtav, kuigi kettale ta ei jõudnud.
+    expect(store.list()[0]?.dueDate).toBe("2026-08-11");
+    // Uues seansis (uus hoidla) on alles vana, salvestatud seis.
+    expect(createReviewStore("persist", () => täisKetas).list()[0]?.dueDate).toBe(
+      "2026-08-08",
+    );
   });
 
   it("täis ketas ei vii mooduli lõpetamist krahhi", () => {

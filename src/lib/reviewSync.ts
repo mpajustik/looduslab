@@ -4,6 +4,8 @@ import {
   parseReviewQueue,
   REVIEW_QUEUE_KEY,
   serializeReviewQueue,
+  type ReviewEntry,
+  type ReviewOp,
   type ReviewQueue,
 } from "../engine/reviewQueue";
 import type { PushResult } from "./progressSync";
@@ -15,9 +17,9 @@ import { browserStorage, type StorageLike } from "./storage";
  * Siin EI OLE Supabase'i – ainult tüüp `RemoteReview`. Nii saab kogu
  * korduskatsete loogika testida päris võrguta (tests/reviewSync.test.ts).
  *
- * Lihtsam kui edenemise järjekord (progressSync.ts): kaardil on ainult üks
- * tehe („lisa, kui veel ei ole"), kustutamist ega „Alusta uuesti" lippu ei
- * ole. Teele läheb üks päring MOODULI kohta (vt `drain`) – kaardi kaupa
+ * Lihtsam kui edenemise järjekord (progressSync.ts): kaardil on kaks tehet
+ * (uus kaart / hinnatud kaart), kustutamist ega „Alusta uuesti" lippu ei ole.
+ * Teele läheb üks päring MOODULI ja tehte kohta (vt `drain`) – kaardi kaupa
  * oleks 10 päringut ühe lõpetamise peale, kõik korraga aga laseks ühel
  * vigasel real teiste moodulite kaardid kinni hoida.
  */
@@ -29,6 +31,11 @@ export type RemoteReview = {
    * seal on kasvanud intervall, mida teine seade juba edasi liigutas.
    */
   create(items: ReviewItem[]): Promise<PushResult>;
+  /**
+   * Kirjuta hinnatud kaardid üle. Siin ON ülekirjutamine õige: viimasena
+   * antud hinnang on kõige värskem teadmine õpilase mälust.
+   */
+  save(items: ReviewItem[]): Promise<PushResult>;
 };
 
 export type ReviewSyncHandle = ReviewSync & {
@@ -61,7 +68,8 @@ export function createReviewSync(
     }
   }
 
-  function save(): void {
+  /** Järjekorra koopia localStorage'i (nimi eristub tehtest `save`). */
+  function persistQueue(): void {
     if (!storage) return;
     try {
       if (Object.keys(pending).length === 0) {
@@ -77,7 +85,7 @@ export function createReviewSync(
   }
 
   /**
-   * Saatmine käib MOODULI kaupa, mitte kõik korraga.
+   * Saatmine käib MOODULI ja tehte kaupa, mitte kõik korraga.
    *
    * Postgres lükkab vigase rea peale tagasi terve päringu. Kui kõik kaardid
    * läheksid ühes päringus, peataks üks võõrvõtme viga (moodulit ei ole veel
@@ -86,21 +94,25 @@ export function createReviewSync(
    * (Codexi ülevaatuse leid 2026-08-07).
    *
    * Moodul on õige jaotus, sest just moodul on see, mille pärast rida
-   * tagasi lükatakse. Ühe mooduli kaarte on 3–10, seega päringute arv jääb
-   * väikeseks.
+   * tagasi lükatakse. Tehte järgi jaotame sellepärast, et `create` ja `save`
+   * on serveris eri päringud. Ühe mooduli kaarte on 3–10, seega päringute
+   * arv jääb väikeseks.
    */
   async function drain(): Promise<void> {
-    const byModule = new Map<string, [string, ReviewItem][]>();
+    const batches = new Map<string, [string, ReviewEntry][]>();
     for (const entry of Object.entries(pending)) {
-      const group = byModule.get(entry[1].moduleId);
+      const key = `${entry[1].op} ${entry[1].item.moduleId}`;
+      const group = batches.get(key);
       if (group) group.push(entry);
-      else byModule.set(entry[1].moduleId, [entry]);
+      else batches.set(key, [entry]);
     }
 
-    for (const batch of byModule.values()) {
+    for (const batch of batches.values()) {
+      const op: ReviewOp = batch[0][1].op;
+      const items = batch.map(([, entry]) => entry.item);
       let result: PushResult;
       try {
-        result = await remote.create(batch.map(([, item]) => item));
+        result = op === "update" ? await remote.save(items) : await remote.create(items);
       } catch {
         // Ootamatu viga (nt `fetch` viskas) loeme võrguveaks: parem proovida
         // uuesti kui kaart vaikselt kaotada.
@@ -109,12 +121,12 @@ export function createReviewSync(
 
       if (result === "retry") continue;
 
-      for (const [key, item] of batch) {
+      for (const [key, entry] of batch) {
         // Kirje on vahepeal asendunud uuemaga – teda EI tohi kustutada, sest
         // saadetud sai vana.
-        if (pending[key] === item) delete pending[key];
+        if (pending[key] === entry) delete pending[key];
       }
-      save();
+      persistQueue();
     }
   }
 
@@ -137,15 +149,26 @@ export function createReviewSync(
     return task;
   }
 
+  function enqueue(items: ReviewItem[], op: ReviewOp): void {
+    if (items.length === 0) return;
+    for (const item of items) {
+      const key = reviewKey(item.moduleId, item.cardId);
+      // `create` ei tohi juba ootavat `update`-i alla kirjutada: ülekirjutav
+      // päring teeb ka lisamise ära, vastupidi aga mitte. Päriselus juhtub
+      // see siis, kui hindamise päring ootab võrku ja õpilane klõpsib
+      // vahepeal sama mooduli uuesti läbi.
+      if (op === "create" && pending[key]?.op === "update") continue;
+      pending[key] = { item, op };
+    }
+    persistQueue();
+    again = true;
+    // Teadlikult ootamata: ei lõpetamine ega hindamine tohi võrku oodata.
+    void run();
+  }
+
   return {
-    push: (items) => {
-      if (items.length === 0) return;
-      for (const item of items) pending[reviewKey(item.moduleId, item.cardId)] = item;
-      save();
-      again = true;
-      // Teadlikult ootamata: mooduli lõpetamine ei tohi võrku oodata.
-      void run();
-    },
+    push: (items) => enqueue(items, "create"),
+    save: (items) => enqueue(items, "update"),
     flush: run,
   };
 }

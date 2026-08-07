@@ -19,31 +19,37 @@ function memoryStorage(initial: Record<string, string> = {}) {
 /** Server, mis vastab ette antud tulemustega ja peab kutsutust arvet. */
 function fakeRemote(results: PushResult[] = []) {
   const batches: ReviewItem[][] = [];
+  /** Kumb tehe iga partii kohta: `create` (lisa) või `save` (kirjuta üle). */
+  const ops: ("create" | "save")[] = [];
   let next = 0;
 
+  function record(op: "create" | "save", items: ReviewItem[]) {
+    batches.push(items);
+    ops.push(op);
+    return Promise.resolve(results[next++] ?? "ok");
+  }
+
   const remote: RemoteReview = {
-    create: (items) => {
-      batches.push(items);
-      return Promise.resolve(results[next++] ?? "ok");
-    },
+    create: (items) => record("create", items),
+    save: (items) => record("save", items),
   };
-  return { remote, batches };
+  return { remote, batches, ops };
 }
 
 /** Server, mis lükkab ühe MOODULI kaardid tagasi ja võtab teised vastu. */
 function pickyRemote(brokenModuleId: string) {
   const accepted: ReviewItem[] = [];
 
-  const remote: RemoteReview = {
-    create: (items) => {
-      if (items.some((item) => item.moduleId === brokenModuleId)) {
-        // Nii käitub Postgres: üks vigane rida lükkab kogu päringu tagasi.
-        return Promise.resolve<PushResult>("retry");
-      }
-      accepted.push(...items);
-      return Promise.resolve<PushResult>("ok");
-    },
-  };
+  function record(items: ReviewItem[]) {
+    if (items.some((item) => item.moduleId === brokenModuleId)) {
+      // Nii käitub Postgres: üks vigane rida lükkab kogu päringu tagasi.
+      return Promise.resolve<PushResult>("retry");
+    }
+    accepted.push(...items);
+    return Promise.resolve<PushResult>("ok");
+  }
+
+  const remote: RemoteReview = { create: record, save: record };
   return { remote, accepted };
 }
 
@@ -121,10 +127,52 @@ describe("createReviewSync", () => {
     expect(data.has(REVIEW_QUEUE_KEY)).toBe(false);
   });
 
+  it("hinnatud kaart läheb teele ÜLEKIRJUTAVA tehtega", async () => {
+    const { storage } = memoryStorage();
+    const { remote, batches, ops } = fakeRemote();
+    const sync = createReviewSync(remote, () => storage);
+
+    sync.save([{ ...CARD, intervalDays: 3, lastResult: "good" }]);
+    await sync.flush();
+
+    expect(ops).toEqual(["save"]);
+    expect(batches[0]?.[0]?.intervalDays).toBe(3);
+  });
+
+  it("uus kaart ja hinnatud kaart lähevad eri päringutega", async () => {
+    const { storage } = memoryStorage();
+    const { remote, ops } = fakeRemote();
+    const sync = createReviewSync(remote, () => storage);
+
+    sync.push([CARD]);
+    sync.save([{ ...CARD_2, lastResult: "good" }]);
+    await sync.flush();
+
+    expect(ops.slice().sort()).toEqual(["create", "save"]);
+  });
+
+  it("hilisem lõpetamine ei kirjuta ootavat hinnangut lisamiseks tagasi", async () => {
+    // Juhtub siis, kui hindamise päring ootab võrku ja õpilane klõpsib
+    // vahepeal sama mooduli uuesti läbi. „Lisa, kui veel ei ole" jätaks
+    // serverisse VANA kuupäeva ja kordamine hüppaks tagasi.
+    const { storage } = memoryStorage();
+    const { remote, batches, ops } = fakeRemote();
+    const sync = createReviewSync(remote, () => storage);
+
+    const hinnatud: ReviewItem = { ...CARD, intervalDays: 21, lastResult: "good" };
+    sync.save([hinnatud]);
+    sync.push([CARD]);
+    await sync.flush();
+
+    expect(ops).toEqual(["save"]);
+    expect(batches[0]).toEqual([hinnatud]);
+  });
+
   it("visatud viga loeb võrguveaks, mitte kadunud kaardiks", async () => {
     const { storage } = memoryStorage();
     const remote: RemoteReview = {
       create: () => Promise.reject(new Error("võrk katki")),
+      save: () => Promise.reject(new Error("võrk katki")),
     };
     const sync = createReviewSync(remote, () => storage);
 
@@ -185,6 +233,26 @@ describe("parseReviewQueue", () => {
 
     expect(parseReviewQueue(raw)).toEqual({});
   });
+
+  it("sammu 3.1 kuju (kaart ilma tehteta) loetakse lisamiseks", () => {
+    const raw = JSON.stringify({
+      version: 1,
+      pending: { [`${CARD.moduleId}:rc-1`]: CARD },
+    });
+
+    expect(parseReviewQueue(raw)).toEqual({
+      [`${CARD.moduleId}:rc-1`]: { item: CARD, op: "create" },
+    });
+  });
+
+  it("tundmatu tehe visatakse kõrvale", () => {
+    const raw = JSON.stringify({
+      version: 1,
+      pending: { [`${CARD.moduleId}:rc-1`]: { item: CARD, op: "kustuta" } },
+    });
+
+    expect(parseReviewQueue(raw)).toEqual({});
+  });
 });
 
 describe("hoidla ja sünk koos", () => {
@@ -210,6 +278,21 @@ describe("hoidla ja sünk koos", () => {
     store.addCards(CARD.moduleId, ["rc-1"], new Date(2026, 8, 1, 12));
 
     expect(batches).toHaveLength(1);
+  });
+
+  it("hinnang läheb nii seadmesse kui serverisse – ülekirjutavana", async () => {
+    const { storage } = memoryStorage();
+    const { remote, batches, ops } = fakeRemote();
+    const sync = createReviewSync(remote, () => storage);
+    const store = createReviewStore("persist", () => storage, sync);
+
+    store.addCards(CARD.moduleId, ["rc-1"], NOW);
+    store.grade(CARD.moduleId, "rc-1", "good", new Date(2026, 7, 8, 12));
+    await sync.flush();
+
+    expect(ops).toEqual(["create", "save"]);
+    expect(batches[1]?.[0]?.dueDate).toBe("2026-08-11");
+    expect(store.list()[0]?.lastResult).toBe("good");
   });
 
   it("preview ei saada serverisse mitte midagi", () => {

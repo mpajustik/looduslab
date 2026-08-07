@@ -12,8 +12,8 @@ import type { ProgressMode } from "./progress";
  * Kuju järgib täpselt tabelit `review_items` (docs/ANDMEMUDEL.md), et etapi
  * 3 serverisünk oleks sama objekti teise kohta kirjutamine, mitte uus mudel.
  *
- * Ajastusloogika (1 → 3 → 7 → 21 päeva) tuleb sammus 3.2. Siin on ainult
- * kaardi SÜND: mooduli lõpetamine paneb kaardi homse peale.
+ * Kaks tehet: kaardi SÜND (mooduli lõpetamine paneb kaardi homse peale) ja
+ * kaardi HINDAMINE (samm 3.2 – õpilase vastus liigutab intervalli).
  */
 
 /** Õpilase hinnang kaardile. Sama loend, mis `review_items.last_result`. */
@@ -105,6 +105,82 @@ export function newReviewItems(args: {
 }
 
 // ---------------------------------------------------------------------------
+// Ajastus: mis päeval kaart uuesti ette tuleb
+// ---------------------------------------------------------------------------
+
+/**
+ * Intervalliredel päevades. TEADLIKULT lihtne, MITTE SM-2 ega FSRS: neli
+ * astet, mille õpetaja suudab õpilasele peast ära seletada („homme, siis
+ * kolme päeva, siis nädala, siis kolme nädala pärast"). Päris SRS-algoritm
+ * annaks paremad intervallid, aga tema arvutust ei oska keegi klassi ees
+ * põhjendada ja tema vigu ei oska keegi näha.
+ */
+export const REVIEW_INTERVALS = [1, 3, 7, 21] as const;
+
+/** Kaugeim aste: siit edasi kaart enam ei liigu. */
+export const MAX_INTERVAL_DAYS = REVIEW_INTERVALS[REVIEW_INTERVALS.length - 1];
+
+/**
+ * Järgmine intervall hinnangu järgi:
+ *
+ * - `again` („ei mäletanud") → tagasi algusesse, kaart tuleb homme;
+ * - `hard` („raskelt") → sama intervall uuesti, edasi ei liiguta;
+ * - `good` („teadsin") → redelil üks aste edasi, tipus jääb 21 päeva peale.
+ *
+ * `current` võib tulla localStorage'ist ehk olla ükskõik mis arv. Seepärast
+ * surume ta enne kasutamist redeli piiridesse:
+ *
+ * - alla ühe päeva ei lasta – 0 tähendaks kaarti, mis tuleb samal päeval
+ *   igavesti uuesti;
+ * - üle 21 päeva ei lasta – rikutud 100 ei tohi kaardi juures kinni jääda;
+ * - `NaN` ja lõpmatus loeme rikutuks ja alustame algusest. Ilma selleta
+ *   jõuaks `NaN` kuupäeva arvutusse ja `dueDate` oleks „NaN-NaN-NaN": kaart
+ *   ei läbiks enam `isReviewItem` kontrolli ja kaoks vaikselt ära
+ *   (CodeRabbiti ülevaatuse leid 2026-08-07).
+ */
+export function nextIntervalDays(current: number, result: ReviewResult): number {
+  if (result === "again") return FIRST_INTERVAL_DAYS;
+
+  const rounded = Math.floor(current);
+  const safe = Number.isFinite(rounded)
+    ? Math.min(MAX_INTERVAL_DAYS, Math.max(FIRST_INTERVAL_DAYS, rounded))
+    : FIRST_INTERVAL_DAYS;
+  if (result === "hard") return safe;
+
+  return REVIEW_INTERVALS.find((days) => days > safe) ?? MAX_INTERVAL_DAYS;
+}
+
+/**
+ * Hinnatud kaart: uus intervall, uus ootamispäev, uus `updatedAt`.
+ *
+ * Puhas funktsioon – kirjutamine on `ReviewStore.grade` asi. `dueDate`
+ * arvutatakse HINDAMISE hetkest, mitte vanast `dueDate`-ist: nädal hiljem
+ * meelde tulnud kaart ei tohi kohe uuesti ette tulla.
+ */
+export function applyReviewResult(
+  item: ReviewItem,
+  result: ReviewResult,
+  now: Date = new Date(),
+): ReviewItem {
+  const intervalDays = nextIntervalDays(item.intervalDays, result);
+  return {
+    ...item,
+    intervalDays,
+    dueDate: dueDateAfter(now, intervalDays),
+    lastResult: result,
+    updatedAt: now.toISOString(),
+  };
+}
+
+/**
+ * Kas kaart ootab sel päeval? Ka eilne ja üleeilne kaart ootab – vahele
+ * jäänud päev ei tohi kaarti igaveseks kaotada.
+ */
+export function isDue(item: ReviewItem, now: Date = new Date()): boolean {
+  return item.dueDate <= dateKey(now);
+}
+
+// ---------------------------------------------------------------------------
 // Salvestus
 // ---------------------------------------------------------------------------
 
@@ -124,7 +200,10 @@ type ReviewFile = {
  * src/lib/reviewRemote.ts-is – engine ei tea Supabase'ist midagi.
  */
 export type ReviewSync = {
+  /** Uus kaart: serveris olevat rida EI tohi puutuda. */
   push(items: ReviewItem[]): void;
+  /** Hinnatud kaart: serveris olev rida kirjutatakse meelega üle. */
+  save(items: ReviewItem[]): void;
 };
 
 export type ReviewStore = {
@@ -134,6 +213,17 @@ export type ReviewStore = {
    * päriselt lisandusid – nii saab kutsuja (ja test) teada, kas midagi juhtus.
    */
   addCards(moduleId: string, cardIds: string[], now?: Date): ReviewItem[];
+  /**
+   * Õpilase hinnang ühele kaardile. Tagastab uue kuju või `null`, kui sellist
+   * kaarti seadmes ei ole (nt teises seadmes tehtud moodul – kuni sammuni 3.6
+   * ei tule kaardid serverist tagasi).
+   */
+  grade(
+    moduleId: string,
+    cardId: string,
+    result: ReviewResult,
+    now?: Date,
+  ): ReviewItem | null;
 };
 
 /**
@@ -145,6 +235,7 @@ export type ReviewStore = {
 const EPHEMERAL_STORE: ReviewStore = {
   list: () => [],
   addCards: () => [],
+  grade: () => null,
 };
 
 /**
@@ -165,6 +256,8 @@ function syncOnlyStore(sync: ReviewSync): ReviewStore {
       // Tagastame tühja: seadmesse ei lisandunud midagi.
       return [];
     },
+    // Hinnata saab ainult kaarti, mis on olemas – siin ei ole ühtegi.
+    grade: () => null,
   };
 }
 
@@ -200,11 +293,28 @@ export function createReviewStore(
     }
   };
 
+  /**
+   * Hinnangud, mida ei õnnestunud kettale kirjutada (kvoot täis).
+   *
+   * Elab ainult selle seansi mälus: lehe värskendamine kaotab nad ja
+   * seadmesse jääb vana kuupäev. See on parim, mis teha annab – ilma
+   * puhvrita tuleks juba hinnatud kaart samas seansis kohe uuesti ette.
+   * Server on sel juhul ainus püsiv koopia (`sync.save` käib ikka).
+   */
+  const unsaved = new Map<string, ReviewItem>();
+
+  /** Kettal olev seis + salvestamata hinnangud peale. */
+  const currentItems = (): Record<string, ReviewItem | undefined> => {
+    const items = { ...readFile().items };
+    for (const [key, item] of unsaved) items[key] = item;
+    return items;
+  };
+
   return {
-    list: () => Object.values(readFile().items).filter((item) => item !== undefined),
+    list: () => Object.values(currentItems()).filter((item) => item !== undefined),
     addCards: (moduleId, cardIds, now) => {
       const file = readFile();
-      const existing = Object.values(file.items).filter((item) => item !== undefined);
+      const existing = Object.values(currentItems()).filter((item) => item !== undefined);
       const created = newReviewItems({ existing, moduleId, cardIds, now });
       if (created.length === 0) return [];
 
@@ -221,6 +331,30 @@ export function createReviewStore(
       }
       sync?.push(created);
       return created;
+    },
+    grade: (moduleId, cardId, result, now) => {
+      const items = currentItems();
+      const key = reviewKey(moduleId, cardId);
+      const current = items[key];
+      if (!current) return null;
+
+      const graded = applyReviewResult(current, result, now ?? new Date());
+      try {
+        storage.setItem(
+          REVIEW_KEY,
+          JSON.stringify({ version: FILE_VERSION, items: { ...items, [key]: graded } }),
+        );
+        // Kirja said ka varem salvestamata jäänud hinnangud – nad olid
+        // `items` sees.
+        unsaved.clear();
+      } catch {
+        // Ketas täis: hinnang jääb selle seansi mällu, kettale ta ei jõua.
+        // Serverisse saadame ikka – seade ja server on teineteisest
+        // sõltumatud (sama valik mis kaardi sünnil).
+        unsaved.set(key, graded);
+      }
+      sync?.save([graded]);
+      return graded;
     },
   };
 }

@@ -47,8 +47,19 @@ järgmisi samme puudutavad:
 > mäletanud" viib tagasi 1 päevale, „raskelt" jätab intervalli samaks,
 > „teadsin" liigub edasi. Kirjuta testid ajastusloogikale.
 
-- [ ] Testid rohelised; loogika on nii lihtne, et suudad seda peast selgitada
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] Testid rohelised; loogika on nii lihtne, et suudad seda peast selgitada
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+
+**Tehtud 2026-08-07.** Redel `1 → 3 → 7 → 21` on failis src/engine/review.ts
+(`nextIntervalDays`, `applyReviewResult`, `isDue`). Kolm otsust:
+
+1. Uus tähtaeg arvutatakse HINDAMISE päevast, mitte vanast tähtajast –
+   muidu tuleks kaks nädalat hiljem korratud kaart kohe uuesti ette.
+2. Hinnangu salvestamine on serveris TEINE tehe (`RemoteReview.save`,
+   ülekirjutav upsert). Saatmisjärjekord hoiab nüüd iga kaardi juures ka
+   tehet ja `update` võidab `create`-i.
+3. Täis kettaga seadmes jääb hinnang seansi mällu (`unsaved`) ja server on
+   ainus püsiv koopia – nii ei tule juba hinnatud kaart kohe uuesti ette.
 
 ## 3.3 Tänased kaardid
 
@@ -84,3 +95,10 @@ järgmisi samme puudutavad:
 
 - [ ] Telefonis lõpetatud moodul annab kaardid ka kooli arvutis
 - [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+
+**Siia kuulub ka sammust 3.2 edasi lükatud leid:** hinnangu ülekirjutav
+upsert (src/lib/reviewRemote.ts `save`) kirjutab serveris rea üle
+TINGIMUSETA. Kaks seadet samal päeval → hilisem päring võidab, ka siis, kui
+tema `updated_at` on vanem. Õige lahendus on „võidab uuem `updated_at`", aga
+see nõuab SQL-i (PostgREST upsert tingimust ei oska) ja kuulub kokku siinse
+liitmisloogikaga (CodeRabbiti ülevaatuse leid 2026-08-07).
