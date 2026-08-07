@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router";
-import { Eye, LogOut, Mail, Trash2, X } from "lucide-react";
+import { Eye, LogOut, Mail, Trash2, Users, X } from "lucide-react";
 import QRCode from "qrcode";
 import { Button } from "../../ui/Button";
 import { Card, CardDescription, CardTitle } from "../../ui/Card";
@@ -616,7 +616,10 @@ function ClassCard({
 }) {
   const [rotating, setRotating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { copied, copy } = useCopy();
+  // Kaks eraldi kopeerimisolekut: „Kopeeritud!" peab ilmuma sellele nupule,
+  // millele õpetaja vajutas – kood ja link on eri asjad.
+  const codeCopy = useCopy();
+  const linkCopy = useCopy();
   // QR hoitakse koos aadressiga, mille pealt ta tehti: nii ei jää koodi
   // uuendamise ja uue pildi valmimise vahele hetke, kus ekraanil on uus
   // number ja vana QR.
@@ -652,7 +655,7 @@ function ClassCard({
         <span className="text-ink-soft">{formatExpiry(klass.code_expires_at)}</span>
       </div>
 
-      {known ? (
+      {known && joinAddress ? (
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
           {qr && qr.address === joinAddress ? (
             <img
@@ -665,37 +668,64 @@ function ClassCard({
             <p className="font-mono text-3xl tracking-widest text-ink">
               {known.code}
             </p>
+
+            {/* Liitumislink ka SIIN, mitte ainult projektorivaates: õpetaja,
+                kes tahab lingi tunnikavva või Stuudiumisse panna, ei pea
+                seda „Näita klassile" täisekraani tagant otsima.
+                wrap-break-word: pikk aadress ei tohi 360 px vaates kaardist
+                välja joosta (reegel 10). */}
+            <p className="wrap-break-word font-mono text-ink-soft">
+              {joinAddress}
+            </p>
+
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => copy(known.code)}
+                onClick={() => codeCopy.copy(known.code)}
               >
-                {copied ? "Kopeeritud!" : "Kopeeri kood"}
+                {codeCopy.copied ? "Kopeeritud!" : "Kopeeri kood"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => linkCopy.copy(joinAddress)}
+              >
+                {linkCopy.copied ? "Kopeeritud!" : "Kopeeri link"}
               </Button>
               <Button type="button" onClick={onShowProjector}>
                 Näita klassile
               </Button>
-              <Link to={`/opetaja/klass/${klass.id}`} className={buttonClasses("secondary")}>
-                Klassi vaade
-              </Link>
             </div>
           </div>
         </div>
       ) : (
         <CardDescription>
           Kood ei ole enam ekraanil (see näidatakse ainult üks kord). Uuenda
-          koodi, et saada uus.
+          koodi, et saada uus kood, QR ja liitumislink.
         </CardDescription>
       )}
 
       {/* Kustutamine on hävitav ja seisab seepärast teistest nuppudest
           eemal, oma real – mitte „Näita klassile" kõrval, kust ta saaks
-          tunni alguses kogemata pihta. */}
+          tunni alguses kogemata pihta.
+
+          „Klassi vaade" on siin, mitte koodiploki sees: klassi haldamine ei
+          tohi sõltuda sellest, kas kood juhtub parasjagu ekraanil olema.
+          Varem pääses klassi juurde ainult pärast „Uuenda koodi" vajutamist. */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button type="button" variant="ghost" onClick={handleRotate} disabled={rotating}>
-          {rotating ? "Uuendan …" : "Uuenda koodi"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to={`/opetaja/klass/${klass.id}`}
+            className={buttonClasses("secondary")}
+          >
+            <Users aria-hidden="true" className="size-5" />
+            Klassi vaade
+          </Link>
+          <Button type="button" variant="ghost" onClick={handleRotate} disabled={rotating}>
+            {rotating ? "Uuendan …" : "Uuenda koodi"}
+          </Button>
+        </div>
         <Button type="button" variant="dangerGhost" onClick={onDelete}>
           <Trash2 aria-hidden="true" className="size-5" />
           Kustuta klass

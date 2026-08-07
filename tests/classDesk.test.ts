@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  classActivity,
   classCodeErrorMessage,
   formatExpiry,
   joinUrl,
   matchesClassName,
   mergeStudents,
 } from "../src/lib/classDesk";
+import type { ClassAttempt } from "../src/lib/classDesk";
 
 describe("formatExpiry", () => {
   it("näitab tulevast kuupäeva 'aegub' sõnaga", () => {
@@ -138,5 +140,128 @@ describe("matchesClassName", () => {
     expect(nfc).not.toBe(nfd);
     expect(matchesClassName(nfd, nfc)).toBe(true);
     expect(matchesClassName(nfc, nfd)).toBe(true);
+  });
+});
+
+describe("classActivity", () => {
+  const attempt = (over: Partial<ClassAttempt>): ClassAttempt => ({
+    module_id: "peegeldumisseadus",
+    current_step: "explore-1",
+    status: "started",
+    started_at: "2026-08-07T09:00:00Z",
+    finished_at: null,
+    ...over,
+  });
+
+  it("tagastab null, kui õpilane ei ole ühtegi moodulit avanud", () => {
+    expect(classActivity([])).toBeNull();
+  });
+
+  it("näitab lõpetatud käiku, mitte 'pole alustanud'", () => {
+    expect(
+      classActivity([
+        attempt({ status: "completed", finished_at: "2026-08-07T09:30:00Z" }),
+      ]),
+    ).toEqual({
+      kind: "completed",
+      moduleId: "peegeldumisseadus",
+      count: 1,
+    });
+  });
+
+  it("loeb lõpetatud tunnid kokku ja valib viimati lõpetatu", () => {
+    expect(
+      classActivity([
+        attempt({
+          module_id: "vedeliku-rohk",
+          status: "completed",
+          finished_at: "2026-08-07T09:30:00Z",
+        }),
+        attempt({
+          module_id: "peegeldumisseadus",
+          status: "completed",
+          finished_at: "2026-08-07T10:30:00Z",
+        }),
+      ]),
+    ).toEqual({
+      kind: "completed",
+      moduleId: "peegeldumisseadus",
+      count: 2,
+    });
+  });
+
+  it("äsja alustatud käik võidab varem lõpetatu", () => {
+    expect(
+      classActivity([
+        attempt({
+          module_id: "vedeliku-rohk",
+          status: "completed",
+          finished_at: "2026-08-07T09:30:00Z",
+        }),
+        attempt({
+          module_id: "peegeldumisseadus",
+          current_step: "explore-2",
+          started_at: "2026-08-07T09:40:00Z",
+        }),
+      ]),
+    ).toEqual({
+      kind: "started",
+      moduleId: "peegeldumisseadus",
+      currentStep: "explore-2",
+    });
+  });
+
+  it("vana pooleli jäänud käik EI varjuta täna lõpetatud tundi", () => {
+    expect(
+      classActivity([
+        // Esmaspäeval pooleli jäänud moodul – ei ole see, mida õpetaja täna
+        // tunnis näha tahab.
+        attempt({ module_id: "vedeliku-rohk", started_at: "2026-08-03T09:00:00Z" }),
+        attempt({
+          module_id: "peegeldumisseadus",
+          status: "completed",
+          started_at: "2026-08-07T10:00:00Z",
+          finished_at: "2026-08-07T10:30:00Z",
+        }),
+      ]),
+    ).toEqual({
+      kind: "completed",
+      moduleId: "peegeldumisseadus",
+      count: 1,
+    });
+  });
+
+  it("mitme poolelioleva käigu seast valib viimati alustatu", () => {
+    expect(
+      classActivity([
+        attempt({ module_id: "vedeliku-rohk", started_at: "2026-08-07T08:00:00Z" }),
+        attempt({
+          module_id: "peegeldumisseadus",
+          started_at: "2026-08-07T09:00:00Z",
+          current_step: "predict-1",
+        }),
+      ]),
+    ).toEqual({
+      kind: "started",
+      moduleId: "peegeldumisseadus",
+      currentStep: "predict-1",
+    });
+  });
+
+  it("saab hakkama ilma finished_at väärtuseta lõpetatud reaga", () => {
+    expect(
+      classActivity([
+        attempt({
+          status: "completed",
+          finished_at: null,
+          started_at: "2026-08-07T08:00:00Z",
+        }),
+        attempt({
+          module_id: "vedeliku-rohk",
+          status: "completed",
+          finished_at: "2026-08-07T09:00:00Z",
+        }),
+      ]),
+    ).toEqual({ kind: "completed", moduleId: "vedeliku-rohk", count: 2 });
   });
 });

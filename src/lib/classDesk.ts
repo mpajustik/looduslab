@@ -46,6 +46,84 @@ export function joinUrl(code: string, origin: string): string {
   return `${origin}/liitu/${encodeURIComponent(code)}`;
 }
 
+/**
+ * Üks moodulikäik klassivaate jaoks (attempts rida, ainult vajalikud veerud).
+ */
+export type ClassAttempt = {
+  module_id: string;
+  current_step: string | null;
+  status: "started" | "completed";
+  started_at: string;
+  finished_at: string | null;
+};
+
+/**
+ * Mida õpetaja ühe õpilase rea kohta näeb.
+ *
+ * `null` tähendab „pole veel alustanud" – ja AINULT seda. Varem sai sama
+ * teksti ka lõpetanud õpilane, sest klassivaade päris ainult `status =
+ * 'started'` ridu; õpetaja jaoks nägi tunni lõpetanu välja nagu see, kes ei
+ * olnud arvutit lahtigi teinud.
+ */
+export type ClassActivity =
+  | { kind: "started"; moduleId: string; currentStep: string | null }
+  | { kind: "completed"; moduleId: string; count: number };
+
+/**
+ * Ühe õpilase kõigist moodulikäikudest see, mida klassivaates näidata.
+ *
+ * Valime VIIMASE toimunu, mitte lihtsalt poolelioleva: pooleli jäänud käik
+ * ei aegu kunagi ise ära ja varjutaks muidu igavesti kõik hilisemad lõpetatud
+ * tunnid („esmaspäeval pooleli jäänud A" jääks ekraanile ka pärast seda, kui
+ * laps teisipäeval B ära lõpetas – Codexi leid).
+ *
+ * Ajatempel: poolelioleval `started_at`, lõpetatul `finished_at`. Viigi
+ * korral võidab pooleliolev – siis on laps ilmselt just praegu tunnis sees.
+ *
+ * Piirang, mida tasub teada: poolelioleva käigu kohta ON ainult alustamise
+ * aeg (baasis ei ole „viimati tegutses"). Kui laps alustab A, käib vahepeal
+ * ära B lõpetamas ja naaseb A juurde, näitab vaade „lõpetas B" – seda saaks
+ * täpsemaks alles siis, kui attempts saab viimase tegevuse ajatempli.
+ */
+export function classActivity(attempts: ClassAttempt[]): ClassActivity | null {
+  const started = attempts.filter((a) => a.status === "started");
+  const completed = attempts.filter((a) => a.status === "completed");
+
+  const latestStarted =
+    started.length === 0
+      ? null
+      : started.reduce((best, a) => (a.started_at > best.started_at ? a : best));
+
+  // finished_at võib teoorias puududa (vana rida) – siis loeb started_at,
+  // et võrdlus ei kukuks undefined'i peale ja järjestus jääks mõistlikuks.
+  const finishStamp = (a: ClassAttempt) => a.finished_at ?? a.started_at;
+  const latestCompleted =
+    completed.length === 0
+      ? null
+      : completed.reduce((best, a) =>
+          finishStamp(a) > finishStamp(best) ? a : best,
+        );
+
+  if (
+    latestStarted &&
+    (!latestCompleted ||
+      latestStarted.started_at >= finishStamp(latestCompleted))
+  ) {
+    return {
+      kind: "started",
+      moduleId: latestStarted.module_id,
+      currentStep: latestStarted.current_step,
+    };
+  }
+
+  if (!latestCompleted) return null;
+  return {
+    kind: "completed",
+    moduleId: latestCompleted.module_id,
+    count: completed.length,
+  };
+}
+
 /** Klassiga liitunud õpilane projektorivaates – rohkem ei ole vaja näidata. */
 export type JoinedStudent = { id: string; display_name: string };
 

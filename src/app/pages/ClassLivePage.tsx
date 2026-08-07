@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Card, CardTitle } from "../../ui/Card";
 import { PageHeader } from "../../ui/PageHeader";
 import { cn } from "../../ui/cn";
 import { supabase } from "../../lib/supabase";
+import { classActivity } from "../../lib/classDesk";
+import type { ClassActivity, ClassAttempt } from "../../lib/classDesk";
 import { moduleRegistry } from "../../modules/registry";
 import ClassResponsesTab from "./ClassResponsesTab";
 
@@ -13,16 +15,15 @@ const POLL_INTERVAL_MS = 10_000;
 type StudentRow = { id: string; display_name: string };
 
 /**
- * Käimasolev moodulikäik ühe õpilase kohta. `students!inner(class_id)` on
- * ainult filtri jaoks (attempts tabelis endas class_id veergu ei ole) –
- * RLS-i "attempts_read_teacher" reegel lubab õpetajal näha ainult oma
- * klasside õpilaste ridu, seega vale klassi id lihtsalt ei anna ühtegi rida.
+ * Moodulikäik ühe õpilase kohta. `students!inner(class_id)` on ainult filtri
+ * jaoks (attempts tabelis endas class_id veergu ei ole) – RLS-i
+ * "attempts_read_teacher" reegel lubab õpetajal näha ainult oma klasside
+ * õpilaste ridu, seega vale klassi id lihtsalt ei anna ühtegi rida.
+ *
+ * Toome NII pooleliolevad kui ka lõpetatud käigud: ainult 'started' ridadega
+ * nägi lõpetanud õpilane välja nagu see, kes pole alustanudki.
  */
-type ActiveAttemptRow = {
-  student_id: string;
-  module_id: string;
-  current_step: string;
-};
+type AttemptRow = ClassAttempt & { student_id: string };
 
 async function fetchStudents(classId: string): Promise<StudentRow[]> {
   const { data, error } = await supabase
@@ -34,14 +35,15 @@ async function fetchStudents(classId: string): Promise<StudentRow[]> {
   return data;
 }
 
-async function fetchActiveAttempts(classId: string): Promise<ActiveAttemptRow[]> {
+async function fetchAttempts(classId: string): Promise<AttemptRow[]> {
   const { data, error } = await supabase
     .from("attempts")
-    .select("student_id, module_id, current_step, students!inner(class_id)")
-    .eq("students.class_id", classId)
-    .eq("status", "started");
+    .select(
+      "student_id, module_id, current_step, status, started_at, finished_at, students!inner(class_id)",
+    )
+    .eq("students.class_id", classId);
   if (error) throw error;
-  return data as unknown as ActiveAttemptRow[];
+  return data as unknown as AttemptRow[];
 }
 
 /** Mooduli pealkiri + sammu-id-de järjestus. Laaditakse laisalt, üks kord mooduli kohta. */
@@ -69,24 +71,27 @@ function loadModuleSteps(moduleId: string) {
   return cached;
 }
 
-type StepProgress =
-  | { kind: "progress"; title: string; stepLabel: string }
-  | { kind: "error" };
-
 /**
  * `current_step` on sammu ID (nt "explore-2"), mitte järjekorranumber
  * (docs/ANDMEMUDEL.md „Miks attempts on moodulikäigu kohta") – number näitaks
  * vale sammu peale, kui mooduli sammude järjekord kunagi muutub. Numbriks
  * tõlgime alles siin, klassivaates.
+ *
+ * Tulemus on valmis lause õpilase rea jaoks (või `null`, kui mooduli info
+ * ei laadinud – siis peab õpetajale jääma selge, et tegu on tehnilise veaga,
+ * mitte tühja käiguga).
  */
-function useStepProgress(
-  attempts: ActiveAttemptRow[],
-): Record<string, StepProgress> {
-  const [progress, setProgress] = useState<Record<string, StepProgress>>({});
+function useActivityLabels(
+  activities: Record<string, ClassActivity | null>,
+): Record<string, string | null> {
+  const [labels, setLabels] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
     let active = true;
-    const moduleIds = [...new Set(attempts.map((a) => a.module_id))];
+    const entries = Object.entries(activities).filter(
+      (entry): entry is [string, ClassActivity] => entry[1] !== null,
+    );
+    const moduleIds = [...new Set(entries.map(([, a]) => a.moduleId))];
 
     Promise.all(
       moduleIds.map((moduleId) =>
@@ -94,37 +99,43 @@ function useStepProgress(
           .then((info) => [moduleId, info] as const)
           .catch(() => [moduleId, null] as const),
       ),
-    ).then((entries) => {
+    ).then((loaded) => {
       if (!active) return;
-      const infoByModule = new Map(entries);
-      const next: Record<string, StepProgress> = {};
+      const infoByModule = new Map(loaded);
+      const next: Record<string, string | null> = {};
 
-      for (const attempt of attempts) {
-        const info = infoByModule.get(attempt.module_id);
+      for (const [studentId, activity] of entries) {
+        const info = infoByModule.get(activity.moduleId);
         if (!info) {
-          // Vaikimisi "Pole veel alustanud" oleks siin eksitav – õpilane ON
-          // alustanud, aga mooduli info ei laadinud. Õpetajale peab jääma
-          // selge, et tegu on tehnilise veaga, mitte tühja käiguga.
-          next[attempt.student_id] = { kind: "error" };
+          next[studentId] = null;
           continue;
         }
-        const index = info.stepIds.indexOf(attempt.current_step);
-        next[attempt.student_id] = {
-          kind: "progress",
-          title: info.title,
-          stepLabel:
-            index === -1 ? "samm pooleli" : `samm ${index + 1}/${info.stepIds.length}`,
-        };
+
+        if (activity.kind === "completed") {
+          next[studentId] =
+            activity.count > 1
+              ? `Lõpetanud ${activity.count} tundi – viimati „${info.title}”`
+              : `Lõpetanud: ${info.title}`;
+          continue;
+        }
+
+        const index =
+          activity.currentStep === null
+            ? -1
+            : info.stepIds.indexOf(activity.currentStep);
+        const stepLabel =
+          index === -1 ? "samm pooleli" : `samm ${index + 1}/${info.stepIds.length}`;
+        next[studentId] = `${info.title} – ${stepLabel}`;
       }
-      setProgress(next);
+      setLabels(next);
     });
 
     return () => {
       active = false;
     };
-  }, [attempts]);
+  }, [activities]);
 
-  return progress;
+  return labels;
 }
 
 /**
@@ -137,7 +148,7 @@ export default function ClassLivePage() {
   const { id } = useParams<{ id: string }>();
   const [tab, setTab] = useState<"elav" | "vastused">("elav");
   const [students, setStudents] = useState<StudentRow[] | null>(null);
-  const [attempts, setAttempts] = useState<ActiveAttemptRow[]>([]);
+  const [attempts, setAttempts] = useState<AttemptRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -151,7 +162,7 @@ export default function ClassLivePage() {
 
     function reload() {
       const requestId = ++latestRequestId;
-      Promise.all([fetchStudents(classId), fetchActiveAttempts(classId)])
+      Promise.all([fetchStudents(classId), fetchAttempts(classId)])
         .then(([studentRows, attemptRows]) => {
           if (!active || requestId !== latestRequestId) return;
           setStudents(studentRows);
@@ -174,7 +185,23 @@ export default function ClassLivePage() {
     };
   }, [id]);
 
-  const stepProgress = useStepProgress(attempts);
+  // Rühmitame käigud õpilaste kaupa ja valime igaühelt selle, mis ekraanile
+  // läheb (loogika ise on classDesk.ts-is, et olla testitav).
+  const activities = useMemo(() => {
+    const byStudent = new Map<string, ClassAttempt[]>();
+    for (const attempt of attempts) {
+      const list = byStudent.get(attempt.student_id);
+      if (list) list.push(attempt);
+      else byStudent.set(attempt.student_id, [attempt]);
+    }
+    const next: Record<string, ClassActivity | null> = {};
+    for (const [studentId, list] of byStudent) {
+      next[studentId] = classActivity(list);
+    }
+    return next;
+  }, [attempts]);
+
+  const labels = useActivityLabels(activities);
 
   return (
     <div className="flex flex-col gap-6">
@@ -250,17 +277,20 @@ export default function ClassLivePage() {
           ) : (
             <ul className="flex flex-col gap-3">
               {students.map((student) => {
-                const progress = stepProgress[student.id];
+                const activity = activities[student.id] ?? null;
+                const label = labels[student.id];
                 return (
                   <li key={student.id}>
                     <Card className="flex flex-wrap items-center justify-between gap-2">
                       <CardTitle>{student.display_name}</CardTitle>
                       <span className="text-ink-soft">
-                        {!progress
+                        {activity === null
                           ? "Pole veel alustanud"
-                          : progress.kind === "progress"
-                            ? `${progress.title} – ${progress.stepLabel}`
-                            : "Mooduli andmeid ei õnnestunud laadida"}
+                          : label === undefined
+                            ? "Laen …"
+                            : label === null
+                              ? "Mooduli andmeid ei õnnestunud laadida"
+                              : label}
                       </span>
                     </Card>
                   </li>
