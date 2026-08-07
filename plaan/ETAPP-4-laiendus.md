@@ -114,6 +114,40 @@ Reeglid (CLAUDE.md-st, korda üle):
 - [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): uus tabel,
       uus RLS, vabatekst õpilaselt
 
+## 4.7 Klassivaade suurele rühmale (150 õpilast)
+
+**Miks:** praegune klassivaade on üks pikk nimekiri – see töötab 25 õpilasega
+ja läheb 150-ga loetamatuks (kasutaja tähelepanek 2026-08-07, katsetamisel).
+Sorteerimine ja koondamine ei ole ilustus, vaid see, mis otsustab, kas
+õpetaja leiab paari sekundiga selle lapse, kes on kinni jäänud.
+
+> **Prompt AI-le:** Täienda õpetaja klassivaadet (`ClassLivePage.tsx`) suure
+> rühma jaoks:
+>
+> 1. **Sorteerimine ja rühmitamine** – nime järgi (praegune vaikimisi),
+>    edenemise järgi (kes on kinni / kes lõpetas) ning tunni ja kursuse
+>    järgi. Kursuse järjestus tuleb kursusefailist (`src/content/`), mitte
+>    mooduli enda küljest – moodul ei tea oma kohta kursuses (reegel 11).
+> 2. **Koondrida tunni kohta** – „Valguse peegeldumine: 12 lõpetanud, 8
+>    pooleli, 5 alustamata" – õpetaja näeb klassi seisu ilma 150 rida läbi
+>    lugemata.
+> 3. **Nimele klikkides ühe õpilase leht** – mida see laps on teinud:
+>    millised tunnid läbitud, kus pooleli, tema vastused. Õpetaja näeb
+>    ainult oma klassi õpilasi (RLS-i olemasolevad reeglid katavad selle –
+>    uut tabelit ega uut poliitikat vaja ei ole).
+>
+> Andmete pool: 150 õpilast × mitu moodulit tähendab, et kõike ei tohi enam
+> iga 10 s järel korraga tõmmata – vaata üle, kas päring vajab koondamist
+> (vaade või agregaat baasi poolel) ja kas poll peab jääma nii tihedaks.
+> Loogika (sorteerimine, koondamine) `src/lib/`-i puhta funktsioonina koos
+> testidega, mitte komponendi sisse.
+
+- [ ] 150 õpilasega klassis leiab õpetaja alla 5 sekundiga selle, kes on
+      kinni jäänud
+- [ ] Töötab 360 px telefonis (tabel ei tohi horisontaalselt laiali joosta)
+- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`): vale koond on
+      vaikne viga, mida õpetaja usub (sama põhjendus mis sammul 2.13)
+
 ---
 
 ## Mida ENDISELT mitte teha
