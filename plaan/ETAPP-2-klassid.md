@@ -521,6 +521,16 @@ fail selles kaustas, mis ei ole SQL.
 seal lahti kirjutatud koos „mida sa pead nägema" kontrollidega – allolev
 loend on kokkuvõte, juhend on tõe allikas.
 
+> **EDASI LÜKATUD 2026-08-07 (kasutaja otsus).** Prod-keskkonda praegu ei
+> tehta – kogu arendus ja katsetamine käib dev-baasis. Koodipool on valmis
+> ja magab: ilma `VITE_SENTRY_DSN`-i ja `VITE_CF_ANALYTICS_TOKEN`-ita ei
+> lähe kumbki teenus buildi ega tee midagi.
+>
+> **See samm tuleb tagasi teha ENNE esimest päris klassi** – dev-baasis ei
+> tohi olla päris laste andmeid. Kui seire jääbki võtmata, võta
+> privaatsuslehelt ära kaart „Vead ja külastuste lugemine" (leht ei tohi
+> lubada asju, mida ei toimu).
+
 - [ ] Käivita KÕIK viis migratsiooni prod-projektis (001…005, järjekorras);
       sync-modules prod-i
 - [ ] Korda turvatesti punktid 1–3 prod-is (kiirversioon: 15 min – RLS on
