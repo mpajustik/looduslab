@@ -18,8 +18,36 @@ moodulite tootmine (4.1) käib pidevalt.
 > viga), kui katmata asju on. Kuva õpetajale mooduli juures seotud
 > õpitulemused ja mõisted.
 
-- [ ] Raport näitab ausalt: 2 moodulit katab murdosa – ülejäänu on punane
+- [x] Raport näitab ausalt: 2 moodulit katab murdosa – ülejäänu on punane
 - [ ] Õpetaja näeb mooduli juures ainekava seost
+
+**Tehtud 2026-08-08 (esimene osa, 4.0a: raport).** Käsk on `npm run coverage`
+(scripts/coverage.mjs), otsustusreeglid scripts/coverageRules.ts,
+testid tests/coverageRules.test.ts. Esimene tulemus: õpitulemused 3/30,
+põhimõisted 6/51, praktilised tööd 1/21. Kolm otsust:
+
+1. **Parsimine ja katvus on puhtad funktsioonid eraldi failis**, skript ise
+   ainult loeb faile ja trükib. Sama muster mis scripts/syncRules.ts – ainekava
+   faili kuju võib muutuda ja siis kaob pool raportist VAIKSELT. Parser on
+   seepärast range: tühjaks jäänud plokk viskab vea, mitte ei näita „kaetud".
+2. **Tundmatu ID on viga, tundmatu MÕISTE ei ole.** `P9-T1` on trükiviga –
+   moodul arvab end midagi katvat, aga raportis on ta nähtamatu, seega
+   väljumiskood 1. Mõistetega on teisiti: ainekava põhimõisted on miinimum,
+   mitte lubatud sõnade loend („peegeldumisnurk" on hea mõiste ka siis, kui
+   ainekava teda ei nimeta) – need lähevad märkusena kirja.
+3. **Katmata ainekava EI OLE viga** (väljumiskood 0, ainult hoiatus). Praegu
+   on katmata 92 asja ja see on ootuspärane seis, mitte rike – punane CI
+   iga päev õpetaks ainult punast CI-d eirama.
+
+CodeRabbit leidis kaks kohta, kus parser oleks VAIKSELT valetanud, mõlemad
+parandatud koos testiga: kirje moodi rida vigase ID-ga (`- **P1-T0** …`)
+valgus enne eelmise kirje teksti sisse ja õpitulemus kadus raportist; tühi või
+vale ainekava fail andis „0/0 (100%)" ehk rohelise raporti olukorras, kus
+ainekava on kaotsi läinud. Mõlemad viskavad nüüd vea.
+
+Katvust loevad ainult `status: "active"` moodulid (ainekava katvuse reegel 1)
+ja mõisteid võrreldakse nime järgi üle kogu ainekava, mitte ploki sees –
+`langemisnurk` on P2 põhimõiste, aga peegeldumisseaduse moodul õpetab teda.
 
 ## 4.1 Moodulite tootmine (pidev, katvusraporti järgi)
 

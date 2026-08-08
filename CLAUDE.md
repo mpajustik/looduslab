@@ -37,13 +37,15 @@ npm run test       # Vitest testid
 npm run build      # toodangu build (peab alati õnnestuma enne commit'i)
 npm run lint       # ESLint + tüübikontroll (tsc --noEmit)
 npm run turvakontroll # kas service-võti on lekkinud repo või bundle'i (samm 2.16)
-npm run coverage      # ainekava katvuse raport (valmib etapis 4.0)
+npm run coverage      # ainekava katvuse raport (samm 4.0)
+npm run coverage -- --katmata  # sama, ainult katmata read
 npm run sync-modules  # manifestid → Supabase modules tabelisse (etapp 2.5)
 ```
 
-Kaks viimast käsku VALMIVAD hiljem. Kuni need puuduvad, ei kehti ka
-moodulilepingu „alusta katvusraportist" samm – etapi 1 kaks pilootmoodulit
-on plaaniga ette antud.
+Katvusraport on olemas (samm 4.0), seega moodulilepingu „alusta
+katvusraportist" samm KEHTIB: iga uus moodul algab sellest, et vaatad,
+milline õpitulemus, mõiste või praktiline töö on veel katmata. Etapi 1 kaks
+pilootmoodulit on erand – need olid plaaniga ette antud.
 
 ## Mudelivalik (iga sammu alguses)
 
