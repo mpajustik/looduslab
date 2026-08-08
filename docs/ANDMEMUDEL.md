@@ -41,7 +41,30 @@ review_items  id, student_id, module_id, card_id, due_date, interval_days,
               last_result ('again'|'hard'|'good'), updated_at
               -- unique (student_id, module_id, card_id) – mooduli
               -- teistkordne lõpetamine ei tekita topeltkaarte
+              -- HINNANGUT EI KIRJUTATA otse: vt save_review_items allpool
 ```
+
+**`review_items` ja kaks seadet** (samm 3.6). Kaardil on kolm eri kirjutust
+ja nad EI OLE sama tehe:
+
+| Tehe | Kuidas | Miks nii |
+| --- | --- | --- |
+| uus kaart | `upsert`, `ignoreDuplicates: true` | olemasoleval real võib teine seade intervalli juba kolme nädala peale kasvatanud olla |
+| hinnang | `rpc('save_review_items')` | vt allpool |
+| lugemine | `select` oma ridade pealt | teises seadmes lõpetatud moodul peab siia jõudma |
+
+Hinnang ei saa käia tavalise upsertiga, sest see kirjutab rea üle
+TINGIMUSETA. Kaks seadet, sama kaart: telefonis kell 10:00 „Teadsin",
+arvutis kell 09:55 „Ei mäletanud" – kui arvuti päring viibib võrgus ja
+jõuab kohale hiljem, kaob õpilase viimane hinnang. Seadmepoolne liitmine
+(`incomingReviewItems`) seda ei päästa, sest konflikt tekib serveris.
+
+Seepärast on funktsioon `public.save_review_items(jsonb)`
+(`supabase/migrations/006_review_save.sql`): `on conflict … do update …
+where excluded.updated_at > review_items.updated_at`. PostgREST-i upsertile
+sellist tingimust anda ei saa – see on puhas SQL. Funktsioon on
+**`security invoker`**, seega RLS kehtib täpselt nagu otsepäringul, ja
+`student_id` võetakse `auth.uid()` pealt, mitte kliendi saadetud väljast.
 
 **Miks attempts on moodulikäigu, mitte sammu kohta** (see oli varem
 mitmeti mõistetav): `responses` kannab juba `step`-i, seega sammuridade

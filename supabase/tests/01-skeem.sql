@@ -110,6 +110,50 @@ with kontrollid as (
 
   union all
 
+  -- 5b. Kordamishinnangu funktsioon (006_review_save.sql). Siin on õiguste
+  --     loogika VASTUPIDINE pidurdusele: seda kutsub õpilase brauser, seega
+  --     `authenticated` PEAB saama. Kaitse ei tule rollist, vaid RLS-ist ja
+  --     sellest, et funktsioon võtab õpilase `auth.uid()` pealt.
+  select
+    'save_review_items on olemas ja authenticated saab kutsuda',
+    'olemas + lubatud',
+    case
+      when to_regprocedure('public.save_review_items(jsonb)') is null
+      then 'PUUDUB'
+      else 'authenticated=' || has_function_privilege('authenticated',
+        'public.save_review_items(jsonb)', 'execute')::text
+    end,
+    case
+      when to_regprocedure('public.save_review_items(jsonb)') is null then 'VIGA'
+      when has_function_privilege('authenticated',
+        'public.save_review_items(jsonb)', 'execute') then 'OK'
+      else 'VIGA'
+    end
+
+  union all
+
+  -- 5c. …aga `security definer` ta olla EI TOHI. Definer käiks RLS-ist mööda
+  --     ja siis hoiaks õpilasi lahus ainult funktsiooni enda esimene rida.
+  --     Funktsioon, mis kirjutab õpilaste andmeid, ei tohi seda üksi kanda.
+  select
+    'save_review_items EI OLE security definer',
+    'invoker',
+    case
+      when to_regprocedure('public.save_review_items(jsonb)') is null
+      then 'funktsioon puudub'
+      when (select p.prosecdef from pg_proc p
+            where p.oid = to_regprocedure('public.save_review_items(jsonb)'))
+      then 'definer' else 'invoker'
+    end,
+    case
+      when to_regprocedure('public.save_review_items(jsonb)') is null then 'VIGA'
+      when (select p.prosecdef from pg_proc p
+            where p.oid = to_regprocedure('public.save_review_items(jsonb)'))
+      then 'VIGA' else 'OK'
+    end
+
+  union all
+
   -- 6. outcome piirang: ainult 'pending' või 'failed'. Õnnestunud liitumise
   --    rida kustutatakse, seega kolmandat väärtust ei tohi tekkida.
   select

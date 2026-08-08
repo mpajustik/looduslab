@@ -24,11 +24,13 @@ const FILE_VERSION = 1;
  *
  * - `create` – uus kaart, „lisa, kui veel ei ole". Olemasolevat rida ei
  *   puutu, sest seal võib teine seade intervalli juba kasvatanud olla.
- * - `update` – hinnatud kaart, rida kirjutatakse meelega üle.
+ * - `update` – hinnatud kaart, rida kirjutatakse üle. Serveris on tingimus
+ *   „ainult siis, kui minu `updated_at` on uuem" (samm 3.6b), aga järjekorra
+ *   jaoks see midagi ei muuda: siin otsustatakse ainult, MIDA saata.
  *
  * Sama kaardi kohta on järjekorras alati üks kirje ja `update` võidab: üle
- * kirjutatud rida sisaldab ka seda, mida `create` oleks lisanud (upsert lisab
- * puuduva rea), aga vastupidi mitte.
+ * kirjutatud rida sisaldab ka seda, mida `create` oleks lisanud (funktsioon
+ * lisab puuduva rea), aga vastupidi mitte.
  */
 export type ReviewOp = "create" | "update";
 

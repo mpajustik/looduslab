@@ -364,7 +364,7 @@ type ReviewFile = {
 export type ReviewSync = {
   /** Uus kaart: serveris olevat rida EI tohi puutuda. */
   push(items: ReviewItem[]): void;
-  /** Hinnatud kaart: serveris olev rida kirjutatakse meelega üle. */
+  /** Hinnatud kaart: serveris olev rida kirjutatakse üle, kui ta on vanem. */
   save(items: ReviewItem[]): void;
 };
 

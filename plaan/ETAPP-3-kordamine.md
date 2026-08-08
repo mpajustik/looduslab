@@ -166,7 +166,7 @@ ega salvestusvõtit.
 
 - [x] Telefonis lõpetatud moodul annab kaardid ka kooli arvutis
 - [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
-- [ ] Hinnangu upsert ei kirjuta üle uuemat rida (vajab SQL-i, vt allpool)
+- [x] Hinnangu upsert ei kirjuta üle uuemat rida (006_review_save.sql)
 - [ ] Üks jagatud „mis kaardid päriselt olemas on" mõlemale lehele
 
 **Tehtud 2026-08-08 (esimene osa).** Liitmine on src/engine/review.ts
@@ -186,12 +186,26 @@ ega salvestusvõtit.
    hullem, ütleks katkise võrguga leht vaikselt „tänane kordamine on tehtud"
    (Codexi ülevaatuse leid 2026-08-08).
 
-**Siia kuulub ka sammust 3.2 edasi lükatud leid:** hinnangu ülekirjutav
-upsert (src/lib/reviewRemote.ts `save`) kirjutab serveris rea üle
-TINGIMUSETA. Kaks seadet samal päeval → hilisem päring võidab, ka siis, kui
-tema `updated_at` on vanem. Õige lahendus on „võidab uuem `updated_at`", aga
-see nõuab SQL-i (PostgREST upsert tingimust ei oska) ja kuulub kokku siinse
-liitmisloogikaga (CodeRabbiti ülevaatuse leid 2026-08-07).
+**Tehtud 2026-08-08 (teine osa, 3.6b).** Sammust 3.2 edasi lükatud leid:
+hinnangu ülekirjutav upsert kirjutas serveris rea üle TINGIMUSETA, seega
+hilisem päring võitis ka vanema `updated_at`-iga. Nüüd käib hinnang
+funktsiooni `public.save_review_items` kaudu
+(supabase/migrations/006_review_save.sql), kus on `on conflict … do update …
+where excluded.updated_at > review_items.updated_at`. Kolm otsust:
+
+1. **Kohtunik on serveris, mitte seadmes.** Seadmepoolne liitmine võrdleb
+   kahte seisu ühes seadmes; konflikt tekib seal, kus kahe seadme päringud
+   kokku saavad. PostgREST-i upsertile `where` tingimust anda ei saa – seega
+   funktsioon ja `rpc`.
+2. **`security invoker`, mitte `definer`.** Definer käiks RLS-ist mööda ja
+   siis hoiaks õpilasi lahus ainult funktsiooni esimene rida. `student_id`
+   võetakse `auth.uid()` pealt, mitte kliendi väljast.
+3. **Õigused on vastupidised pidurdusfunktsioonile:** `authenticated` PEAB
+   saama kutsuda, sest kutsuja on õpilase enda brauser. Kaitse tuleb RLS-ist,
+   mitte rollist.
+
+Kontroll: supabase/tests/05-kordamine.sql (5 kontrolli, lõpeb `rollback`-iga)
+ja kaks uut rida 01-skeem.sql-is (olemasolu + õigused, `invoker`).
 
 **Ja sammust 3.4 edasi lükatud leid:** /edenemine loeb kaartide arvu seadme
 pealt, /kordamine viskab lisaks välja kaardid, mille TEKST on kadunud.

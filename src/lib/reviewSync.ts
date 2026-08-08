@@ -32,8 +32,10 @@ export type RemoteReview = {
    */
   create(items: ReviewItem[]): Promise<PushResult>;
   /**
-   * Kirjuta hinnatud kaardid üle. Siin ON ülekirjutamine õige: viimasena
-   * antud hinnang on kõige värskem teadmine õpilase mälust.
+   * Kirjuta hinnatud kaardid üle – aga AINULT siis, kui serveris olev rida
+   * on vanem. Viimasena antud hinnang on kõige värskem teadmine õpilase
+   * mälust; kohtunikuks on server ise (`save_review_items`, samm 3.6b), sest
+   * konflikt tekib just seal, kus kahe seadme päringud kokku saavad.
    */
   save(items: ReviewItem[]): Promise<PushResult>;
   /** Kõik selle õpilase kaardid serverist (samm 3.6). */

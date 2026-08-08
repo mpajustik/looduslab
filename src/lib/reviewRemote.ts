@@ -10,10 +10,16 @@ import {
 } from "./reviewSync";
 
 /**
- * Kordamiskaartide kirjutamine Supabase'i (samm 3.1).
+ * Kordamiskaardid Supabase'i ja tagasi (sammud 3.1 ja 3.6).
  *
  * Andmekuju on TÄPSELT sama, mis seadmes (src/engine/review.ts) – muutub
  * ainult sihtkoht. Üks `review_items` rida kaardi kohta (docs/ANDMEMUDEL.md).
+ *
+ * Kolm tehet ja igaühel oma põhjus (tabel: docs/ANDMEMUDEL.md):
+ *
+ * - `create` – upsert „lisa, kui veel ei ole";
+ * - `save` – `rpc('save_review_items')`, kus võidab uuem `updated_at`;
+ * - `pull` – tavaline `select` oma ridade pealt.
  *
  * Kellel rida ei teki: külaline ilma sessioonita ja õpetaja oma seadmes
  * (`currentStudent` → `skipped`). Külalise kordamine jääb seadmesse – see on
@@ -23,42 +29,71 @@ import {
 export function createSupabaseReviewRemote(
   getClient: () => Promise<SupabaseClient> = loadClient,
 ): RemoteReview {
-  /**
-   * Mõlemal tehtel on sama päring – vahet teeb ainult `ignoreDuplicates`.
-   *
-   * `keepExisting: true` teeb sellest „lisa, kui veel ei ole" (SQL: on
-   * conflict do nothing). See EI OLE optimeerimine, vaid sisuline nõue:
-   * olemasoleval real võib teine seade olla intervalli juba kolme nädala
-   * peale kasvatanud ja tavaline upsert lükkaks selle tagasi homsele.
-   *
-   * `keepExisting: false` kirjutab rea üle. Hindamise puhul on just see õige:
-   * viimasena antud hinnang on kõige värskem teadmine õpilase mälust. Kuni
-   * sammuni 3.6 võib see kaotada hinnangu, mille õpilane andis samal ajal
-   * teises seadmes – seal hakkab võitma uuem `updated_at`.
-   */
-  async function write(items: ReviewItem[], keepExisting: boolean): Promise<PushResult> {
-    if (items.length === 0) return "ok";
-
-    const client = await getClient();
-    const student = await currentStudent(client);
-    if (!student.ok) return student.result;
-
-    const rows = items.map((item) => ({
-      student_id: student.id,
+  /** Kaardi kuju serveri veerunimedega. `student_id` lisab kutsuja. */
+  function toRow(item: ReviewItem) {
+    return {
       module_id: item.moduleId,
       card_id: item.cardId,
       due_date: item.dueDate,
       interval_days: item.intervalDays,
       last_result: item.lastResult,
       updated_at: item.updatedAt,
-    }));
+    };
+  }
 
-    const { error } = await client.from("review_items").upsert(rows, {
-      onConflict: "student_id,module_id,card_id",
-      ignoreDuplicates: keepExisting,
-    });
+  /**
+   * UUS kaart: „lisa, kui veel ei ole" (SQL: on conflict do nothing).
+   *
+   * See EI OLE optimeerimine, vaid sisuline nõue: olemasoleval real võib
+   * teine seade olla intervalli juba kolme nädala peale kasvatanud ja
+   * tavaline upsert lükkaks selle tagasi homsele.
+   */
+  async function create(items: ReviewItem[]): Promise<PushResult> {
+    if (items.length === 0) return "ok";
+
+    const client = await getClient();
+    const student = await currentStudent(client);
+    if (!student.ok) return student.result;
+
+    const { error } = await client.from("review_items").upsert(
+      items.map((item) => ({ student_id: student.id, ...toRow(item) })),
+      { onConflict: "student_id,module_id,card_id", ignoreDuplicates: true },
+    );
 
     return error ? classify(error, "Kordamiskaartide") : "ok";
+  }
+
+  /**
+   * HINNATUD kaart: läheb `rpc`-ga, mitte upsertiga (samm 3.6b).
+   *
+   * Miks mitte tavaline upsert: ta kirjutab rea üle TINGIMUSETA. Kaks
+   * seadet, sama kaart – telefonis kell 10:00 „Teadsin", arvutis 09:55 „Ei
+   * mäletanud". Kui arvuti päring viibib võrgus ja jõuab kohale hiljem,
+   * kaob õpilase viimane hinnang. Seadmepoolne liitmine
+   * (`incomingReviewItems`) seda ei päästa, sest konflikt tekib SERVERIS.
+   *
+   * Tingimuse „ainult siis, kui minu `updated_at` on uuem" hoiab
+   * `public.save_review_items` (supabase/migrations/006_review_save.sql) –
+   * PostgREST-i upsertile sellist tingimust anda ei saa.
+   *
+   * `student_id` EI ole päringus: funktsioon võtab ta sessioonist. Nii ei
+   * ole kliendil võimalustki kirjutada kellegi teise nimel.
+   */
+  async function save(items: ReviewItem[]): Promise<PushResult> {
+    if (items.length === 0) return "ok";
+
+    const client = await getClient();
+    // Kontroll jääb ka siin alles, kuigi funktsioon viskaks sessioonita vea:
+    // külaline ja õpetaja peavad saama `skipped`, mitte igavesti korduva
+    // `retry`. Vea järgi neid eristada ei saa (vt `classify`).
+    const student = await currentStudent(client);
+    if (!student.ok) return student.result;
+
+    const { error } = await client.rpc("save_review_items", {
+      p_items: items.map(toRow),
+    });
+
+    return error ? classify(error, "Kordamishinnangu") : "ok";
   }
 
   /**
@@ -112,11 +147,7 @@ export function createSupabaseReviewRemote(
     return { ok: true, items };
   }
 
-  return {
-    create: (items) => write(items, true),
-    save: (items) => write(items, false),
-    pull,
-  };
+  return { create, save, pull };
 }
 
 /**

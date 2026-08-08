@@ -17,6 +17,8 @@ midagi püsivalt ja neid tohib jooksutada nii mitu korda kui tahad.
 04-rls-brauseris.js  kas RLS peab PÄRIS brauserist, päris sessiooniga
                    (ainult loeb; EI OLE SQL – käib brauseri konsooli,
                     F12 → Console, mitte SQL Editorisse)
+05-kordamine.sql   kas vanem kordamishinnang jätab uuema rahule
+                   (kirjutab, aga võtab kõik lõpuks tagasi – rollback)
 ```
 
 ## Kuidas kasutada
@@ -43,6 +45,14 @@ kui SQL-failid: mitte „kas poliitika on olemas", vaid „kas keegi saab minu
 andmed kätte, kui ta väga tahab". Faili alguses on kaks rida, mis tuleb
 `.env.local` failist täita (URL ja anon-võti – anon-võti on avalik, ta on
 niikuinii igas brauseris). Kasutusjuhend on faili enda alguses.
+
+**`05-kordamine.sql`** töötab nagu `03`: kogu skript on ühe transaktsiooni
+sees ja lõpeb `rollback`-iga, seega prod-baasi ei jää sellest midagi. Erinevalt
+teistest SQL-failidest paneb ta end tehingu sees ÕPILASE nahka
+(`request.jwt.claims` + roll `authenticated`) – muidu jookseks ta
+`postgres`-ina, kellele RLS ei kehti ja kelle `auth.uid()` on null, ega
+ütleks brauseris toimuva kohta midagi. Kui baasis ei ole ühtegi õpilast ega
+moodulit, ütleb ta „Vahele jäetud".
 
 Miks konsool ja mitte SQL: SQL Editor jookseb service-võtmega, kes RLS-ist
 üle sõidab. Poliitikat saab ainult sealt kontrollida, kust õpilane päriselt
