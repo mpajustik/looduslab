@@ -19,7 +19,7 @@ moodulite tootmine (4.1) käib pidevalt.
 > õpitulemused ja mõisted.
 
 - [x] Raport näitab ausalt: 2 moodulit katab murdosa – ülejäänu on punane
-- [ ] Õpetaja näeb mooduli juures ainekava seost
+- [x] Õpetaja näeb mooduli juures ainekava seost
 
 **Tehtud 2026-08-08 (esimene osa, 4.0a: raport).** Käsk on `npm run coverage`
 (scripts/coverage.mjs), otsustusreeglid scripts/coverageRules.ts,
@@ -48,6 +48,34 @@ ainekava on kaotsi läinud. Mõlemad viskavad nüüd vea.
 Katvust loevad ainult `status: "active"` moodulid (ainekava katvuse reegel 1)
 ja mõisteid võrreldakse nime järgi üle kogu ainekava, mitte ploki sees –
 `langemisnurk` on P2 põhimõiste, aga peegeldumisseaduse moodul õpetab teda.
+
+**Tehtud 2026-08-08 (teine osa, 4.0b: õpetaja näeb seost).** Õpetaja alas
+(„3. Jaga üksikut tundi") on iga tunni juures kokkupandav plokk „Mida see
+tund ainekavast katab": õpitulemused ja praktilised tööd koos ainekava
+TEKSTIGA, põhimõisted eraldi mooduli enda mõistetest. Kolm otsust:
+
+1. **Ainekava tekst tuleb failist, mitte koopiast.** `sisu/AINEKAVA-fyysika-8.md`
+   imporditakse `?raw`-na (src/lib/curriculumSource.ts) ja parsitakse sama
+   koodiga, mis raportil. Käsitsi tehtud TS-koopia läheks esimese ainekava
+   paranduse järel vaikselt lahku. Parser kolis seepärast
+   scripts/coverageRules.ts-ist src/lib/curriculum.ts-i – kaks lugejat, üks
+   parser. Fail on ~14 kB ja jõuab ainult laisalt laaditavasse õpetaja
+   pakki (reegel 13), õpilase esilehele mitte.
+2. **Tundmatu ID jääb õpetaja ekraanile nähtavale** („P9-T1 – seda ID-d ei
+   ole ainekava failis"), kuigi raport nimetab teda veaks. Vaikselt ära
+   jättes arvaks õpetaja, et moodulil polegi ainekava seost.
+3. **Ainekava seos on ÕPETAJA asi.** Õpilase vaates ID-sid ei ole – laps ei
+   õpi „P1-T2", tema jaoks on eesmärk manifesti `goal`.
+
+Katki ainekava fail ei tohi õpetaja ala valgeks teha: parsimisviga läheb
+Sentrysse ja plokk näitab ID-d ilma tekstita (curriculumSource.ts).
+
+CodeRabbit leidis, et parser ei märka ainekavas korduvat kirjet – kopeeritud
+rida ei teeks raportit punaseks, vaid VALEKS („3/30" muutuks vaikselt
+„3/31"-ks). Nüüd viskab korduv ID vea. Sama kontroll mõistetel avastas kohe
+päris seisu: „optiline keskkond" ON ainekavas kaks korda (P1 ja P2) ja see
+on õige – riiklikus ainekavas käib sama mõiste kahe teema alla. Seepärast
+nõutakse mõistelt unikaalsust ainult PLOKI SEES.
 
 ## 4.1 Moodulite tootmine (pidev, katvusraporti järgi)
 

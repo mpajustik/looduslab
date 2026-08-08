@@ -5,6 +5,7 @@ import { Eye, LogOut, Mail, Trash2, Users, X } from "lucide-react";
 import QRCode from "qrcode";
 import { Button } from "../../ui/Button";
 import { Card, CardDescription, CardTitle } from "../../ui/Card";
+import { CurriculumNote } from "../../ui/CurriculumNote";
 import { PageHeader } from "../../ui/PageHeader";
 import { buttonClasses } from "../../ui/buttonStyles";
 import { supabase } from "../../lib/supabase";
@@ -23,6 +24,7 @@ import {
 import type { JoinedStudent } from "../../lib/classDesk";
 import { modulePreviewPath, moduleUrl } from "../../lib/shareLinks";
 import { isTeacherSession, useSession } from "../../lib/useSession";
+import type { ModuleManifest } from "../../engine/contract";
 import { useDialogKeys } from "../../ui/useDialogKeys";
 import { allModuleIds, useModuleManifests } from "../moduleManifests";
 
@@ -322,7 +324,7 @@ function ShareSection() {
         <ul className="flex w-full flex-col gap-3">
           {known.map((manifest) => (
             <li key={manifest.id}>
-              <ShareCard title={manifest.title} slug={manifest.slug} />
+              <ShareCard manifest={manifest} />
             </li>
           ))}
         </ul>
@@ -331,7 +333,8 @@ function ShareSection() {
   );
 }
 
-function ShareCard({ title, slug }: { title: string; slug: string }) {
+function ShareCard({ manifest }: { manifest: ModuleManifest }) {
+  const { title, slug } = manifest;
   const [showQr, setShowQr] = useState(false);
   const { copied, copy } = useCopy();
   const address = moduleUrl(slug, window.location.origin);
@@ -378,6 +381,11 @@ function ShareCard({ title, slug }: { title: string; slug: string }) {
           <p className="text-ink-soft">Valmistan QR-koodi …</p>
         )
       ) : null}
+
+      {/* Ainekava seos (samm 4.0b) käib jagamisnuppudest ALLA: õpetaja,
+          kes tuli linki võtma, saab selle ühe pilguga kätte, ja see, kes
+          alles valib, avab ploki. */}
+      <CurriculumNote manifest={manifest} />
     </Card>
   );
 }

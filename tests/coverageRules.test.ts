@@ -103,6 +103,35 @@ describe("parseCurriculum", () => {
     ).toThrow(/P1-T0/);
   });
 
+  it("viskab vea, kui sama ID on ainekavas kaks korda", () => {
+    // Kopeeritud rida ei tee raportit punaseks, vaid VALEKS: sama õpitulemus
+    // loetakse kaks korda ja nimetaja („3/31") ei klapi enam ainekavaga.
+    // Kordus üle plokkide (P1-PT1 kahes plokis) on sama häda, seepärast
+    // otsitakse teda kogu failist, mitte ploki seest (CodeRabbiti leid).
+    expect(() =>
+      parseCurriculum("## P1. Valgus\n\n- **P1-T1** esimene\n- **P1-T1** kordus\n"),
+    ).toThrow(/P1-T1/);
+  });
+
+  it("viskab vea, kui sama mõiste on ÜHES plokis kaks korda", () => {
+    // Sama häda mõistepoolel: „valguskiir, valguskiir" annaks 51 asemel 52.
+    expect(() =>
+      parseCurriculum("## P1. Valgus\n\n**Põhimõisted:** valguskiir, Valguskiir\n"),
+    ).toThrow(/valguskiir/i);
+  });
+
+  it("lubab sama mõistet KAHES plokis – nii on riiklikus ainekavas", () => {
+    // „optiline keskkond" on põhimõiste nii P1 (levimine) kui ka P2
+    // (murdumine) all. See ei ole trükiviga, vaid sama mõiste kahes teemas.
+    const kahes = parseCurriculum(
+      "## P1. Valgus\n\n**Põhimõisted:** optiline keskkond\n\n" +
+        "## P2. Murdumine\n\n**Põhimõisted:** optiline keskkond, lääts\n",
+    );
+
+    expect(kahes[0].concepts).toEqual(["optiline keskkond"]);
+    expect(kahes[1].concepts).toEqual(["optiline keskkond", "lääts"]);
+  });
+
   it("viskab vea, kui ainekavas ei ole ühtegi plokki", () => {
     // Ilma selleta annaks vale või tühi fail „0/0 (100%)" – roheline raport
     // olukorras, kus ainekava on hoopis kaotsi läinud.
