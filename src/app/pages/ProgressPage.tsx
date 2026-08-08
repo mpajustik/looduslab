@@ -15,11 +15,16 @@ import { createReviewStore } from "../../engine/review";
 import { appNow } from "../../lib/devClock";
 import { sharedReviewSync } from "../../lib/reviewRemote";
 import { browserStorage } from "../../lib/storage";
-import { moduleRegistry } from "../../modules/registry";
 import { buttonClasses } from "../../ui/buttonStyles";
 import { Card, CardTitle } from "../../ui/Card";
 import { PageHeader } from "../../ui/PageHeader";
 import { useModuleManifests } from "../moduleManifests";
+import {
+  countableReviewItems,
+  loadReviewContent,
+  possibleReviewItems,
+  type ReviewContent,
+} from "../reviewContent";
 
 /**
  * „Minu edenemine" (plaani samm 3.4).
@@ -36,6 +41,12 @@ import { useModuleManifests } from "../moduleManifests";
  *    on tegu ainult arvuga, mida tohib täpsustada.
  * 3. **Ei mingit punktisüsteemi ega edetabelit** (plaan). Iga arv siin
  *    vastab küsimusele „mis on tehtud", mitte „kui hea sa oled".
+ *
+ * Kaartide arv käib SAMA reegli järgi, mis kordamisleht
+ * (src/app/reviewContent.ts): esmalt optimistlik `possibleReviewItems`, siis
+ * taustal `countableReviewItems`. Ilma selleta lubaks siinne leht
+ * „3 kaarti ootab" ka kaartide eest, mille küsimus on moodulist eemaldatud –
+ * ja kordamisleht ütleks sama hetke kohta „ei ole midagi korrata".
  */
 export default function ProgressPage() {
   const manifests = useModuleManifests();
@@ -54,14 +65,26 @@ export default function ProgressPage() {
       // näitab seadme seisu ja tema lubadus on „see, mis siin seadmes on".
       // Kordamislehel oleks vaikimine vale, sest seal võiks õpilane arvata,
       // et päev on tehtud.
-      if (cancelled || !pulled.ok) return;
+      if (cancelled) return;
 
-      // Hoidla ilma `sync`-ita: siit lehelt ei saadeta serverisse midagi ja
-      // serverist tulnud kaarte ei tohiks niikuinii tagasi saata.
-      const merged = createReviewStore("persist", browserStorage).merge(pulled.items);
-      // Ei lisandunud midagi uut → jätame vaate rahule. Ilma selle kontrollita
-      // joonistaks leht end iga avamise järel tarbetult uuesti.
-      if (merged.length > 0) setOverview(readOverview());
+      if (pulled.ok) {
+        // Hoidla ilma `sync`-ita: siit lehelt ei saadeta serverisse midagi ja
+        // serverist tulnud kaarte ei tohiks niikuinii tagasi saata.
+        createReviewStore("persist", browserStorage).merge(pulled.items);
+      }
+
+      // Kaartide tekst kohale – alles siis on teada, kas ootel kaardil on veel
+      // küsimus olemas. Laaditakse ainult tänaste kaartide moodulid, seega
+      // tühja kordamispäeva korral ei tehta ühtegi päringut.
+      const items = createReviewStore("persist", browserStorage).list();
+      const now = appNow();
+      const content = await loadReviewContent({ items, now });
+      if (cancelled) return;
+
+      // Joonistatakse ALATI uuesti, ka siis, kui sisu jäi laadimata: serverist
+      // tulnud kaardid on juba seadmes ja peavad arvu jõudma. Mida luhtunud
+      // laadimisega peale hakata, otsustab `countableReviewItems`.
+      setOverview(readOverview(content));
     })();
 
     return () => {
@@ -107,29 +130,30 @@ export default function ProgressPage() {
  * Seadme seis kokku üheks arvutuseks.
  *
  * Mõlemad hoidlad saavad `persist`, aga siit lehelt EI KIRJUTATA kuhugi:
- * kutsume ainult `list()`. `sync` jääb `null`-iks – edenemisleht ei tekita
- * serverisse ühtegi päringut ja avaneb ka lennukirežiimis.
+ * kutsume ainult `list()`.
+ *
+ * `content` puudub esimesel joonistusel (moodulite sisu on veel laadimata) ja
+ * on olemas taustal tehtud täpsustusel. Kumbki filter EI OLE siin kirjas –
+ * mõlemad elavad src/app/reviewContent.ts-is, sest sama otsust vajab ka
+ * kordamisleht ja kaks koopiat läheksid varem või hiljem lahku (Codexi
+ * ülevaatuse leid 2026-08-07).
  */
-function readOverview(): CourseOverview {
+function readOverview(content?: ReviewContent): CourseOverview {
+  // Sama kell, mis kordamislehel (src/lib/devClock.ts): kui ajakerimine näitab
+  // kordamislehel kolme kaarti, peab siin olema seesama kolm.
+  const now = appNow();
+  const items = createReviewStore("persist", browserStorage).list();
+
   return courseOverview({
     blocks: course.blocks.map((block) => ({
       title: block.title,
       moduleIds: blockModules(block),
     })),
     progress: createProgressStore("persist", browserStorage).list(),
-    // Kaardid, mille moodulit registris enam ei ole (arhiveeritud moodul,
-    // CLAUDE.md reegel 11), viskab ka kordamisleht välja. Ilma sama filtrita
-    // lubaks edenemisleht kaarte, mille peale kordamisleht ütleb „ei ole
-    // midagi korrata" (Codexi ülevaatuse leid 2026-08-07).
-    //
-    // Filter on SIIN, mitte engine'is: register on rakenduse asi, engine ei
-    // tea moodulite laadimisest midagi (docs/ARHITEKTUUR.md).
-    reviewItems: createReviewStore("persist", browserStorage)
-      .list()
-      .filter((item) => moduleRegistry[item.moduleId]),
-    // Sama kell, mis kordamislehel (src/lib/devClock.ts): kui ajakerimine
-    // näitab kordamislehel kolme kaarti, peab siin olema seesama kolm.
-    now: appNow(),
+    reviewItems: content
+      ? countableReviewItems({ items, content, now })
+      : possibleReviewItems(items),
+    now,
   });
 }
 

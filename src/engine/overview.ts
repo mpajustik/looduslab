@@ -83,8 +83,9 @@ export function courseOverview(args: {
 
   // Kaardid loeme SAMA funktsiooniga, mida kordamisleht kasutab: kui
   // edenemisleht ütleks „ootel 14", aga kordamisleht annaks kümme, oleks üks
-  // neist valetanud. Arhiveeritud mooduli kaarte see arv sisaldab – kaart ise
-  // on ju alles ja tuleb kordamislehel ette.
+  // neist valetanud. Kaarte, mille küsimus on moodulist kadunud, siin EI
+  // filtreerita – engine ei tea moodulite laadimisest midagi. Seda teeb
+  // kutsuja (src/app/reviewContent.ts), mõlema lehe jaoks ühtemoodi.
   const dueCards = dueReviewItems({ items: args.reviewItems, now }).length;
 
   return {

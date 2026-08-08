@@ -167,7 +167,7 @@ ega salvestusvõtit.
 - [x] Telefonis lõpetatud moodul annab kaardid ka kooli arvutis
 - [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
 - [x] Hinnangu upsert ei kirjuta üle uuemat rida (006_review_save.sql)
-- [ ] Üks jagatud „mis kaardid päriselt olemas on" mõlemale lehele
+- [x] Üks jagatud „mis kaardid päriselt olemas on" mõlemale lehele
 
 **Tehtud 2026-08-08 (esimene osa).** Liitmine on src/engine/review.ts
 (`incomingReviewItems`, `ReviewStore.merge`), lugemine src/lib/reviewRemote.ts
@@ -215,3 +215,29 @@ mooduli `activities.ts`-ist jääb ikka lahku: seda näeb alles siis, kui moodul
 sisu on laaditud. Õige lahendus on üks jagatud „mis kaardid on päriselt
 olemas" abifunktsioon mõlemale lehele – tee see koos siinse liitmisloogikaga
 (Codexi ülevaatuse leid 2026-08-07).
+
+**Tehtud 2026-08-08 (kolmas osa, 3.6c).** Jagatud fail on
+src/app/reviewContent.ts – ainus koht, kus otsustatakse, kas kaart on
+päriselt olemas. Kolm otsust:
+
+1. **Küsimus on üks, hetki on kaks.** `possibleReviewItems` (moodul on
+   registris) on optimistlik vastus enne sisu laadimist, `existingReviewItems`
+   (kaardi küsimus on moodulis alles) on lõplik vastus pärast. Mõlemad
+   reeglid on ÜHES failis, sest lahku aetuna nad lähevad lahku – täpselt seda
+   nad seni tegidki.
+2. **Lugemine ja näitamine taluvad eri asju.** Kordamisleht ootab sisu ära ja
+   kaotab luhtunud mooduli kaardid (tühja küsimusega kaarti ei saa näidata),
+   edenemisleht langeb `countableReviewItems`-iga tagasi optimistlikule
+   reeglile. „Ei saanud kätte" ei ole „ei ole olemas".
+3. **Fail on src/app-is, mitte src/engine-is.** Siin loetakse REGISTRIT ja
+   laaditakse mooduleid; engine ei tea moodulite laadimisest midagi
+   (docs/ARHITEKTUUR.md) ja saab kaardid sisendina. Naaber
+   src/app/moduleManifests.ts on samal põhjusel samas kohas.
+
+Codexi ülevaatus leidis siin päris vea, mis oli selle sammu enda tekitatud:
+/edenemine jättis luhtunud sisulaadimise korral vaate ÜLDSE värskendamata,
+seega serverist just tõmmatud kaart jäi ekraanilt välja ja leht ütles „ei
+oota ükski kaart". Sellest sündis `countableReviewItems` (otsus 2) koos
+testiga. CodeRabbit tõi ühe kesköö-piirjuhu (`now` loetakse enne sisu
+laadimist) – teadlikult parandamata, sest päeva kaardid valitakse otsuse
+järgi üks kord lehe avamisel (samm 3.3, otsus 2).

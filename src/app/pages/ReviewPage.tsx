@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
-import type { ReviewCard } from "../../engine/contract";
 import {
   createReviewStore,
   dueReviewItems,
-  isDue,
   reviewedToday,
   reviewKey,
   type ReviewItem,
@@ -14,11 +12,16 @@ import {
 import { appNow } from "../../lib/devClock";
 import { sharedReviewSync } from "../../lib/reviewRemote";
 import { browserStorage } from "../../lib/storage";
-import { moduleRegistry } from "../../modules/registry";
 import { Button } from "../../ui/Button";
 import { buttonClasses } from "../../ui/buttonStyles";
 import { Card } from "../../ui/Card";
 import { PageHeader } from "../../ui/PageHeader";
+import {
+  existingReviewItems,
+  loadReviewContent,
+  reviewCardOf,
+  type ReviewContent,
+} from "../reviewContent";
 
 /**
  * Tänased kordamiskaardid (plaani samm 3.3).
@@ -39,19 +42,13 @@ import { PageHeader } from "../../ui/PageHeader";
  *    See ei riiva CLAUDE.md reeglit 3: siin ei otsusta õigsust ka mitte AI.
  */
 
-/** Ühe mooduli kordamissisu: pealkiri ekraanile ja kaardid id järgi. */
-type ModuleCards = {
-  title: string;
-  cards: Record<string, ReviewCard | undefined>;
-};
-
 type Session = {
   /** Tänased kaardid järjekorras – valitakse üks kord (vt otsus 2 ülal). */
   items: ReviewItem[];
-  content: Record<string, ModuleCards | undefined>;
+  content: ReviewContent;
   /** Mitu kaarti on täna juba tehtud – eristab „päev tehtud" tühjast päevast. */
   doneToday: number;
-  /** Kas mõne mooduli sisu jäi laadimata (kehv võrk). */
+  /** Kas kaarte jäi kätte saamata (kaartide loend või mõne mooduli tekst). */
   failed: boolean;
 };
 
@@ -96,38 +93,26 @@ export default function ReviewPage() {
       // eilse päeva peale.
       const now = appNow();
       const all = store.list();
-      const due = all.filter((item) => isDue(item, now));
-      const moduleIds = [...new Set(due.map((item) => item.moduleId))];
 
-      const loaded = await Promise.all(moduleIds.map(loadModuleCards));
+      // Kaardi TEKST ja „mis kaardid päriselt olemas on" tulevad jagatud
+      // failist (src/app/reviewContent.ts) – täpselt sama vastus, mis saab
+      // edenemisleht. Kaart, mille tekst on kadunud, jäetakse vaikselt
+      // vahele: tühja küsimusega kaarti ei saa korrata ja krahh oleks siin
+      // selgelt üle reageeritud.
+      const content = await loadReviewContent({ items: all, now });
       if (cancelled) return;
 
-      const content: Record<string, ModuleCards | undefined> = {};
-      for (const entry of loaded) {
-        if (entry.value) content[entry.id] = entry.value;
-      }
-
-      // Kaart, mille tekst on kadunud (moodul kustutas ta või moodulit enam
-      // registris ei ole), jäetakse vaikselt vahele: tühja küsimusega kaarti
-      // ei saa korrata ja krahh oleks siin selgelt üle reageeritud.
-      //
-      // Ootel MITTE olevad kaardid jäävad loendisse alles: `dueReviewItems`
-      // vajab neid päevapiiri arvutamiseks (täna juba hinnatud kaart ei ole
-      // enam ootel, aga ta on päevast osa võtnud).
-      const usable = all.filter(
-        (item) => !isDue(item, now) || content[item.moduleId]?.cards[item.cardId],
-      );
       setSession({
-        items: dueReviewItems({ items: usable, now }),
+        items: dueReviewItems({ items: existingReviewItems({ items: all, content, now }), now }),
         content,
         doneToday: reviewedToday(all, now),
-        // Ainult võrgu- või laadimisviga. Puuduv moodul registris (arhiveeritud)
-        // on tavaline vananemine, mitte rike, mille pärast õpilast tüüdata.
         // Kaks eri viga, üks lipp: kas kaartide LOEND jäi serverist tulemata
         // või mõne mooduli kaartide TEKST laadimata. Õpilase jaoks on tagajärg
         // sama („osa kaarte võib puudu olla") ja kaks eri teadet ei aitaks
-        // teda kummalgi juhul rohkem.
-        failed: pullFailed || loaded.some((entry) => entry.failed),
+        // teda kummalgi juhul rohkem. Puuduv moodul registris (arhiveeritud)
+        // ei ole viga, vaid tavaline vananemine – seda `content.failed` ei
+        // sisalda.
+        failed: pullFailed || content.failed,
       });
     }
 
@@ -172,13 +157,14 @@ export default function ReviewPage() {
     return <DoneState total={doneToday} />;
   }
 
-  const moduleCards = session.content[item.moduleId];
-  const card = moduleCards?.cards[item.cardId];
-  // Kaardid on eespool juba sisu järgi filtreeritud – siia jõuab ainult
-  // olemasolev kaart. TypeScript seda ei tea, seega üks vaikne vahelejätt.
-  if (!moduleCards || !card) {
+  // Sama otsing, mille peal `existingReviewItems` filtreeris – seega siia
+  // jõuab ainult olemasolev kaart. TypeScript seda ei tea, seega üks vaikne
+  // vahelejätt.
+  const found = reviewCardOf(session.content, item);
+  if (!found) {
     return <DoneState total={doneToday} />;
   }
+  const { moduleTitle, card } = found;
 
   const grade = (result: ReviewResult) => {
     // Ka hindamine käib nihutatud kella järgi – muidu arvutaks „+7 päeva"
@@ -212,7 +198,7 @@ export default function ReviewPage() {
       {/* Võti sunnib uue kaardi peale uue DOM-i: ilma selleta jääks pööratud
           kaardi kõrgus ja fookus eelmise oma. */}
       <Card key={reviewKey(item.moduleId, item.cardId)} className="flex flex-col gap-4">
-        <p className="text-sm font-medium text-ink-soft">{moduleCards.title}</p>
+        <p className="text-sm font-medium text-ink-soft">{moduleTitle}</p>
         <p className="text-xl text-ink sm:text-2xl">{card.question}</p>
 
         {flipped ? (
@@ -248,32 +234,6 @@ export default function ReviewPage() {
       </Card>
     </div>
   );
-}
-
-/**
- * Ühe mooduli kaardid registrist.
- *
- * `failed` eristab kahte täiesti erinevat „ei saanud kaarte": PUUDUV moodul
- * (arhiveeritud, CLAUDE.md reegel 11 – tavaline vananemine, õpilasele ei
- * kaeba) ja LAADIMATA moodul (kehv võrk – seda peab õpilane teada saama,
- * muidu ütleb leht vaikselt „ei ole midagi korrata").
- */
-async function loadModuleCards(
-  id: string,
-): Promise<{ id: string; value: ModuleCards | null; failed: boolean }> {
-  const loader = moduleRegistry[id];
-  if (!loader) return { id, value: null, failed: false };
-
-  try {
-    const { manifest, activities } = await loader();
-    const cards: Record<string, ReviewCard | undefined> = {};
-    for (const card of activities.reviewCards) cards[card.id] = card;
-    return { id, value: { title: manifest.title, cards }, failed: false };
-  } catch {
-    // Kuupäevi see ei puuduta – kaardid jäävad ootele ja tulevad ette siis,
-    // kui võrk töötab.
-    return { id, value: null, failed: true };
-  }
 }
 
 function LoadFailedState({ onRetry }: { onRetry: () => void }) {
