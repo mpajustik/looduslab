@@ -36,11 +36,35 @@ export type RemoteReview = {
    * antud hinnang on kõige värskem teadmine õpilase mälust.
    */
   save(items: ReviewItem[]): Promise<PushResult>;
+  /** Kõik selle õpilase kaardid serverist (samm 3.6). */
+  pull(): Promise<PullResult>;
 };
+
+/**
+ * Lugemise tulemus. Kolm seisu, sest kaks oleks vale – sama loogika, mis
+ * `PushResult`-il, aga vastupidises suunas:
+ *
+ * - `{ ok: true }` – kaardid käes. Tühi loend tähendab „serveris ei olegi
+ *   kaarte", mitte „ei saanud".
+ * - `retry` – VÕRK oli katki. Kutsuja peab seda õpilasele ÜTLEMA: vaikimisi
+ *   „ei ole midagi korrata" oleks vale vastus, kui kaardid on serveris olemas
+ *   (Codexi ülevaatuse leid 2026-08-08).
+ * - `skipped` – siin ei olegi kellegi kaarte lugeda: külaline ilma
+ *   sessioonita, õpetaja oma seadmes. See on TAVALINE seis, mitte rike –
+ *   hoiatust ei tohi näidata, muidu saab iga külaline veateate.
+ */
+export type PullResult =
+  | { ok: true; items: ReviewItem[] }
+  | { ok: false; reason: "retry" | "skipped" };
 
 export type ReviewSyncHandle = ReviewSync & {
   /** Proovi järjekord tühjaks saata (lehe avamisel, võrgu naasmisel). */
   flush(): Promise<void>;
+  /**
+   * Serveris olevad kaardid siia. Ei kirjuta kuhugi – liitmise teeb kutsuja
+   * (`ReviewStore.merge`), sest hoidla on engine'i, mitte võrgu asi.
+   */
+  pull(): Promise<PullResult>;
 };
 
 export function createReviewSync(
@@ -170,5 +194,18 @@ export function createReviewSync(
     push: (items) => enqueue(items, "create"),
     save: (items) => enqueue(items, "update"),
     flush: run,
+    pull: async () => {
+      // Saadame ENNE lugemist ära: siis sisaldab serveris olev rida juba
+      // selle seadme viimast hinnangut ja me ei loe endale tagasi seisu,
+      // millest me ise oleme edasi läinud. Katkise võrgu korral lõpeb `run`
+      // kiiresti („retry") ja lugemine proovib ikka – kaks eri päringut.
+      await run();
+      try {
+        return await remote.pull();
+      } catch {
+        // Sama valik mis saatmisel: ootamatu viga on võrguviga, mitte krahh.
+        return { ok: false, reason: "retry" };
+      }
+    },
   };
 }

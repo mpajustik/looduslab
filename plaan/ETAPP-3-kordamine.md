@@ -164,8 +164,27 @@ ega salvestusvõtit.
 > `updated_at` võidab). Tee see alles siis, kui 3.2–3.3 on valmis – enne
 > seda ei ole teada, mis kujul kaardid päriselt muutuvad.
 
-- [ ] Telefonis lõpetatud moodul annab kaardid ka kooli arvutis
-- [ ] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [x] Telefonis lõpetatud moodul annab kaardid ka kooli arvutis
+- [x] Codexi ülevaatus tehtud – **riskisamm** (`/ulevaatus`)
+- [ ] Hinnangu upsert ei kirjuta üle uuemat rida (vajab SQL-i, vt allpool)
+- [ ] Üks jagatud „mis kaardid päriselt olemas on" mõlemale lehele
+
+**Tehtud 2026-08-08 (esimene osa).** Liitmine on src/engine/review.ts
+(`incomingReviewItems`, `ReviewStore.merge`), lugemine src/lib/reviewRemote.ts
+(`pull`). Kolm otsust:
+
+1. **Võidab uuem `updatedAt`**, mitte „server võidab" – kaart liigub redelil
+   ühe õpilase peas ja viimasena hindaja teab tema mälust kõige rohkem. Aega
+   võrreldakse ARVUNA: server annab `+00:00`, seade kirjutab `Z`, tekstina
+   võrreldes oleks „uuem" loterii.
+2. **Kaks lehte ootavad serverit erinevalt.** /kordamine ootab ära, sest päeva
+   kaardid valitakse üks kord ja hiljem saabuv kaart jääks päevast välja.
+   /edenemine joonistab kohe seadme pealt ja parandab arvu taustal – ta peab
+   avanema ka lennukirežiimis.
+3. **`pull` eristab „võrk katki" ja „pole kellegi kaarte"** (`retry` vs
+   `skipped`). Ühte `null`-i surutuna näeks iga külaline veateadet – või, mis
+   hullem, ütleks katkise võrguga leht vaikselt „tänane kordamine on tehtud"
+   (Codexi ülevaatuse leid 2026-08-08).
 
 **Siia kuulub ka sammust 3.2 edasi lükatud leid:** hinnangu ülekirjutav
 upsert (src/lib/reviewRemote.ts `save`) kirjutab serveris rea üle

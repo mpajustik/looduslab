@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
 import { course } from "../../content/fyysika-8";
@@ -13,6 +13,7 @@ import {
 import { createProgressStore } from "../../engine/progress";
 import { createReviewStore } from "../../engine/review";
 import { appNow } from "../../lib/devClock";
+import { sharedReviewSync } from "../../lib/reviewRemote";
 import { browserStorage } from "../../lib/storage";
 import { moduleRegistry } from "../../modules/registry";
 import { buttonClasses } from "../../ui/buttonStyles";
@@ -27,9 +28,12 @@ import { useModuleManifests } from "../moduleManifests";
  *
  * 1. **Arvutus on engine'is** (src/engine/overview.ts), leht ainult joonistab.
  *    Nii saab „mida järgmisena soovitada" testida ilma brauserita.
- * 2. **Ilma serverita.** Loeme ainult seadme salvestust: edenemisleht peab
- *    avanema ka lennukirežiimis ja ilma sisselogimiseta. Serveris olev seis
- *    jõuab seadmesse sammuga 3.6.
+ * 2. **Seade ENNE, server pärast.** Leht joonistatakse kohe seadme salvestuse
+ *    pealt – ta peab avanema ka lennukirežiimis ja ilma sisselogimiseta.
+ *    Serveris olevad kaardid (samm 3.6) tulevad taustal järele ja arv
+ *    parandatakse ainult siis, kui midagi päriselt lisandus. Kordamisleht
+ *    ootab serverit ÄRA, sest seal muudaks hiline kaart päeva loendit; siin
+ *    on tegu ainult arvuga, mida tohib täpsustada.
  * 3. **Ei mingit punktisüsteemi ega edetabelit** (plaan). Iga arv siin
  *    vastab küsimusele „mis on tehtud", mitte „kui hea sa oled".
  */
@@ -39,7 +43,31 @@ export default function ProgressPage() {
   // laadimisolekut: `useState` alglaadur jookseb täpselt üks kord lehe
   // avamisel. Efektiga tehtud `setState` oleks lisaks tarbetu ka ESLintile
   // (react-hooks/set-state-in-effect – sama leid mis kordamislehel).
-  const [overview] = useState<CourseOverview>(readOverview);
+  const [overview, setOverview] = useState<CourseOverview>(readOverview);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const pulled = await sharedReviewSync().pull();
+      // Luhtunud lugemist siin EI kaevata (erinevalt kordamislehest): see leht
+      // näitab seadme seisu ja tema lubadus on „see, mis siin seadmes on".
+      // Kordamislehel oleks vaikimine vale, sest seal võiks õpilane arvata,
+      // et päev on tehtud.
+      if (cancelled || !pulled.ok) return;
+
+      // Hoidla ilma `sync`-ita: siit lehelt ei saadeta serverisse midagi ja
+      // serverist tulnud kaarte ei tohiks niikuinii tagasi saata.
+      const merged = createReviewStore("persist", browserStorage).merge(pulled.items);
+      // Ei lisandunud midagi uut → jätame vaate rahule. Ilma selle kontrollita
+      // joonistaks leht end iga avamise järel tarbetult uuesti.
+      if (merged.length > 0) setOverview(readOverview());
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">

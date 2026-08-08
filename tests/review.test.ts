@@ -6,6 +6,7 @@ import {
   dateKey,
   dueDateAfter,
   dueReviewItems,
+  incomingReviewItems,
   isDue,
   newReviewItems,
   nextIntervalDays,
@@ -109,6 +110,92 @@ describe("newReviewItems", () => {
     });
 
     expect(created).toHaveLength(1);
+  });
+});
+
+describe("incomingReviewItems", () => {
+  /** Serverist tulnud kaart – seadmes teda ei ole. */
+  const teisest: ReviewItem = {
+    moduleId: "physics.vedeliku-rohk",
+    cardId: "rc-3",
+    dueDate: "2026-08-09",
+    intervalDays: 1,
+    lastResult: null,
+    updatedAt: "2026-08-07T09:00:00.000Z",
+  };
+
+  it("võtab vastu kaardi, mida seadmes ei ole", () => {
+    expect(incomingReviewItems({ existing: [CARD], incoming: [teisest] })).toEqual([
+      teisest,
+    ]);
+  });
+
+  it("uuem hinnang serverist võidab seadmes olevat", () => {
+    const seadmes: ReviewItem = { ...CARD, updatedAt: "2026-08-07T09:00:00.000Z" };
+    const serveris: ReviewItem = {
+      ...CARD,
+      dueDate: "2026-08-14",
+      intervalDays: 7,
+      lastResult: "good",
+      updatedAt: "2026-08-07T10:00:00.000Z",
+    };
+
+    expect(incomingReviewItems({ existing: [seadmes], incoming: [serveris] })).toEqual([
+      serveris,
+    ]);
+  });
+
+  it("vanem seis serverist EI kirjuta üle just antud hinnangut", () => {
+    const seadmes: ReviewItem = {
+      ...CARD,
+      intervalDays: 7,
+      lastResult: "good",
+      updatedAt: "2026-08-07T10:00:00.000Z",
+    };
+    const serveris: ReviewItem = { ...CARD, updatedAt: "2026-08-07T09:00:00.000Z" };
+
+    expect(incomingReviewItems({ existing: [seadmes], incoming: [serveris] })).toEqual([]);
+  });
+
+  it("sama ajatempel jätab seadme oma alles – tarbetut kirjutamist ei tule", () => {
+    const serveris: ReviewItem = { ...CARD, intervalDays: 21 };
+
+    expect(incomingReviewItems({ existing: [CARD], incoming: [serveris] })).toEqual([]);
+  });
+
+  it("võrdleb aega arvuna, mitte tekstina", () => {
+    // Postgres annab `+00:00`, seade kirjutab `Z`. Tekstina võrreldes oleks
+    // "2026-08-07T10:00:00+00:00" < "2026-08-07T09:00:00.000Z" ja uuem kaart
+    // jääks võtmata.
+    const seadmes: ReviewItem = { ...CARD, updatedAt: "2026-08-07T09:00:00.000Z" };
+    const serveris: ReviewItem = { ...CARD, updatedAt: "2026-08-07T10:00:00+00:00" };
+
+    expect(incomingReviewItems({ existing: [seadmes], incoming: [serveris] })).toEqual([
+      serveris,
+    ]);
+  });
+
+  it("katkise ajatempliga kaart serverist ei võida", () => {
+    const serveris: ReviewItem = { ...CARD, intervalDays: 21, updatedAt: "eile" };
+
+    expect(incomingReviewItems({ existing: [CARD], incoming: [serveris] })).toEqual([]);
+  });
+
+  it("katkise ajatempliga kaart SEADMES asendub loetavaga", () => {
+    const seadmes: ReviewItem = { ...CARD, updatedAt: "eile" };
+
+    expect(incomingReviewItems({ existing: [seadmes], incoming: [CARD] })).toEqual([CARD]);
+  });
+
+  it("sama kaart kaks korda sissetulevas loendis annab ÜHE vastuse", () => {
+    const vanem: ReviewItem = { ...CARD, updatedAt: "2026-08-07T09:00:00.000Z" };
+    const uuem: ReviewItem = { ...CARD, intervalDays: 7, updatedAt: "2026-08-07T11:00:00.000Z" };
+
+    // Kummaski järjekorras: võidab uuem ja tagastuses on täpselt üks kirje.
+    // Funktsioon lubab „mis seadmes muutub", mitte „mis kirjed läbi käisid" –
+    // kaks kirjet sama võtmega oleks kutsujale lõks (CodeRabbiti leid).
+    expect(incomingReviewItems({ existing: [], incoming: [vanem, uuem] })).toEqual([uuem]);
+    expect(incomingReviewItems({ existing: [], incoming: [uuem, vanem] })).toEqual([uuem]);
   });
 });
 
@@ -359,6 +446,53 @@ describe("createReviewStore", () => {
 
     expect(teine).toEqual([]);
     expect(store.list()[0]?.dueDate).toBe("2026-08-08");
+  });
+
+  it("merge toob teises seadmes tehtud mooduli kaardid siia", () => {
+    const { storage } = memoryStorage();
+    const store = createReviewStore("persist", () => storage);
+    store.addCards(CARD.moduleId, ["rc-1"], NOW);
+
+    const telefonist: ReviewItem = {
+      moduleId: "physics.vedeliku-rohk",
+      cardId: "rc-1",
+      dueDate: "2026-08-09",
+      intervalDays: 1,
+      lastResult: null,
+      updatedAt: "2026-08-08T09:00:00.000Z",
+    };
+
+    expect(store.merge([telefonist])).toEqual([telefonist]);
+    // Uus kaart lisandus, vana jäi alles.
+    expect(store.list()).toHaveLength(2);
+    // Ka pärast uut lugemist – kirjas on ta salvestuses, mitte ainult mälus.
+    expect(createReviewStore("persist", () => storage).list()).toHaveLength(2);
+  });
+
+  it("merge ei saada serverist tulnud kaarte serverisse tagasi", () => {
+    const { storage } = memoryStorage();
+    const saadetud: ReviewItem[] = [];
+    const store = createReviewStore("persist", () => storage, {
+      push: (items) => saadetud.push(...items),
+      save: (items) => saadetud.push(...items),
+    });
+
+    store.merge([CARD]);
+
+    expect(saadetud).toEqual([]);
+  });
+
+  it("merge ei lükka seadmes antud hinnangut tagasi vanema seisu peale", () => {
+    const { storage } = memoryStorage();
+    const store = createReviewStore("persist", () => storage);
+    store.addCards(CARD.moduleId, ["rc-1"], NOW);
+    const hinnatud = store.grade(CARD.moduleId, "rc-1", "good", new Date(2026, 7, 8, 12));
+
+    // Server ei tea hinnangust veel midagi – tema koopia on eilsest.
+    const serveris: ReviewItem = { ...CARD, updatedAt: NOW.toISOString() };
+
+    expect(store.merge([serveris])).toEqual([]);
+    expect(store.list()[0]).toEqual(hinnatud);
   });
 
   it("preview EI kirjuta mitte kuhugi", () => {

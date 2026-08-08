@@ -59,9 +59,10 @@ export default function ReviewPage() {
   // Sama hoidla, mis mooduli lõpetamisel (src/engine/useModuleProgress.ts):
   // `persist`, sest kordamine ON õpilase päris töö. Preview't siia ei tule –
   // õpetaja „Vaata õpilasena" käib mooduli, mitte kordamise kaudu.
+  const sync = useMemo(() => sharedReviewSync(), []);
   const store = useMemo(
-    () => createReviewStore("persist", browserStorage, sharedReviewSync()),
-    [],
+    () => createReviewStore("persist", browserStorage, sync),
+    [sync],
   );
 
   const [session, setSession] = useState<Session | null>(null);
@@ -72,14 +73,33 @@ export default function ReviewPage() {
 
   useEffect(() => {
     let cancelled = false;
-    // `appNow`, mitte `new Date()`: arenduses saab aega edasi kerida
-    // (src/lib/devClock.ts), toodangus on see täpselt praegune hetk.
-    const now = appNow();
-    const all = store.list();
-    const due = all.filter((item) => isDue(item, now));
-    const moduleIds = [...new Set(due.map((item) => item.moduleId))];
 
-    void Promise.all(moduleIds.map(loadModuleCards)).then((loaded) => {
+    async function build(): Promise<void> {
+      // Serverist tulnud kaarte ootame ÄRA, enne kui päeva kaardid valime.
+      // Päeva loend pannakse paika üks kord (otsus 2 ülal) – kui telefonis
+      // lõpetatud mooduli kaardid jõuaksid kohale alles pärast valikut, jääksid
+      // nad sellest päevast lihtsalt välja. Ootamine on odav: leht laadib
+      // moodulite sisu niikuinii võrgust ja näitab seni „Laen tänaseid kaarte …".
+      // Ilma võrguta luhtub päring kohe ja jätkame seadmes olevaga.
+      const pulled = await sync.pull();
+      if (cancelled) return;
+      if (pulled.ok) store.merge(pulled.items);
+      // Katkine võrk EI TOHI vaikida: serveris võib olla kaheksa tänast kaarti
+      // ja seadmes kaks – ilma selle liputa ütleks leht rahulikult „tänane
+      // kordamine on tehtud" (Codexi ülevaatuse leid 2026-08-08). Külalise ja
+      // õpetaja `skipped` on seevastu tavaline seis, seda ei kaeba.
+      const pullFailed = !pulled.ok && pulled.reason === "retry";
+
+      // `appNow`, mitte `new Date()`: arenduses saab aega edasi kerida
+      // (src/lib/devClock.ts), toodangus on see täpselt praegune hetk. Kell
+      // loetakse PÄRAST võrgupäringut – muidu võiks pikk päring jätta lehe
+      // eilse päeva peale.
+      const now = appNow();
+      const all = store.list();
+      const due = all.filter((item) => isDue(item, now));
+      const moduleIds = [...new Set(due.map((item) => item.moduleId))];
+
+      const loaded = await Promise.all(moduleIds.map(loadModuleCards));
       if (cancelled) return;
 
       const content: Record<string, ModuleCards | undefined> = {};
@@ -103,14 +123,20 @@ export default function ReviewPage() {
         doneToday: reviewedToday(all, now),
         // Ainult võrgu- või laadimisviga. Puuduv moodul registris (arhiveeritud)
         // on tavaline vananemine, mitte rike, mille pärast õpilast tüüdata.
-        failed: loaded.some((entry) => entry.failed),
+        // Kaks eri viga, üks lipp: kas kaartide LOEND jäi serverist tulemata
+        // või mõne mooduli kaartide TEKST laadimata. Õpilase jaoks on tagajärg
+        // sama („osa kaarte võib puudu olla") ja kaks eri teadet ei aitaks
+        // teda kummalgi juhul rohkem.
+        failed: pullFailed || loaded.some((entry) => entry.failed),
       });
-    });
+    }
+
+    void build();
 
     return () => {
       cancelled = true;
     };
-  }, [store, attempt]);
+  }, [store, sync, attempt]);
 
   if (session === null) {
     return <PageHeader title="Kordamine" lead="Laen tänaseid kaarte …" />;
@@ -253,13 +279,16 @@ async function loadModuleCards(
 function LoadFailedState({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex flex-col gap-6">
+      {/* Sõnastus katab MÕLEMAD vead: nii tulemata jäänud kaartide loendi kui
+          ka laadimata jäänud kaarditeksti. Vana lause „kaardid on olemas"
+          lubaks esimesel juhul midagi, mida me ei tea. */}
       <PageHeader
         title="Kordamine"
-        lead="Kaardid on olemas, aga nende teksti ei õnnestunud laadida."
+        lead="Kordamiskaarte ei õnnestunud kätte saada."
       />
       <Card className="flex flex-col gap-3">
         <p className="text-ink">
-          Tavaliselt on põhjus katkenud internetiühendus. Kaardid ise on alles
+          Tavaliselt on põhjus katkenud internetiühendus. Sinu kaardid on alles
           ja ootavad edasi – proovi natukese aja pärast uuesti.
         </p>
         <div>

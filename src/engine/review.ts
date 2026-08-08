@@ -105,6 +105,68 @@ export function newReviewItems(args: {
   return created;
 }
 
+/**
+ * Mis mujalt tulnud kaartidest seadmes olevat seisu PARANDAB (samm 3.6).
+ *
+ * Tagastab ainult need `incoming` kaardid, mis on kas seadmes puudu VÕI
+ * seadmes olevast uuemad. Ülejäänud jäetakse kõrvale – nii ei kirjuta serveri
+ * vanem koopia üle hinnangut, mille õpilane just selles seadmes andis.
+ *
+ * Kolm otsust:
+ *
+ * 1. **Uuem `updatedAt` võidab**, mitte „server võidab" ega „seade võidab".
+ *    Kaart liigub redelil ainult edasi-tagasi ühe õpilase peas; kes viimasena
+ *    hindas, see teab tema mälust kõige rohkem.
+ * 2. **Aega võrdleme arvuna** (`Date.parse`), mitte tekstina. Seade kirjutab
+ *    `2026-08-07T10:00:00.000Z`, Postgres tagastab `2026-08-07T10:00:00+00:00`
+ *    – tekstina võrreldes oleks „uuem" puhas loterii.
+ * 3. **Võrdse aja korral jääb seade peale** (`>`, mitte `>=`). Sama hetk
+ *    tähendab peaaegu alati sama kaarti; tarbetu kirjutamine tekitaks ainult
+ *    salvestusliiklust.
+ *
+ * Puhas funktsioon: sisend → väljund.
+ */
+export function incomingReviewItems(args: {
+  existing: ReviewItem[];
+  incoming: ReviewItem[];
+}): ReviewItem[] {
+  const current = new Map(
+    args.existing.map((item) => [reviewKey(item.moduleId, item.cardId), item]),
+  );
+
+  // `Map`, mitte massiiv: kui sissetulevas loendis on sama kaart kaks korda
+  // (rikutud server, topeltpäring), tohib vastuses olla temast täpselt ÜKS
+  // kirje – see, mis päriselt peale jääb. Massiiviga tuleks kutsujale kaks
+  // kirjet ühe võtme kohta ja lubadus „mis seadmes muutub" oleks katki
+  // (CodeRabbiti ülevaatuse leid 2026-08-08).
+  const accepted = new Map<string, ReviewItem>();
+  for (const item of args.incoming) {
+    const key = reviewKey(item.moduleId, item.cardId);
+    const mine = current.get(key);
+    if (mine && !isNewer(item, mine)) continue;
+    current.set(key, item);
+    accepted.set(key, item);
+  }
+
+  return [...accepted.values()];
+}
+
+/**
+ * Kas `candidate` on `current`-ist uuem?
+ *
+ * Loetamatu `updatedAt` (vana kuju, käsitsi muudetud) ei ole kunagi uuem:
+ * `NaN` võrdlus annab `false` niikuinii, aga kirjutame selle välja, sest
+ * vaikimisi „ei võida" on siin ainus ohutu vastus.
+ */
+function isNewer(candidate: ReviewItem, current: ReviewItem): boolean {
+  const a = Date.parse(candidate.updatedAt);
+  const b = Date.parse(current.updatedAt);
+  if (!Number.isFinite(a)) return false;
+  // Seadmes olev aeg on katki: siis on iga loetav aeg parem kui mitte midagi.
+  if (!Number.isFinite(b)) return true;
+  return a > b;
+}
+
 // ---------------------------------------------------------------------------
 // Ajastus: mis päeval kaart uuesti ette tuleb
 // ---------------------------------------------------------------------------
@@ -315,8 +377,9 @@ export type ReviewStore = {
   addCards(moduleId: string, cardIds: string[], now?: Date): ReviewItem[];
   /**
    * Õpilase hinnang ühele kaardile. Tagastab uue kuju või `null`, kui sellist
-   * kaarti seadmes ei ole (nt teises seadmes tehtud moodul – kuni sammuni 3.6
-   * ei tule kaardid serverist tagasi).
+   * kaarti seadmes ei ole. Teises seadmes tehtud mooduli kaardid jõuavad siia
+   * `merge` kaudu (samm 3.6), seega `null` tähendab nüüd päriselt tundmatut
+   * kaarti, mitte lihtsalt sünkimata seadet.
    */
   grade(
     moduleId: string,
@@ -324,6 +387,15 @@ export type ReviewStore = {
     result: ReviewResult,
     now?: Date,
   ): ReviewItem | null;
+  /**
+   * Mujalt (serverist) tulnud kaardid seadmesse (samm 3.6). Tagastab need,
+   * mis päriselt seisu muutsid – tühi loend tähendab „ei olnud midagi uut" ja
+   * kutsuja saab siis vana vaate rahule jätta.
+   *
+   * Serverisse tagasi EI saadeta: need kaardid TULID sealt. Vastupidine suund
+   * käib `addCards`/`grade` kaudu nagu seni.
+   */
+  merge(incoming: ReviewItem[]): ReviewItem[];
 };
 
 /**
@@ -336,6 +408,7 @@ const EPHEMERAL_STORE: ReviewStore = {
   list: () => [],
   addCards: () => [],
   grade: () => null,
+  merge: () => [],
 };
 
 /**
@@ -358,6 +431,10 @@ function syncOnlyStore(sync: ReviewSync): ReviewStore {
     },
     // Hinnata saab ainult kaarti, mis on olemas – siin ei ole ühtegi.
     grade: () => null,
+    // Serverist tulnud kaardil ei ole siin kohta, kuhu jääda: järgmine lehe
+    // avamine loeks ta niikuinii uuesti serverist. Kordamine ei tööta sellises
+    // seadmes ka pärast sammu 3.6 – see on localStorage'ita brauseri hind.
+    merge: () => [],
   };
 }
 
@@ -455,6 +532,28 @@ export function createReviewStore(
       }
       sync?.save([graded]);
       return graded;
+    },
+    merge: (incoming) => {
+      const items = currentItems();
+      const existing = Object.values(items).filter((item) => item !== undefined);
+      const accepted = incomingReviewItems({ existing, incoming });
+      if (accepted.length === 0) return [];
+
+      const next = { ...items };
+      for (const item of accepted) next[reviewKey(item.moduleId, item.cardId)] = item;
+      try {
+        storage.setItem(REVIEW_KEY, JSON.stringify({ version: FILE_VERSION, items: next }));
+        // Salvestamata hinnangud olid `items` sees ja said nüüd kirja.
+        unsaved.clear();
+      } catch {
+        // Ketas täis: serverist tulnud kaardid jäävad selle seansi mällu.
+        // Nad on ka serveris alles, seega järgmine avamine toob nad uuesti –
+        // erinevalt hinnangust ei ole siin midagi kaotada.
+        for (const item of accepted) unsaved.set(reviewKey(item.moduleId, item.cardId), item);
+      }
+      // Serverisse tagasi EI saada: need kaardid tulid sealt. `sync.push`
+      // siin tekitaks lõputu ringi server → seade → server.
+      return accepted;
     },
   };
 }

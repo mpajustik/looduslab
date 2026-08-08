@@ -32,6 +32,7 @@ function fakeRemote(results: PushResult[] = []) {
   const remote: RemoteReview = {
     create: (items) => record("create", items),
     save: (items) => record("save", items),
+    pull: () => Promise.resolve({ ok: true as const, items: [] }),
   };
   return { remote, batches, ops };
 }
@@ -49,7 +50,11 @@ function pickyRemote(brokenModuleId: string) {
     return Promise.resolve<PushResult>("ok");
   }
 
-  const remote: RemoteReview = { create: record, save: record };
+  const remote: RemoteReview = {
+    create: record,
+    save: record,
+    pull: () => Promise.resolve({ ok: true as const, items: [] }),
+  };
   return { remote, accepted };
 }
 
@@ -173,6 +178,7 @@ describe("createReviewSync", () => {
     const remote: RemoteReview = {
       create: () => Promise.reject(new Error("võrk katki")),
       save: () => Promise.reject(new Error("võrk katki")),
+      pull: () => Promise.reject(new Error("võrk katki")),
     };
     const sync = createReviewSync(remote, () => storage);
 
@@ -197,6 +203,48 @@ describe("createReviewSync", () => {
     await sync.flush();
 
     expect(batches).toEqual([[CARD]]);
+  });
+
+  it("pull saadab OOTAVAD kaardid enne ära, alles siis loeb", async () => {
+    const { storage } = memoryStorage();
+    const järjekord: string[] = [];
+    const remote: RemoteReview = {
+      create: () => {
+        järjekord.push("create");
+        return Promise.resolve<PushResult>("ok");
+      },
+      save: () => {
+        järjekord.push("save");
+        return Promise.resolve<PushResult>("ok");
+      },
+      pull: () => {
+        järjekord.push("pull");
+        return Promise.resolve({ ok: true as const, items: [CARD] });
+      },
+    };
+    const sync = createReviewSync(remote, () => storage);
+
+    sync.push([CARD]);
+    const saadud = await sync.pull();
+
+    // Nii sisaldab serveris olev rida juba selle seadme viimast seisu.
+    expect(järjekord).toEqual(["create", "pull"]);
+    expect(saadud).toEqual({ ok: true, items: [CARD] });
+  });
+
+  it("visatud viga lugemisel annab retry, mitte vaikse tühja loendi", async () => {
+    const { storage } = memoryStorage();
+    const remote: RemoteReview = {
+      create: () => Promise.resolve<PushResult>("ok"),
+      save: () => Promise.resolve<PushResult>("ok"),
+      pull: () => Promise.reject(new Error("võrk katki")),
+    };
+    const sync = createReviewSync(remote, () => storage);
+
+    // Tühi loend tähendaks kutsujale „serveris ei olegi kaarte" ja
+    // kordamisleht ütleks katkise võrguga rahulikult „ei ole midagi korrata"
+    // (Codexi ülevaatuse leid 2026-08-08).
+    expect(await sync.pull()).toEqual({ ok: false, reason: "retry" });
   });
 
   it("localStorage'ita seadmes saadab ikka, järjekord elab mälus", async () => {

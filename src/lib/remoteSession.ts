@@ -35,7 +35,14 @@ export function loadClient(): Promise<SupabaseClient> {
   return client;
 }
 
-export type StudentCheck = { ok: true; id: string } | { ok: false; result: PushResult };
+/**
+ * `result` on MEELEGA kitsam kui `PushResult`: kui kontroll ebaõnnestus, ei
+ * saa vastus olla „ok". Ilma selleta peaks iga kutsuja, kes seisu edasi annab
+ * (nt kordamise `pull`, samm 3.6), „ok"-i võimalust asjata käsitlema.
+ */
+export type StudentCheck =
+  | { ok: true; id: string }
+  | { ok: false; result: Exclude<PushResult, "ok"> };
 
 /**
  * Kelle nimel me kirjutame.
@@ -76,7 +83,10 @@ export async function currentStudent(client: SupabaseClient): Promise<StudentChe
  * Hind: kirjutamatu rida jääb järjekorda ja iga klõps proovib teda uuesti.
  * See on üks tühi päring, mitte kadunud vastus – õige pool eksida.
  */
-export function classify(error: PostgrestError, what: string): PushResult {
+export function classify(
+  error: PostgrestError,
+  what: string,
+): Extract<PushResult, "retry"> {
   // Jälg konsooli (ja sealt Sentrysse, samm 2.17): kirjutamatu rida proovib
   // nüüd igavesti uuesti ja ilma selle reata ei saaks keegi teada, MIKS ta
   // ei õnnestu. Õpilase vastust siia EI panda – see on isikuandmed.
