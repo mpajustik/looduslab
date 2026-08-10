@@ -90,6 +90,23 @@ export function holeDiameterFromMm(holeMm: number): number {
 }
 
 /**
+ * Pikkus meetritest sentimeetriteks.
+ *
+ * Sama põhjendus mis `holeDiameterFromMm`-il, ainult teistpidi: mudel arvutab
+ * meetrites, aga kujutis on kooliolukorras sentimeetrite suurune ja
+ * simulatsioon näitab teda nii. Paljas `* 100` komponendis või sisufailis on
+ * koht, kus keegi ühel päeval unustab korrutada ja ülesande õige vastus läheb
+ * VAIKSELT sada korda valeks – arv ekraanil on ju endiselt arv.
+ *
+ * Teisendus ise ei ole füüsika, aga ta on mudeli väljundi lepingu osa: kes
+ * mudeli arvu muus ühikus näitab, teeb seda alati teisenduse nime kaudu.
+ */
+export function metersToCm(valueM: number): number {
+  assertPositive(valueM, "Pikkus");
+  return valueM * 100;
+}
+
+/**
  * Nõelaugukaamera kujutise kõrgus (m) – mooduli PÕHIVALEM.
  *
  * `h' = h · b / L`, kus `h` on eseme kõrgus, `b` kambri sügavus ja `L` kaugus
