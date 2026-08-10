@@ -5,26 +5,36 @@ import { Button } from "../../../ui/Button";
 import { formatNumber } from "../../../lib/format";
 import {
   EXAMPLE_SOURCES,
-  POINT_SOURCE_MAX_DEG,
+  POINT_SOURCE_MIN_RATIO,
   apparentSizeDeg,
-  classifyBySize,
+  classifyByRatio,
+  distanceToSizeRatio,
   type ExampleSourceId,
 } from "./model";
+// Suhte vormindus elab omaette failis, sest teda on vaja ka testis ja
+// komponendifail tohib eksportida ainult komponente – vt display.ts päis.
+import { formatRatio } from "./display";
 
 /**
  * Valgusallikate simulatsioon – ainult VAADE (sisu/MOODUL-valgusallikad.md
  * samm „explore"; docs/MOODULILEPING.md „Simulation.tsx – reeglid").
  *
- * Füüsikat siin ei arvutata: näiva suuruse annab `apparentSizeDeg` ja liigi
- * `classifyBySize` (CLAUDE.md reegel 1). Ainus koht, kus see fail nurgaga
- * arvutab, on `coneHalfHeight` – see teeb valmis nurgast PIKSLID ega otsusta
- * midagi. Piiri 1° siin failis ei ole: võrdluse teeb mudel.
+ * Füüsikat siin ei arvutata: suhte annab `distanceToSizeRatio`, liigi
+ * `classifyByRatio` ja kraadid `apparentSizeDeg` (CLAUDE.md reegel 1). Ainus
+ * koht, kus see fail ise arvutab, on `coneHalfHeight` – see teeb valmis
+ * nurgast PIKSLID ega otsusta midagi. Piiri 60 siin failis ei ole: võrdluse
+ * teeb mudel.
+ *
+ * **Suur näit on SUHE, kraadid on väikeses kirjas.** Õpilase reegel on
+ * „kaugus vähemalt 60 korda suurem kui mõõde" – seda ta arvutab ka ülesannetes.
+ * Kraadid on siin ainult selleks, keda huvitab, kuidas asja päris füüsikas
+ * mõõdetakse; nende järgi ei liigitata midagi.
  *
  * **Joonise kokkulepe:** NURK on joonisel päris (nii nagu mudel ütleb), KAUGUS
  * mitte – allikas seisab alati sama kaugel ekraani servast ja päris kaugus on
  * kirjas arvuna. Teisiti ei saagi: 0,5 m ja 150 000 000 km ei mahu ühele
- * skaalale. Ja just nurk ongi see, mida moodul õpetab – kaugus muudab teda,
- * aga vaadata tuleb nurka.
+ * skaalale. Joonis näitab AUSALT seda, mida suhe tähendab: mida suurem suhe,
+ * seda kitsam kimp. Suhte enda arvu loeb õpilane näidikult, mitte jooniselt.
  *
  * Kaks muudetavat suurust (DISAINIJUHIS): allika mõõde ja kaugus. Nupurida on
  * nende kiirvalik, mitte kolmas suurus – iga nupp paneb paika sama kaks
@@ -47,7 +57,8 @@ const MAX_SIZE_M = 2;
 const SIZE_SLIDER_STEPS = 200;
 
 const MIN_DISTANCE_M = 0.5;
-/** Ülemine ots peab ulatuma üle 69 m, muidu ei ole ülesanne 1 lahendatav. */
+/** Ülemine ots peab ulatuma üle 72 m, muidu ei ole ülesanne 1 lahendatav
+ *  (`pointSourceDistance(1,2 m)` – päevavalgustoru punktallikaks). */
 const MAX_DISTANCE_M = 80;
 const DISTANCE_STEP_M = 0.5;
 
@@ -140,8 +151,17 @@ function formatSize(sizeM: number): string {
   return `${formatNumber(sizeM, decimals)} m`;
 }
 
+/**
+ * Kaugus alati ühe kümnendkohaga – täpselt nii peeneks, kui liugur (samm
+ * 0,5 m) üldse minna saab.
+ *
+ * Täisarvuks ümardades näitaks 71,5 m juures näidik „72 m", suhe aga 59,6 ehk
+ * „veel mitte punktallikas" – ja ülesanne 1 küsib just seda kaugust, kus silt
+ * vahetub. Kaks ekraaninumbrit ei tohi seal teineteisele vastu rääkida (sama
+ * mure mis `formatRatio`-l, CodeRabbiti leid 2026-08-10).
+ */
 function formatDistance(distanceM: number): string {
-  return `${formatNumber(distanceM, distanceM < 10 ? 1 : 0)} m`;
+  return `${formatNumber(distanceM, 1)} m`;
 }
 
 /** Kosmoseskaala arvud kilomeetrites – ainult VORMINDUS, arvud on mudelist. */
@@ -194,9 +214,11 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
   // näidetest, mitte liuguritelt – liugurid jäävad seni puutumata.
   const source = cosmicActive ? EXAMPLE_SOURCES.paike : { sizeM, distanceM };
 
-  const angleDeg = apparentSizeDeg(source.sizeM, source.distanceM);
-  const kind = classifyBySize(angleDeg);
+  const ratio = distanceToSizeRatio(source.sizeM, source.distanceM);
+  const kind = classifyByRatio(ratio);
   const kindLabel = kind === "point" ? "punktvalgusallikas" : "laiendatud allikas";
+  // Kraadid on lisanäit ja joonise sisend – liigitamisel neid ei kasutata.
+  const angleDeg = apparentSizeDeg(source.sizeM, source.distanceM);
 
   const rawHalfHeight = coneHalfHeight(angleDeg);
   const clipped = rawHalfHeight > MAX_CONE_HALF;
@@ -240,20 +262,20 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
           <line x1={EYE.x} y1={EYE.y} x2={coneBottom.x} y2={coneBottom.y} />
         </g>
 
-        {/* Nurgakaar silma juures + arv. Kaar on kimbu sees, seega ta ei jookse
-            väikese nurga juures kiirtest välja. */}
+        {/* Nurgakaar silma juures + kraadid. Kaar on kimbu sees, seega ta ei
+            jookse väikese nurga juures kiirtest välja. Vaikne hall, mitte
+            põhivärv: see on lisanäit, õpilase suurus on suhe näidikul. */}
         <path
           d={`M ${arcStart.x} ${arcStart.y} A ${ARC_RADIUS} ${ARC_RADIUS} 0 0 1 ${arcEnd.x} ${arcEnd.y}`}
-          className="fill-none stroke-brand"
-          strokeWidth={2}
+          className="fill-none stroke-ink-soft"
+          strokeWidth={1.5}
         />
         <text
           x={EYE.x - ARC_RADIUS - 6}
           y={EYE.y - 12}
           textAnchor="end"
-          className="fill-brand"
-          fontSize={15}
-          fontWeight={600}
+          className="fill-ink-soft"
+          fontSize={13}
           stroke="white"
           strokeWidth={4}
           paintOrder="stroke"
@@ -261,8 +283,6 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
           {formatAngle(angleDeg)}°
         </text>
 
-        {/* Allikas: kollane ketas. Raadius järgib kiirte kimpu, aga ei kao
-            päris ära – punktallikas peab jääma täpina nähtavaks. */}
         {/* Allikas on ELLIPS, mitte ring: teda nähakse servast ja loeb ainult
             see mõõde, mis on risti vaatesuunaga – täpselt see, mille otstesse
             kiired puutuvad. Ümmargune ketas ulatuks pealegi kimbu sisse ja
@@ -334,9 +354,13 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
       ) : null}
 
       {/* Numbrid suurelt joonise all: projektorilt ei loe kaugelt istuv õpilane
-          15-pikslist silti (sama põhjendus mis teistel moodulitel). */}
+          13-pikslist silti (sama põhjendus mis teistel moodulitel). */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <Readout label="Näiv suurus" value={`${formatAngle(angleDeg)}°`} tone="angle" />
+        <Readout
+          label="Mitu korda on kaugus suurem"
+          value={`${formatRatio(ratio, kind)} korda`}
+          tone="ratio"
+        />
         <Readout label="Allika liik" value={kindLabel} tone="kind" />
       </div>
 
@@ -344,8 +368,16 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
           võrdlusega piiriga. Piiri arvu ütleb mudeli konstant, mitte see fail. */}
       <p className="text-base leading-relaxed text-ink-soft">
         {kind === "point"
-          ? `${formatAngle(angleDeg)}° on kuni ${POINT_SOURCE_MAX_DEG}° – allikas paistab meile punktina, seega on ta punktvalgusallikas.`
-          : `${formatAngle(angleDeg)}° on üle ${POINT_SOURCE_MAX_DEG}° – allikas paistab meile laiali, seega on ta laiendatud allikas.`}
+          ? `${formatRatio(ratio, kind)} on vähemalt ${POINT_SOURCE_MIN_RATIO} – allikas paistab meile punktina, seega on ta punktvalgusallikas.`
+          : `${formatRatio(ratio, kind)} on vähem kui ${POINT_SOURCE_MIN_RATIO} – allikas paistab meile laiali, seega on ta laiendatud allikas.`}
+      </p>
+
+      {/* Kraadid: lisanäit neile, keda huvitab, kuidas asja päris füüsikas
+          mõõdetakse. Väikeses kirjas ja eraldi, et keegi ei arvaks, nagu peaks
+          ta neid ülesandes kasutama. */}
+      <p className="text-sm text-ink-soft">
+        Päris füüsikas mõõdetakse sama asja nurgaga: siit vaadates paistab allikas{" "}
+        {formatAngle(angleDeg)}° suurusena.
       </p>
 
       {cosmicActive ? (
@@ -469,22 +501,26 @@ function Readout({
 }: {
   label: string;
   value: string;
-  tone: "angle" | "kind";
+  tone: "ratio" | "kind";
 }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-line p-3 sm:flex-col sm:items-start sm:gap-1">
       <div className="flex items-center gap-2">
         <span
           aria-hidden="true"
-          className={`h-1 w-5 shrink-0 rounded-full ${tone === "angle" ? "bg-brand" : "bg-info"}`}
+          className={`h-1 w-5 shrink-0 rounded-full ${tone === "ratio" ? "bg-brand" : "bg-info"}`}
         />
         <span className="text-sm font-medium text-ink-soft">{label}</span>
       </div>
-      {/* Liigi nimi on pikk sõna – 360 px ekraanil peab ta murduma, mitte
-          kaardilt välja jooksma, seega väiksem aste kui nurgal. */}
+      {/* Mõlemad väärtused on sõnadega („1,7 korda", „laiendatud allikas"),
+          seega 360 px ekraanil peavad nad murduma või mahtuma – suurim aste
+          käib alles telefonist laiemal. Liigi nimi on kahest pikem sõna,
+          seega tema aste on ka seal väiksem. */}
       <p
         className={`font-semibold tabular-nums text-ink ${
-          tone === "angle" ? "text-3xl" : "text-xl sm:text-2xl"
+          tone === "ratio"
+            ? "whitespace-nowrap text-2xl sm:text-3xl"
+            : "text-xl sm:text-2xl"
         }`}
       >
         {value}

@@ -13,10 +13,14 @@ peegeldumisseadus/
   activities.ts    # sammud, küsimused, õiged vastused, vihjed + reviewCards
   teacher.ts       # õpetajajuhend, väärarusaamad, aruteluküsimused
   figures.tsx      # VALIKULINE: teooria- ja hook-sammu staatilised joonised
+  display.ts       # VALIKULINE: näidiku vormindus (tekst, mitte otsused)
 ```
 
-`figures.tsx` on ainus lubatud kuues fail ja ainult siis, kui moodulil on
-staatilisi jooniseid (sammu `figure` väli). Miks eraldi failis, mitte
+`figures.tsx` ja `display.ts` on ainsad lubatud lisafailid ja mõlemad ainult
+siis, kui moodul neid päriselt vajab.
+
+`figures.tsx` – kui moodulil on staatilisi jooniseid (sammu `figure` väli).
+Miks eraldi failis, mitte
 `Simulation.tsx`-is: teooriasamm tuleb enne simulatsiooni ja ei tohi tirida
 kaasa kogu simulatsiooni koodi (reegel 13). Miks mitte `activities.ts`-is:
 see fail peab jääma puhtaks ANDMEKS, mida zod valideerib ja mis läheb
@@ -27,6 +31,19 @@ Joonised registreeritakse `src/modules/registry.ts`-is (`moduleFigures`)
 laiskade komponentidena, sildi kaupa. Silt peab klappima `activities.ts`
 `figure` väljaga – seda valvab test, sest puuduv joonis ei tee ekraani
 katki, ta lihtsalt EI ILMU.
+
+`display.ts` – kui mooduli näidiku vormindusel on oma reegel, mida on vaja
+TESTIDA. Ainult puhtad funktsioonid, mis teevad arvust teksti; ükski otsus
+(kumb liik, kas õige) siia ei kuulu – need tulevad `model.ts`-ist ja
+checkerist. Miks eraldi failis, mitte `Simulation.tsx`-is: komponendifail
+tohib eksportida ainult komponente (ESLint `react-refresh/only-export-components`),
+seega `Simulation.tsx`-i jäänud vormindaja EI OLE testitav.
+
+Millal seda vaja on, näitab valgusallikate moodul: näidik kuvab ümardatud
+arvu („60,0") ja kõrval on mudeli otsustatud silt („laiendatud allikas").
+Ümardamine võib need kaks vastuollu viia just piiri juures – ja piir on
+tavaliselt see koht, kuhu ülesanne õpilase saadab. Selline vormindus vajab
+testi, mitte hoolikat vaatamist.
 
 Moodul registreeritakse `src/modules/registry.ts`-is (`id → () => import()`).
 See on AINUS koht, mis teab kõiki mooduleid – nii jääb dünaamiline laadimine

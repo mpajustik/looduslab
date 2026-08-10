@@ -38,42 +38,52 @@ slug: `valgusallikad` · id: `physics.valgusallikad`
   valgus; 17.4 külmade allikate kiirgus on luminestsents; punktvalgusallika
   definitsioon: mõõtmed väikesed VÕRRELDES KAUGUSEGA vaatluskohast) –
   kasutatud faktikontrolliks, tekst on oma sõnadega
-- **Ülesannete näidised:** – (arvud on selle mooduli omad: näiv nurkmõõde
+- **Ülesannete näidised:** – (arvud on selle mooduli omad: suhe
   arvutatakse iga ülesande juures model.ts kaudu läbi)
 
 ## Füüsika (model.ts jaoks)
 
 Punktallikaks olemine EI ole keha omadus, vaid keha ja vaatluskoha
-**suhte** omadus. Mõõdetav suurus on näiv nurkmõõde:
+**suhte** omadus. Õpilase suurus on **suhe** `kaugus / mõõde` – üks
+jagamistehe, ühikuta arv. Nurkmõõde jäi mudelisse, aga ainult
+LISANÄIDUNA: 8. klass arkustangensit ei tunne ja põhivara ütleb sama asja
+täpselt nii – „mõõtmed on väikesed VÕRRELDES KAUGUSEGA vaatluskohast".
 
+- `distanceToSizeRatio(sizeM, distanceM) = distanceM / sizeM` – mitu korda
+  on kaugus suurem kui allika mõõde (`sizeM` – allika mõõde m,
+  `distanceM` – kaugus vaatluskohast m)
+- `classifyByRatio(ratio)` → `"point"`, kui suhe ≥ **60**, muidu
+  `"extended"`. Piir 60 on projekti KOKKULEPE (õpilasele öeldakse seda ka
+  nii) ja vastab umbes 0,95° nurkmõõdule: sellest väiksema allika varjul on
+  serv nii terav, et poolvarju praktikas ei märka. Piir elab model.ts
+  konstandis `POINT_SOURCE_MIN_RATIO`, mitte laiali sisufailides.
+- `pointSourceDistance(sizeM) = sizeM · 60` – vähim kaugus, millelt antud
+  mõõtmega allikas loeb punktallikaks (pöördülesanne)
 - `apparentSizeDeg(sizeM, distanceM) = 2 · atan(sizeM / (2 · distanceM))`
-  kraadides (`sizeM` – allika mõõde m, `distanceM` – kaugus vaatluskohast m)
-- `classifyBySize(angleDeg)` → `"point"`, kui nurkmõõde ≤ **1°**, muidu
-  `"extended"`. Piir 1° on projekti KOKKULEPE (õpilasele öeldakse seda ka
-  nii): sellest väiksema allika varjul on serv nii terav, et poolvarju
-  praktikas ei märka. Piir elab model.ts konstandis `POINT_SOURCE_MAX_DEG`,
-  mitte laiali sisufailides.
-- `pointSourceDistance(sizeM) = sizeM / (2 · tan(0,5°))` – vähim kaugus,
-  millelt antud mõõtmega allikas loeb punktallikaks (pöördülesanne)
+  kraadides – **lisanäit, mitte reegel**: simulatsioon joonistab tema järgi
+  kiirte kimbu ja näitab kraade väikeses kirjas. Ükski ülesanne kraade ei
+  küsi ja tema järgi ei liigitata (seda valvab test).
 - Definitsioonipiirkond: `sizeM > 0`, `distanceM > 0`; null või negatiivne
   viskab vea (funktsioon ei paranda sisendit vaikselt)
 - Sim on IDEAALNE: väärtused tulevad mudelist täpselt, mõõtmismüra ei ole
 
 **Testiväärtused (teadaolevad):**
 
-| Allikas | mõõde | kaugus | nurkmõõde | liik |
-|---|---|---|---|---|
-| LED | 0,005 m | 1 m | 0,29° | punkt |
-| hõõgniit | 0,01 m | 3 m | 0,19° | punkt |
-| lambipirn | 0,08 m | 4 m | 1,15° | laiendatud |
-| päevavalgustoru | 1,2 m | 2 m | 33,4° | laiendatud |
-| aken | 1,5 m | 3 m | 28,1° | laiendatud |
-| Päike | 1 392 000 km | 150 000 000 km | 0,53° | punkt |
+| Allikas | mõõde | kaugus | suhe | liik | (nurk) |
+|---|---|---|---|---|---|
+| LED | 0,005 m | 1 m | 200 | punkt | 0,29° |
+| hõõgniit | 0,01 m | 3 m | 300 | punkt | 0,19° |
+| lambipirn | 0,08 m | 4 m | 50 | laiendatud | 1,15° |
+| päevavalgustoru | 1,2 m | 2 m | 1,7 | laiendatud | 33,4° |
+| aken | 1,5 m | 3 m | 2 | laiendatud | 28,1° |
+| Päike | 1 392 000 km | 150 000 000 km | 108 | punkt | 0,53° |
 
-Piirjuhud: mõõde = `2 · tan(0,5°) · kaugus` annab TÄPSELT 1° → `"point"`
-(piir on kaasav); 2 m kaugusel on see 0,0349 m. `pointSourceDistance(1,2)`
-= 68,8 m ja see kaugus peab `apparentSizeDeg`-i kaudu tagasi andma 1,0°
-(edasi-tagasi test). Sisend 0 või −1 → viga.
+Piirjuhud: suhe täpselt 60 → `"point"` (piir on kaasav).
+`pointSourceDistance(1.2)` = 72 m (koodis kirjutatakse kümnendkoht punktiga)
+ja see kaugus peab
+`distanceToSizeRatio`-i kaudu tagasi andma täpselt 60 (edasi-tagasi test –
+kümnendmurruga mõõdu juures ei ole korrutamine ja jagamine teineteise
+täpsed pöördtehted). Sisend 0 või −1 → viga.
 
 ## Sammud
 
@@ -96,10 +106,11 @@ Eesmärk õpilase keeles: „Oskan öelda, mis liiki valgusallikaga on tegu."
   Päike, tähed, küünlaleek, hõõglamp, tuli. Mida kuumem, seda sinakam
   valgus. **Külmad** allikad kiirgavad ilma kuumenemata (luminestsents):
   LED, päevavalguslamp, telefoniekraan, jaaniuss.
-- **Suuruse järgi:** loeb näiv suurus, mitte päris mõõde. Kui allikas
-  paistab meile kuni 1° suurusena, nimetame teda **punktvalgusallikaks**;
-  muidu on ta laiendatud allikas. Sama lamp on kaugelt punktallikas ja
-  lähedalt laiendatud allikas.
+- **Suuruse järgi:** loeb see, kui väike on allikas VÕRRELDES kaugusega,
+  mitte tema päris mõõt. Jaga kaugus allika mõõtmega: kui vastus on
+  vähemalt **60**, nimetame allikat **punktvalgusallikaks**; kui vähem, on
+  ta laiendatud allikas. Sama lamp on kaugelt punktallikas ja lähedalt
+  laiendatud allikas.
 - **Päike kui elu võimaldaja** (2 lauset): Päikeselt jõuab Maale
   peamiselt lühilaineline kiirgus (sh nähtav valgus ja ultraviolett),
   Maalt lahkub tagasi pikalaineline soojuskiirgus. See sisse-välja
@@ -111,44 +122,55 @@ Eesmärk õpilase keeles: „Oskan öelda, mis liiki valgusallikaga on tegu."
 on?" (a) punktvalgusallikas (b) **laiendatud allikas** – nii arvab enamik
 (c) ei kumbki + „Miks sa nii arvad?" (vabatekst).
 
-Õige on (a): Päike on tohutu, aga ta on ka tohutult kaugel – näiv suurus
-on ainult 0,53°. Vastust EI avaldata enne sammu 4.
+Õige on (a): Päike on tohutu, aga ta on ka tohutult kaugel – kaugus on
+tema läbimõõdust 108 korda suurem. Vastust EI avaldata enne sammu 4.
 
 ### 4. explore – simulatsioon
 
-SVG: vasakul valgusallikas (kollane ketas), paremal silm/vaatluskoht,
-nende vahel kaugusnool. Kaks liugurit: **allika mõõde** 0,005–2 m
-(logaritmiline) ja **kaugus** 0,5–80 m (ülemine ots peab ulatuma üle 69 m,
-muidu ei ole ülesanne 1 lahendatav). Suurelt kuvatakse näiv suurus
-kraadides ja silt „punktvalgusallikas" / „laiendatud allikas" (silt ei ole
-ainus märk – kõrval on ka sõnaline lause, reegel: värv ei kanna infot
-üksi). Nupurida päris näidetega: LED · lambipirn · päevavalgustoru ·
-aken · Päike (Päike lülitab skaala kosmoseskaalale ja näitab 0,53°).
+SVG: vasakul valgusallikas, paremal silm/vaatluskoht, nende vahel
+kaugusnool ja kiirte kimp allika servadest silma. **Joonisel on nurk päris,
+kaugus mitte:** allikas seisab alati sama kaugel ekraani servast ja päris
+kaugus on kirjas arvuna (0,5 m ja 150 000 000 km ei mahu ühele skaalale).
+Kaks liugurit: **allika mõõde** 0,005–2 m (logaritmiline) ja **kaugus**
+0,5–80 m (ülemine ots peab ulatuma üle 72 m, muidu ei ole ülesanne 1
+lahendatav). Suurelt kuvatakse **suhe** („200 korda") ja silt
+„punktvalgusallikas" / „laiendatud allikas" (silt ei ole ainus märk –
+kõrval on ka sõnaline lause, reegel: värv ei kanna infot üksi); nurkmõõde
+kraadides on väikeses kirjas lisanäiduna. Nupurida päris näidetega: LED ·
+lambipirn · päevavalgustoru · aken · Päike (Päike lülitab skaala
+kosmoseskaalale ja näitab 108 korda).
+
+Tolerantsid: suhteküsimused 5%; explore-2 (sildi vahetumise kaugus) aga
+ABSOLUUTNE ±1 m, sest 5% ulatuks kaugustesse, kus silt veel ei ole
+vahetunud (liuguri samm on 0,5 m).
+
+Suhteküsimuste ühik on `korda` (suhe ise on ühikuta arv, aga õpilane
+kirjutab sõna loomulikult kaasa): kõlbab nii „100" kui ka „100 korda",
+„100 m" annab selge veateate. Kehtib küsimustele explore-3, practice-1,
+practice-3 ja exit-2; explore-2 küsib kaugust ja tema ühik on `m`.
 
 Ülesanded:
 
 1. „Pane päevavalgustoru (1,2 m) 2 m kaugusele. Kas ta on punktallikas?"
-   (ei, 33°) „Kaugenda, kuni silt muutub. Mis kaugusel see juhtus?"
-   (≈ 69 m)
-2. „Vali LED (5 mm) ja too ta 0,5 m kaugusele. Kas ta jääb punktallikaks?"
-   (jääb: 0,57°)
+   (ei, ainult 1,7 korda) „Kaugenda, kuni silt muutub. Mis kaugusel see
+   juhtus?" (72 m)
+2. „Vali LED (5 mm) ja too ta 0,5 m kaugusele. Mitu korda on kaugus suurem
+   kui LED-i mõõde?" (100)
 3. „Vajuta nupule „Päike". Võrdle oma ennustusega sammust 3."
 
 ### 5. practice – harjutamine
 
 1. **Näidis (lahendatud):** LED läbimõõt 5 mm = 0,005 m, kaugus 1 m.
-   Näiv suurus = 2 · atan(0,005 / (2 · 1)) = 0,29° → kuni 1° →
-   punktvalgusallikas.
-2. **Osaline:** Lambipirn läbimõõt 0,08 m, kaugus 4 m. Näiv suurus =
-   2 · atan(0,08 / (2 · ___)) = ___° (vastus 1,15°; tolerants 5%;
-   järeldus: laiendatud allikas).
+   1 / 0,005 = 200 → vähemalt 60 → punktvalgusallikas.
+2. **Osaline:** Lambipirn läbimõõt 0,08 m, kaugus 4 m.
+   4 / 0,08 = ___ (vastus 50; tolerants 5%; järeldus: laiendatud allikas).
 3. **Iseseisev (valik, mitu õiget):** Millised on külmad valgusallikad?
    **LED-lamp**, küünlaleek, **telefoniekraan**, hõõglamp, **jaaniuss**,
    Päike. `shuffle: true`.
 4. **Iseseisev (arv):** Päikese läbimõõt on 1 392 000 km ja kaugus Maast
-   150 000 000 km. Kui suur on tema näiv suurus? (0,53°; tolerants 5%;
-   vihje 1: „mõlemad arvud on samades ühikutes – teisendama ei pea";
-   vihje 2: „2 · atan(läbimõõt / (2 · kaugus))")
+   150 000 000 km. Mitu korda on kaugus suurem kui Päike ise? (108;
+   tolerants 5%; vihje 1: „mõlemad arvud on samades ühikutes – teisendama
+   ei pea"; vihje 2: „jaga kaugus läbimõõduga")
 5. **Ülekanne (valik):** Selge ilmaga on inimese vari maapinnal terava
    servaga, pilvise ilmaga varju peaaegu ei olegi. Miks? (a) **pilvine
    taevas on hiiglaslik laiendatud allikas, Päike aga punktallikas**
@@ -156,10 +178,11 @@ aken · Päike (Päike lülitab skaala kosmoseskaalale ja näitab 0,53°).
 
 ### 6. exit – väljumispilet
 
-1. Punktvalgusallikas on allikas, mis… (a) **paistab vaatluskohast
-   kuni 1° suurusena** (b) on väiksem kui 1 cm (c) annab ainult ühe kiire
-2. Arvuta: lambipirn läbimõõduga 0,06 m tänavalambis 12 m kõrgusel. Näiv
-   suurus ___° (0,29; tolerants 5%) – ja mis liiki allikaga on tegu?
+1. Punktvalgusallikas on allikas, mis… (a) **on vaatluskohast vähemalt
+   60 korda kaugemal, kui on tema enda mõõde** (b) on väiksem kui 1 cm
+   (c) annab ainult ühe kiire
+2. Arvuta: lambipirn läbimõõduga 0,06 m tänavalambis 12 m kõrgusel. Mitu
+   korda on kaugus suurem kui pirn? (200; tolerants 5%)
 3. „Nimeta üks valgusallikas oma kodust ja ütle, kas ta on soojuslik või
    külm." (vabatekst, õpetajale nähtav)
 
@@ -197,7 +220,7 @@ aken · Päike (Päike lülitab skaala kosmoseskaalale ja näitab 0,53°).
 | id | tüüp | küsimus | vastus |
 |---|---|---|---|
 | rc-1 | concept | Mis on valgusallikas? | Keha, mis ise kiirgab valgust (Kuu ja helkur ei ole – nad peegeldavad) |
-| rc-2 | concept | Millal nimetatakse allikat punktvalgusallikaks? | Kui tema mõõtmed on väikesed võrreldes kaugusega – näiv suurus kuni 1° |
+| rc-2 | concept | Millal nimetatakse allikat punktvalgusallikaks? | Kui tema mõõtmed on väikesed võrreldes kaugusega – kaugus on vähemalt 60 korda suurem kui allika mõõde |
 | rc-3 | concept | Too näide soojuslikust ja külmast valgusallikast | Soojuslik: Päike, küünal, hõõglamp. Külm: LED, päevavalguslamp, jaaniuss |
-| rc-4 | calc | LED läbimõõduga 5 mm on 1 m kaugusel. Näiv suurus ja liik? | 0,29° – punktvalgusallikas |
-| rc-5 | transfer | Päike on hiiglaslik. Miks ta on meie jaoks ikkagi punktvalgusallikas? | Ta on väga kaugel: näiv suurus on ainult 0,53°, alla 1° piiri (piir on kaasav: ka täpselt 1° loeb punktallikaks) |
+| rc-4 | calc | LED läbimõõduga 5 mm on 1 m kaugusel. Mitu korda on kaugus suurem ja mis liiki allikaga on tegu? | 1 / 0,005 = 200 korda – punktvalgusallikas |
+| rc-5 | transfer | Päike on hiiglaslik. Miks ta on meie jaoks ikkagi punktvalgusallikas? | Ta on väga kaugel: kaugus on 108 korda suurem kui tema läbimõõt, üle 60 piiri (piir on kaasav: ka täpselt 60 loeb punktallikaks) |

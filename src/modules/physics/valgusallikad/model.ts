@@ -13,8 +13,9 @@
  * `isPointSource(sizeM)`, on see märk, et väärarusaam `suurus-ilma-kauguseta`
  * on jõudnud koodi, mitte et mudel on puudulik.
  *
- * SI-ühikud sees: mõõtmed ja kaugused meetrites, nurgad kraadides (nurk on
- * see, mida õpilane ekraanil näeb ja ülesandes kirja paneb).
+ * SI-ühikud sees: mõõtmed ja kaugused meetrites. Õpilase suurus on ÜHIKUTA
+ * suhe `kaugus / mõõde` – nurkmõõde kraadides on ainult simulatsiooni lisanäit
+ * ja joonise sisend, ülesannetes teda ei ole (vt `apparentSizeDeg`).
  *
  * Vigane sisend VISKAB vea, ta ei „paranda" ennast vaikselt – vaikne parandus
  * peidaks ära vea kutsuvas koodis (nt liuguri vale alampiir) ja õpilane näeks
@@ -22,33 +23,43 @@
  */
 
 /**
- * Suurim näiv nurkmõõde (kraadides), mille juures allikas veel loeb
- * punktvalgusallikaks. **Piir on kaasav:** täpselt 1° on veel punktallikas.
+ * Vähim suhe (kaugus jagatud allika mõõduga), mille juures allikas loeb
+ * punktvalgusallikaks. **Piir on kaasav:** täpselt 60 korda on veel
+ * punktallikas.
  *
- * See on projekti KOKKULEPE, mitte loodusseadus, ja õpilasele öeldakse seda
- * ka nii (teooriasamm: „kui allikas paistab meile kuni 1° suurusena"). Sellest
- * väiksema allika varjul on serv nii terav, et poolvarju praktikas ei märka.
+ * See on mooduli PÕHISUURUS ja ta on meelega jagamistehe, mitte nurk: 8. klass
+ * arkustangensit ei tunne ja põhivara ütleb sama asja täpselt nii – „mõõtmed on
+ * väikesed VÕRRELDES KAUGUSEGA vaatluskohast". Õpilane arvutab `kaugus / mõõde`
+ * ja võrdleb 60-ga; rohkem matemaatikat siin moodulis ei ole.
+ *
+ * 60 on projekti KOKKULEPE, mitte loodusseadus. Ta vastab umbes 0,95°
+ * nurkmõõdule (`apparentSizeDeg`) – sellest väiksema allika varjul on serv nii
+ * terav, et poolvarju praktikas ei märka.
  *
  * Konstant elab siin ühes kohas, mitte laiali sisufailides: piiri muutmine
  * muudaks korraga kõigi ülesannete õigeid vastuseid ja seda ei tohi saada teha
  * kogemata (moodulilepingu versioonireeglite järgi oleks see major-muudatus).
  */
-export const POINT_SOURCE_MAX_DEG = 1;
+export const POINT_SOURCE_MIN_RATIO = 60;
 
 /**
- * Ujukomanumbri müra kraadides, mille võrra tohib piir „järele anda".
+ * Suhteline ujukomamüra, mille võrra tohib piir „järele anda".
  *
  * Miks üldse: piirjuht on see, kus kaugus on täpselt `pointSourceDistance`.
- * Seal käib arv teekonna kraadid → radiaanid → tangens → arkustangens →
- * kraadid ja tuleb tagasi kujul 1,0000000000000002 – matemaatiliselt täpselt
- * 1°, aga `<= 1` järgi juba laiendatud allikas. Ilma selle lubatud veata
- * sõltuks õpilase ekraanil olev silt viimasest bitist.
+ * Kümnendmurruga mõõdu juures ei ole korrutamine ja jagamine teineteise
+ * täpsed pöördtehted – mõõde 0,06 m (väljumispileti tänavalamp!) annab
+ * `(0,06 · 60) / 0,06` = 59,999999999999993 ehk `>= 60` järgi juba laiendatud
+ * allikas. Ilma selle lubatud veata sõltuks õpilase ekraanil olev silt
+ * viimasest bitist just seal, kus ülesanne teda vaatama paneb.
  *
- * 1e-9° on umbes miljard korda väiksem kui see, mida ekraanil üldse näidatakse
- * (0,01°), seega ta ei nihuta ühegi ülesande vastust – ta ainult ei lase
- * kokkuleppelisel piiril ujukomavea taha ära libiseda.
+ * Suurus on valitud MÕÕDETUD vea järgi, mitte lakke: ülalkirjeldatud viga on
+ * umbes 2 ulp (~1e-16 suhtena), seega 8 · `Number.EPSILON` (~1,8e-15) katab ta
+ * varuga ära ja jääb ikka kümme suurusjärku väiksemaks kui miski, mida ekraanil
+ * näidatakse. Varasem 1e-9 oli tarbetult lai – siis oleks ka päris (kui ka
+ * mõttetult napp) 59,99999997 lugenud punktallikaks (CodeRabbiti leid
+ * 2026-08-10).
  */
-const ANGLE_EPSILON_DEG = 1e-9;
+const RATIO_EPSILON = 8 * Number.EPSILON;
 
 /**
  * Simulatsiooni ja ülesannete päris näited (meetrites).
@@ -109,16 +120,53 @@ function assertFiniteResult(value: number, what: string): void {
   }
 }
 
-function toRadians(angleDeg: number): number {
-  return (angleDeg * Math.PI) / 180;
-}
-
 function toDegrees(angleRad: number): number {
   return (angleRad * 180) / Math.PI;
 }
 
 /**
+ * Mitu korda on kaugus suurem kui allika mõõde – mooduli PÕHISUURUS.
+ *
+ * `L / d`, kus `d` on allika mõõde ja `L` kaugus. Üks jagamine, ühikuta arv:
+ * meetrid taanduvad välja, seega vastus on sama, kas arvutada meetrites või
+ * kilomeetrites (just seda Päikese ülesanne kasutab).
+ *
+ * @param sizeM allika mõõde ehk läbimõõt (m)
+ * @param distanceM kaugus vaatluskohast (m)
+ */
+export function distanceToSizeRatio(sizeM: number, distanceM: number): number {
+  assertPositive(sizeM, "Allika mõõde");
+  assertPositive(distanceM, "Kaugus");
+  const ratio = distanceM / sizeM;
+  assertFiniteResult(ratio, "Suhe");
+  return ratio;
+}
+
+/**
+ * Suhe → allika liik. Piir on kaasav (vt `POINT_SOURCE_MIN_RATIO`): täpselt
+ * 60 korda on punktallikas.
+ *
+ * Suhe tuleb `distanceToSizeRatio`-st, mitte mõõtmest ja kaugusest – nii on
+ * „kumb liik" otsus koodis ühes kohas ja simulatsiooni silt ei saa ülesannete
+ * vastustest lahku minna.
+ */
+export function classifyByRatio(ratio: number): SourceSize {
+  // Null on siin LUBATUD, erinevalt mõõtmest ja kaugusest: hiiglaslik allikas
+  // päris lähedal annab ujukoma alla kaduva suhte ja 0 on ilmselgelt
+  // laiendatud allikas. Vea viskamine tähendaks, et mudel kukub oma enda
+  // väljundi peale.
+  assertNonNegative(ratio, "Suhe");
+  return ratio >= POINT_SOURCE_MIN_RATIO * (1 - RATIO_EPSILON) ? "point" : "extended";
+}
+
+/**
  * Näiv nurkmõõde: kui suurena allikas vaatluskohast paistab (kraadides).
+ *
+ * **Lisanäit, mitte reegel.** Liigi otsustab `classifyByRatio`; see funktsioon
+ * on olemas kahel põhjusel: simulatsioon joonistab tema järgi kiirte kimbu ja
+ * näitab kraade väikeses kirjas neile, keda huvitab, kuidas asja päris
+ * füüsikas mõõdetakse. Ükski ülesanne kraade ei küsi – arkustangens ei ole
+ * 8. klassi matemaatika.
  *
  * `2 · atan(d / (2 · L))`, kus `d` on allika mõõde ja `L` kaugus. Kaks korda
  * pool nurka: allika keskkoht on vaatesuunas, servad selle kummalgi pool.
@@ -141,38 +189,19 @@ export function apparentSizeDeg(sizeM: number, distanceM: number): number {
 }
 
 /**
- * Näiv nurkmõõde → allika liik.
- *
- * Piir on kaasav (vt `POINT_SOURCE_MAX_DEG`): täpselt 1° on punktallikas.
- * Nurk tuleb `apparentSizeDeg`-ist, mitte mõõtmest ja kaugusest – nii on
- * „kumb liik" otsus koodis ühes kohas ja simulatsiooni silt ei saa
- * ülesannete vastustest lahku minna.
- */
-export function classifyBySize(angleDeg: number): SourceSize {
-  // Null on siin LUBATUD, erinevalt mõõtmest ja kaugusest: `apparentSizeDeg`
-  // oskab ise nulli tagastada (pisike allikas väga kaugel – suhe kaob ujukoma
-  // alla) ja 0° on ilmselgelt punktallikas. Vea viskamine tähendaks, et mudel
-  // kukub oma enda väljundi peale (CodeRabbiti leid 2026-08-10).
-  assertNonNegative(angleDeg, "Näiv nurkmõõde");
-  return angleDeg <= POINT_SOURCE_MAX_DEG + ANGLE_EPSILON_DEG
-    ? "point"
-    : "extended";
-}
-
-/**
  * Vähim kaugus, millelt antud mõõtmega allikas loeb punktallikaks (m).
  *
- * Sama seos tagurpidi: `L = d / (2 · tan(piir / 2))`. Ta on mudelis, sest
- * simulatsiooni ülesanne 1 küsib täpselt seda arvu („kaugenda, kuni silt
- * muutub – mis kaugusel see juhtus?", päevavalgustoru puhul ≈ 69 m). Ilma
- * selleta arvutaks vastuse kas sisufail või õpetaja peast, mitte mudel.
+ * Sama seos tagurpidi: `L = d · piir`. Ta on mudelis, sest simulatsiooni
+ * ülesanne 1 küsib täpselt seda arvu („kaugenda, kuni silt muutub – mis
+ * kaugusel see juhtus?", päevavalgustoru puhul 72 m). Ilma selleta arvutaks
+ * vastuse kas sisufail või õpetaja peast, mitte mudel.
  *
- * Piir tuleb `POINT_SOURCE_MAX_DEG`-ist, mitte eraldi kirjutatud 0,5°-st –
+ * Piir tuleb `POINT_SOURCE_MIN_RATIO`-st, mitte eraldi kirjutatud 60-st –
  * muidu jääks kokkuleppe muutmisel pool koodi vanale piirile.
  */
 export function pointSourceDistance(sizeM: number): number {
   assertPositive(sizeM, "Allika mõõde");
-  const distanceM = sizeM / (2 * Math.tan(toRadians(POINT_SOURCE_MAX_DEG / 2)));
+  const distanceM = sizeM * POINT_SOURCE_MIN_RATIO;
   assertFiniteResult(distanceM, "Kaugus");
   return distanceM;
 }

@@ -109,11 +109,15 @@ export const teacher = {
         "Punktallikas kiirgab kiiri KÕIKIDESSE suundadesse – joonisele joonistatakse neist ainult üks või kaks, sest kõiki ei jõuaks. „Punkt“ käib allika näiva SUURUSE, mitte kiirte arvu kohta.",
     },
     {
-      id: "poolnurk-unustatud",
+      // Asendas väärarusaama `poolnurk-unustatud` (arkustangensi poolitamine):
+      // moodul ei küsi enam nurka, vaid suhet, ja tüüpiline viga on nüüd see,
+      // et jagatakse valetpidi. Silt jäi õpetajajuhendisse, sest õpetaja tunneb
+      // selle vastuste seast ära – ülesannetes lõksu ei ole.
+      id: "suhe-tagurpidi",
       description:
-        "Õpilane arvutab atan(d / (2 · L)) ja unustab tulemuse kahega korrutada – vastuseks tuleb pool õigest nurgast.",
+        "Õpilane jagab mõõtme kaugusega, mitte kauguse mõõtmega – vastuseks tuleb 0,005 ja ta järeldab, et allikas on „väga väike ehk punktallikas“.",
       remedy:
-        "Joonista kolmnurk: allika keskkoht on vaatesuunas ja servad jäävad kummalegi poole. Arkustangens annab ainult ühe poole nurgast, seega tuleb see kahega korrutada.",
+        "Küsi, mida arv tähendab: „mitu korda mahub allikas kauguse sisse?“ Suur arv tähendab, et allikas on kauguse kõrval tilluke. Kui vastuseks tuleb nullilähedane murd, on jagamine tagurpidi.",
     },
   ] satisfies Misconception[],
 };

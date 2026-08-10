@@ -2,8 +2,8 @@ import { defineActivities } from "../../../engine/contract";
 import type { ReviewCard, Step } from "../../../engine/contract";
 import {
   EXAMPLE_SOURCES,
-  POINT_SOURCE_MAX_DEG,
-  apparentSizeDeg,
+  POINT_SOURCE_MIN_RATIO,
+  distanceToSizeRatio,
   pointSourceDistance,
 } from "./model";
 
@@ -11,35 +11,41 @@ import {
  * Sammud ja kordamiskaardid (docs/MOODULILEPING.md,
  * sisu/MOODUL-valgusallikad.md).
  *
+ * Mooduli suurus on SUHE `kaugus / mõõde`, mitte nurkmõõde: 8. klass
+ * arkustangensit ei tunne ja põhivara ütleb sama asja täpselt nii – „mõõtmed on
+ * väikesed võrreldes kaugusega". Õpilane teeb siin ainult jagamistehteid ja
+ * võrdleb tulemust 60-ga. Kraadid on alles ainult simulatsiooni väikeses
+ * lisanäidus; ükski küsimus neid ei küsi (seda valvab test).
+ *
  * Kõik arvulised vastused tulevad MUDELIST, mitte käsitsi kirjutatud arvudest
  * (CLAUDE.md reegel 1). Nii ei saa ülesande vastus ja simulatsiooni näit
- * kunagi lahku minna – ka siis mitte, kui piir `POINT_SOURCE_MAX_DEG` kunagi
+ * kunagi lahku minna – ka siis mitte, kui piir `POINT_SOURCE_MIN_RATIO` kunagi
  * muutuks. Et see ei jääks iseennast kontrollivaks ringiks, loeb
  * tests/valgusallikad.model.test.ts need arvud üle SPETSIFIKATSIOONI tabeli
- * järgi (0,29° · 1,15° · 0,53° · 68,8 m): vale mõõde või kaugus siin failis
- * teeb testi punaseks, mitte ei jõua tundi.
+ * järgi (200 · 100 · 50 · 108 · 72 m): vale mõõde või kaugus siin failis teeb
+ * testi punaseks, mitte ei jõua tundi.
  */
 
 /** Harjutuse näidis ja kordamiskaart rc-4: LED 5 mm, 1 m kauguselt. */
-const LED_1M_DEG = apparentSizeDeg(
+const LED_1M_RATIO = distanceToSizeRatio(
   EXAMPLE_SOURCES.led.sizeM,
   EXAMPLE_SOURCES.led.distanceM,
 );
 
 /** Harjutus 2: lambipirn 0,08 m, 4 m kauguselt – esimene LAIENDATUD allikas. */
-const BULB_4M_DEG = apparentSizeDeg(
+const BULB_4M_RATIO = distanceToSizeRatio(
   EXAMPLE_SOURCES.lambipirn.sizeM,
   EXAMPLE_SOURCES.lambipirn.distanceM,
 );
 
 /**
  * Simulatsiooni ülesanne 1: päevavalgustoru 1,2 m juures vähim kaugus,
- * millelt ta veel punktallikaks loeb (≈ 69 m).
+ * millelt ta veel punktallikaks loeb (72 m).
  *
- * Toru näivat suurust 2 m kauguselt (33,4°) siin konstandina ei ole: seda
- * arvu õpilane ei kirjuta, ta loeb selle ekraanilt. Et ülesanne oleks üldse
- * lahendatav, peab toru 2 m kauguselt olema LAIENDATUD allikas – seda
- * kontrollib mudeli test `EXAMPLE_SOURCES` tabeli pealt.
+ * Toru suhet 2 m kauguselt (1,7) siin konstandina ei ole: seda arvu õpilane ei
+ * kirjuta, ta loeb selle ekraanilt. Et ülesanne oleks üldse lahendatav, peab
+ * toru 2 m kauguselt olema LAIENDATUD allikas – seda kontrollib mudeli test
+ * `EXAMPLE_SOURCES` tabeli pealt.
  */
 const TUBE_POINT_DISTANCE_M = pointSourceDistance(
   EXAMPLE_SOURCES.paevavalgustoru.sizeM,
@@ -53,24 +59,29 @@ const TUBE_POINT_DISTANCE_M = pointSourceDistance(
  * sest „5 mm LED" peab olema kõikjal sama keha.
  */
 const LED_CLOSE_DISTANCE_M = 0.5;
-const LED_CLOSE_DEG = apparentSizeDeg(
+const LED_CLOSE_RATIO = distanceToSizeRatio(
   EXAMPLE_SOURCES.led.sizeM,
   LED_CLOSE_DISTANCE_M,
 );
 
-/** Ennustuse ja harjutuse 4 tuum: Päike on 0,53° – alla piiri. */
-const SUN_DEG = apparentSizeDeg(
+/** Ennustuse ja harjutuse 4 tuum: Päike on 108 korda – üle piiri. */
+const SUN_RATIO = distanceToSizeRatio(
   EXAMPLE_SOURCES.paike.sizeM,
   EXAMPLE_SOURCES.paike.distanceM,
 );
 
 /** Väljumispilet: tänavalambi pirn 0,06 m, 12 m kõrgusel. */
 const EXIT_LAMP = { sizeM: 0.06, distanceM: 12 };
-const EXIT_LAMP_DEG = apparentSizeDeg(EXIT_LAMP.sizeM, EXIT_LAMP.distanceM);
+const EXIT_LAMP_RATIO = distanceToSizeRatio(EXIT_LAMP.sizeM, EXIT_LAMP.distanceM);
 
-/** Eesti kombe järgi koma, mitte punkt: „0,29", mitte „0.29". */
+/** Eesti kombe järgi koma, mitte punkt: „1,7", mitte „1.7". */
 function comma(value: number, decimals: number): string {
   return value.toFixed(decimals).replace(".", ",");
+}
+
+/** Suhe tekstina: suured arvud täisarvuna („200"), väikesed ühe kohaga („1,7"). */
+function ratioText(value: number): string {
+  return comma(value, value < 10 ? 1 : 0);
 }
 
 const steps: Step[] = [
@@ -94,7 +105,7 @@ const steps: Step[] = [
     body: [
       "Valgusallikas on keha, mis ise kiirgab valgust. Kuu, helkur ja peegel EI ole valgusallikad – nad peegeldavad Päikese või lambi valgust.",
       "Spektraalse koostise järgi: soojuslikud allikad kiirgavad valgust sellepärast, et nad on kuumad (üle umbes 600 °C) – Päike, tähed, küünlaleek, hõõglamp, tuli. Mida kuumem on keha, seda sinakam on tema valgus. Külmad allikad kiirgavad ilma hõõguma minemata: LED, päevavalguslamp, telefoniekraan, jaaniuss. „Külm“ ei tähenda siin valguse värvust ega seda, et lamp üldse ei soojene – see ütleb, KUIDAS valgus tekib.",
-      `Suuruse järgi: loeb näiv suurus, mitte päris mõõde. Kui allikas paistab meile kuni ${POINT_SOURCE_MAX_DEG}° suurusena, nimetame teda punktvalgusallikaks; muidu on ta laiendatud allikas. Sama lamp on kaugelt punktallikas ja lähedalt laiendatud allikas – liik sõltub alati sellest, kust me vaatame.`,
+      `Suuruse järgi: loeb see, kui väike on allikas VÕRRELDES kaugusega, mitte tema päris mõõt. Jaga kaugus allika mõõtmega. Kui vastus on vähemalt ${POINT_SOURCE_MIN_RATIO}, nimetame allikat punktvalgusallikaks; kui vähem, on ta laiendatud allikas. Sama lamp on kaugelt punktallikas ja lähedalt laiendatud allikas – liik sõltub alati sellest, kust me vaatame.`,
       "Päike kui elu võimaldaja: Päikeselt jõuab Maale peamiselt lühilaineline kiirgus (sh nähtav valgus ja ultraviolett), Maalt läheb tagasi pikalaineline soojuskiirgus. See sisse-välja tasakaal hoiab Maa temperatuuri elule sobivana.",
     ],
   },
@@ -139,7 +150,7 @@ const steps: Step[] = [
     id: "explore-1",
     title: "Katseta simulatsiooniga",
     body: [
-      "Liuguritega saad muuta allika mõõdet ja kaugust vaatluskohast. Jälgi, kuidas näiv suurus kraadides muutub – ja millal silt „punktvalgusallikas“ vahetub „laiendatud allika“ vastu.",
+      `Liuguritega saad muuta allika mõõdet ja kaugust vaatluskohast. Näidik ütleb, mitu korda on kaugus suurem kui allika mõõde – jälgi, millal see arv jõuab ${POINT_SOURCE_MIN_RATIO}-ni ja silt „laiendatud allikas“ vahetub „punktvalgusallika“ vastu.`,
     ],
     questions: [
       {
@@ -151,7 +162,7 @@ const steps: Step[] = [
         options: [
           {
             id: "ei",
-            text: `Ei – ta paistab palju suuremana kui ${POINT_SOURCE_MAX_DEG}°`,
+            text: `Ei – kaugus on ainult umbes 2 korda suurem kui toru ise, aga vaja oleks ${POINT_SOURCE_MIN_RATIO}`,
             correct: true,
           },
           {
@@ -177,25 +188,39 @@ const steps: Step[] = [
         prompt:
           "Jäta toru mõõt samaks ja kaugenda, kuni silt muutub. Mis kaugusel see juhtus?",
         hints: [
-          "Vaata näivat suurust kraadides – silt vahetub täpselt siis, kui see langeb piirini.",
+          `Vaata näidikut: silt vahetub täpselt siis, kui kaugus saab ${POINT_SOURCE_MIN_RATIO} korda suuremaks kui toru mõõt.`,
         ],
         unit: "m",
-        // Liuguriga otsitud kaugus, mitte peast arvutatud arv: 5% on ligikaudu
-        // 3,4 m ja katab liuguri astumise ka jämedama sammuga.
-        tolerance: { mode: "percent", value: 5 },
+        // Liuguriga otsitud kaugus, mitte peast arvutatud arv – aga lubatud viga
+        // on siin ABSOLUUTNE ja kitsas, erinevalt mooduli teistest küsimustest.
+        // 5% oleks 68,4–75,6 m ja võtaks õigeks ka arvud, mille juures ekraanil
+        // seisab veel „laiendatud allikas" (Codexi leid 2026-08-10) – just selle
+        // sildi vahetumist see küsimus aga otsida palub. Liuguri samm on 0,5 m,
+        // seega ±1 m katab kaks sammu mõlemale poole ja rohkem ei ole vaja.
+        tolerance: { mode: "absolute", value: 1 },
         answer: TUBE_POINT_DISTANCE_M,
       },
       {
-        // Ülesanne 2: pisike allikas väga lähedal on ikka punktallikas –
-        // vastupidine suund samale mõttele.
+        // Ülesanne 2: pisike allikas päris lähedal on ikka punktallikas –
+        // vastupidine suund samale mõttele. Ühikut ei ole: suhe on ühikuta arv
+        // (meetrid taanduvad jagamisel välja).
         kind: "numeric",
         id: "explore-3",
         prompt:
-          "Vali LED (5 mm) ja too ta 0,5 m kaugusele. Kui suur on tema näiv suurus?",
-        hints: ["Näidik ekraani ülaosas näitab näivat suurust kraadides."],
-        unit: "°",
+          "Vali LED (5 mm) ja too ta 0,5 m kaugusele. Mitu korda on kaugus suurem kui LED-i mõõde?",
+        hints: [
+          "Näidik ekraani ülaosas ütleb selle arvu. Sama saad ka ise: jaga 0,5 m LED-i mõõtmega 0,005 m.",
+        ],
+        // „korda" ei ole SI-ühik, vaid siin ühiku KOHAL: suhe on ühikuta arv.
+        // Ilma selle väljata luges checker vastuse „100 korda" valeks (Codexi
+        // leid 2026-08-10) – õpilane kirjutab loomulikult sõna kaasa ja
+        // sisuliselt õige vastus oleks salvestunud valena, sealtkaudu ka
+        // õpetaja koondvaatesse. Nüüd kõlbavad mõlemad, „100" ja „100 korda",
+        // ja „100 m" annab selge veateate. Sama väli on kõigil selle mooduli
+        // suhteküsimustel (practice-1, practice-3, exit-2).
+        unit: "korda",
         tolerance: { mode: "percent", value: 5 },
-        answer: LED_CLOSE_DEG,
+        answer: LED_CLOSE_RATIO,
       },
       {
         // Ülesanne 3: ennustuse kontroll. Vastust ei hinnata – õpilane paneb
@@ -220,35 +245,29 @@ const steps: Step[] = [
     title: "Proovi ise järele",
     // Näidis on LAHENDATUD ülesanne, mitte küsimus (docs/MOODULILEPING.md).
     worked: {
-      prompt: "LED-i läbimõõt on 5 mm ja sa vaatad teda 1 m kauguselt. Kui suur on tema näiv suurus ja mis liiki allikaga on tegu?",
+      prompt:
+        "LED-i läbimõõt on 5 mm ja sa vaatad teda 1 m kauguselt. Mitu korda on kaugus suurem kui LED ise ja mis liiki allikaga on tegu?",
       solution: [
         "Teisenda mõõt meetriteks: 5 mm = 0,005 m.",
-        `Näiv suurus = 2 · atan(0,005 / (2 · 1)) = ${comma(LED_1M_DEG, 2)}°.`,
-        `${comma(LED_1M_DEG, 2)}° on väiksem kui ${POINT_SOURCE_MAX_DEG}°, seega on tegu punktvalgusallikaga.`,
+        `Jaga kaugus mõõtmega: 1 / 0,005 = ${ratioText(LED_1M_RATIO)}.`,
+        `${ratioText(LED_1M_RATIO)} on suurem kui ${POINT_SOURCE_MIN_RATIO}, seega on tegu punktvalgusallikaga.`,
       ],
-      answer: `${comma(LED_1M_DEG, 2)}° – punktvalgusallikas`,
+      answer: `${ratioText(LED_1M_RATIO)} korda – punktvalgusallikas`,
     },
     questions: [
       {
-        // Osaline: valem on osaliselt ees, üks arv ja vastus tulevad ise.
+        // Osaline: tehe on ees, vastus tuleb ise.
         kind: "numeric",
         id: "practice-1",
         prompt:
-          "Lambipirni läbimõõt on 0,08 m ja sa vaatad teda 4 m kauguselt. Näiv suurus = 2 · atan(0,08 / (2 · ___)) = ___°",
+          "Lambipirni läbimõõt on 0,08 m ja sa vaatad teda 4 m kauguselt. Mitu korda on kaugus suurem kui pirn? 4 / 0,08 = ___",
         hints: [
-          "Puuduv arv on kaugus meetrites.",
-          // Sagedasim viga on see, et arkustangensi tulemus jääb kahega
-          // korrutamata. Siin hoiatab selle eest vihje, mitte lõks: lõksu arv
-          // (pool õigest vastusest) tähendaks, et sisufail arvutab ise ühe
-          // füüsikalise suuruse välja, ja füüsika elab ainult model.ts-is
-          // (CLAUDE.md reegel 1, CodeRabbiti leid 2026-08-10). Väärarusaam
-          // `poolnurk-unustatud` jääb õpetajajuhendisse alles – õpetaja
-          // tunneb selle vastuste seast ise ära.
-          "Ära unusta lõpuks kahega korrutada – arkustangens annab ainult poole nurgast.",
+          "Mõlemad arvud on juba meetrites – teisendama ei pea.",
+          `Kui vastus tuleb vähemalt ${POINT_SOURCE_MIN_RATIO}, on tegu punktallikaga. Siin ta nii suur ei ole.`,
         ],
-        unit: "°",
+        unit: "korda",
         tolerance: { mode: "percent", value: 5 },
-        answer: BULB_4M_DEG,
+        answer: BULB_4M_RATIO,
       },
       {
         // Iseseisev, mitu õiget (spets p 3). Segamine on vaikimisi sees.
@@ -286,14 +305,14 @@ const steps: Step[] = [
         kind: "numeric",
         id: "practice-3",
         prompt:
-          "Päikese läbimõõt on 1 392 000 km ja tema kaugus Maast 150 000 000 km. Kui suur on tema näiv suurus?",
+          "Päikese läbimõõt on 1 392 000 km ja tema kaugus Maast 150 000 000 km. Mitu korda on kaugus suurem kui Päike ise?",
         hints: [
           "Mõlemad arvud on samades ühikutes – teisendama ei pea.",
-          "Näiv suurus = 2 · atan(läbimõõt / (2 · kaugus)).",
+          "Jaga kaugus läbimõõduga.",
         ],
-        unit: "°",
+        unit: "korda",
         tolerance: { mode: "percent", value: 5 },
-        answer: SUN_DEG,
+        answer: SUN_RATIO,
       },
       {
         // Ülekanne (spets p 5): sama mõte päris ilmas – hiiglaslik laiendatud
@@ -341,7 +360,7 @@ const steps: Step[] = [
         options: [
           {
             id: "nurk",
-            text: `paistab vaatluskohast kuni ${POINT_SOURCE_MAX_DEG}° suurusena`,
+            text: `on vaatluskohast vähemalt ${POINT_SOURCE_MIN_RATIO} korda kaugemal, kui on tema enda mõõde`,
             correct: true,
           },
           {
@@ -362,10 +381,10 @@ const steps: Step[] = [
         kind: "numeric",
         id: "exit-2",
         prompt:
-          "Tänavalambi pirni läbimõõt on 0,06 m ja lamp ripub 12 m kõrgusel. Kui suur on tema näiv suurus maapinnalt vaadates?",
-        unit: "°",
+          "Tänavalambi pirni läbimõõt on 0,06 m ja lamp ripub 12 m kõrgusel. Mitu korda on kaugus suurem kui pirn?",
+        unit: "korda",
         tolerance: { mode: "percent", value: 5 },
-        answer: EXIT_LAMP_DEG,
+        answer: EXIT_LAMP_RATIO,
       },
       {
         kind: "text",
@@ -394,7 +413,7 @@ const reviewCards: ReviewCard[] = [
     id: "rc-2",
     type: "concept",
     question: "Millal nimetatakse allikat punktvalgusallikaks?",
-    answer: `Kui tema mõõtmed on väikesed võrreldes kaugusega – näiv suurus on kuni ${POINT_SOURCE_MAX_DEG}°.`,
+    answer: `Kui tema mõõtmed on väikesed võrreldes kaugusega – kaugus on vähemalt ${POINT_SOURCE_MIN_RATIO} korda suurem kui allika mõõde.`,
   },
   {
     id: "rc-3",
@@ -406,14 +425,15 @@ const reviewCards: ReviewCard[] = [
   {
     id: "rc-4",
     type: "calc",
-    question: "LED läbimõõduga 5 mm on 1 m kaugusel. Kui suur on näiv suurus ja mis liiki allikaga on tegu?",
-    answer: `${comma(LED_1M_DEG, 2)}° – punktvalgusallikas.`,
+    question:
+      "LED läbimõõduga 5 mm on 1 m kaugusel. Mitu korda on kaugus suurem kui LED ja mis liiki allikaga on tegu?",
+    answer: `1 / 0,005 = ${ratioText(LED_1M_RATIO)} korda – punktvalgusallikas.`,
   },
   {
     id: "rc-5",
     type: "transfer",
     question: "Päike on hiiglaslik. Miks ta on meie jaoks ikkagi punktvalgusallikas?",
-    answer: `Ta on väga kaugel: näiv suurus on ainult ${comma(SUN_DEG, 2)}°, alla ${POINT_SOURCE_MAX_DEG}° piiri (piir on kaasav – ka täpselt ${POINT_SOURCE_MAX_DEG}° loeb punktallikaks).`,
+    answer: `Ta on väga kaugel: kaugus on ${ratioText(SUN_RATIO)} korda suurem kui Päikese enda läbimõõt, seega üle ${POINT_SOURCE_MIN_RATIO} piiri (piir on kaasav – ka täpselt ${POINT_SOURCE_MIN_RATIO} loeb punktallikaks).`,
   },
 ];
 

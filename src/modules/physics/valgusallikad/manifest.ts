@@ -29,6 +29,12 @@ export const manifest = defineModule({
   practicalWork: [],
   minutes: { demo: 6, lesson: 15, homework: 12 },
   // Reeglid: docs/MOODULILEPING.md „Versioonimine".
-  version: "1.0.0",
+  //
+  // 2.0.0: mooduli põhisuurus muutus nurkmõõtmest (kraadid, arkustangens)
+  // suhteks `kaugus / mõõde`, sest 8. klass arkustangensit ei tunne. Nelja
+  // arvküsimuse õige vastus ja ühik muutusid (question_id-d jäid samaks,
+  // CLAUDE.md reegel 11) – see on lepingu järgi major, sest vana `is_correct`
+  // ei ole uuega võrreldav. Klassides moodulit veel kasutatud ei olnud.
+  version: "2.0.0",
   status: "active",
 });
