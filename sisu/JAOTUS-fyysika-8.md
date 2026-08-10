@@ -40,7 +40,9 @@ labor · harjutusmoodul · teooriakonspekt
 | lambivalik | rakendusmoodul | P1-T1 (osa: liigituse rakendamine) | – | plaanis |
 | valguse-sirgjooneline-levimine | mikromoodul | P1-T2 (osa: sirgjooneline levimine) | valgusvihk, optiline keskkond | ehitatud |
 | vari-ja-poolvari | virtuaalne labor | P1-T2 (osa: varju joonised); P1-PT1 (sim + päris katse juhend) | täisvari, poolvari | ehitatud |
-| varjutused-ja-kuu-faasid | rakendusmoodul | P1-T2 (osa: varju ülekanne taevakehadele) | – | plaanis |
+| varjutused | rakendusmoodul | P1-T2 (osa: varju ülekanne taevakehadele) | – | spetsitud |
+| kuu-faasid | mikromoodul | P1-T2 (osa: valgustatud poolkera vaatenurk – õppesisu „Kuu faasid") | – | plaanis |
+| varjutused-ja-kuu-faasid | rakendusmoodul | – (jagatud kaheks: `varjutused` + `kuu-faasid`) | – | arhiveeritud |
 | liitvalgus-ja-spekter | mikromoodul | P1-T1 (osa: spektraalne koostis); P1-T3 (osa: spekter) | valge valgus, liht- ja liitvalgus, valguse spekter | plaanis |
 | esemete-varvus | mikromoodul | P1-T3 (osa: peegeldumine, neeldumine ja värvus) | – | plaanis |
 | valgusfiltrid | virtuaalne labor | P1-T3 (osa: valgusfilter); P1-PT2 (sim + päris katse juhend) | – | plaanis |
@@ -65,10 +67,23 @@ labor · harjutusmoodul · teooriakonspekt
 - **valguse-sirgjooneline-levimine** – valgusvihk homogeenses keskkonnas,
   kiire mudel, miks laser on sirge joon.
 - **vari-ja-poolvari** – allika suurus → varju servad; sim + (K) katse.
-- **varjutused-ja-kuu-faasid** – päikese- ja kuuvarjutus, Kuu faasid;
-  varjutuse tekkimise joonis; NASA varjutuste kaardi lugemine;
-  (K) arutelu, miks on varjutuse teekond kaardil kõver, mitte sirge;
-  (K) möödunud varjutuste videod.
+- **varjutused** – päikese- ja kuuvarjutus kui täisvarju ja poolvarju
+  ülekanne taevakehadele; varjutuse tekkimise joonis; varjutuse teekonna
+  kaardi lugemine; (K) arutelu, miks on varjutuse teekond kaardil kõver,
+  mitte sirge; (K) möödunud varjutuste videod.
+- **kuu-faasid** – miks näeme Kuust kord sirpi, kord ketast: Päike
+  valgustab igal hetkel täpselt poolt Kuust, aga Kuu tiirlemise ajal
+  näeme me sellest valgustatud poolest kord rohkem, kord vähem –
+  varjuga ei ole siin midagi pistmist; faaside tsükkel 29,5 ööpäeva;
+  simulatsiooniga.
+
+  **NB! Miks kaks moodulit, kuigi ainekava õppesisus on „vari ja
+  varjutused; Kuu faasid" kõrvuti:** varjutus on VARI (üks keha jääb teise
+  varju), Kuu faas EI ole vari (Kuud valgustab kogu aeg pool, muutub
+  vaatenurk). Kokku pandult tuleks kaks simulatsiooni ja ~8 sammu ehk üle
+  suurusreegli, ja kõige levinum väärarusaam („Kuu faasid on Maa vari")
+  vajab oma mooduli, kus teda päriselt ümber lükata. Rida
+  `varjutused-ja-kuu-faasid` jääb tabelisse arhiveerituna (slug on igavene).
 - **liitvalgus-ja-spekter** – valge valgus koosneb värvidest, spekter.
 - **esemete-varvus** – must neelab, valge peegeldab, värviline peegeldab
   valikuliselt; miks must särk päikese käes soojeneb; kuidas silm värve
@@ -95,7 +110,7 @@ labor · harjutusmoodul · teooriakonspekt
 - P1-T1 → valgusallikad + liitvalgus-ja-spekter (rakendus: lambivalik)
 - P1-T2 → valguse-sirgjooneline-levimine, vari-ja-poolvari,
   peegeldumisseadus, tasapeegli-kujutis, nurkpeegel, kumerpeegel,
-  noguspeegel (rakendused: varjutused-ja-kuu-faasid, peeglikiri, helkur,
+  noguspeegel, kuu-faasid (rakendused: varjutused, peeglikiri, helkur,
   kumerpeegli-rakendused, noguspeegli-rakendused)
 - P1-T3 → liitvalgus-ja-spekter, esemete-varvus, valgusfiltrid
 - P1-PT1 → vari-ja-poolvari · P1-PT2 → valgusfiltrid ·
