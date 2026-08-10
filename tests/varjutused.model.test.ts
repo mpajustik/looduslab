@@ -27,6 +27,13 @@ import {
   umbraLengthBehindObject as vpUmbraLengthBehindObject,
   umbraWidth as vpUmbraWidth,
 } from "../src/modules/physics/vari-ja-poolvari/model";
+import { manifest } from "../src/modules/physics/varjutused/manifest";
+import { activities } from "../src/modules/physics/varjutused/activities";
+import { teacher } from "../src/modules/physics/varjutused/teacher";
+import { activitiesSchema, manifestSchema } from "../src/engine/contractSchema";
+import { stepQuestions } from "../src/engine/contract";
+import { checkNumericAnswer } from "../src/checker/numeric";
+import { formatNumber } from "../src/lib/format";
 
 /**
  * Päikese- ja kuuvarjutuse mudeli test.
@@ -43,8 +50,8 @@ import {
  * nõuaks siia mudelist maha kirjutatud kümnendkohti ja test hakkaks kontrollima
  * ujukomat, mitte füüsikat.
  *
- * Manifest, sammud ja õpetajajuhend tulevad järgmise sammuga – siin on ainult
- * puhas füüsika.
+ * Alumine osa (samm 4.1o) katab manifesti, samme ja õpetajajuhendit – sama
+ * muster mis tests/vari-ja-poolvari.model.test.ts.
  */
 
 const round = (value: number) => Math.round(value);
@@ -520,5 +527,202 @@ describe("vigased sisendid viskavad vea, mitte ei paranda ennast vaikselt", () =
     // piiraks end liuguri vahemikuga, ei saaks seda ülesannet üldse arvutada.
     expect(340_000).toBeLessThan(SLIDERS.moonDistanceKm.min);
     expect(() => solarUmbraSpotKm(340_000)).not.toThrow();
+  });
+});
+
+describe("manifest", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => manifestSchema.parse(manifest)).not.toThrow();
+  });
+
+  it("viitab ainekava õpitulemusele; praktilist tööd ei ole (kaetud vari-ja-poolvari's)", () => {
+    expect(manifest.outcomes).toContain("P1-T2");
+    expect(manifest.practicalWork).toEqual([]);
+  });
+});
+
+describe("activities", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => activitiesSchema.parse(activities)).not.toThrow();
+  });
+
+  it("on väike moodul: kuus sammu, üks ekraan korraga", () => {
+    // Suurusreegel (sisu/MALL-moodul.md): 3–6 sammu.
+    expect(activities.steps.map((step) => step.type)).toEqual([
+      "hook",
+      "theory",
+      "predict",
+      "explore",
+      "practice",
+      "exit",
+    ]);
+  });
+
+  it("hookil ja teoorial on spetsifikatsiooni joonised", () => {
+    // Sildid peavad klappima registriga (moduleFigures) – seda valvab
+    // tests/registry.test.ts alles siis, kui moodul on registris.
+    const figures = activities.steps
+      .filter((step) => step.type === "hook" || step.type === "theory")
+      .map((step) =>
+        step.type === "hook" || step.type === "theory" ? step.figure : undefined,
+      );
+    expect(figures).toEqual(["vj-eesti-varjutus", "vj-kaks-varjutust"]);
+  });
+
+  it("kaardilugemise harjutus viitab oma joonisele", () => {
+    const practice = activities.steps.find((step) => step.type === "practice");
+    const question =
+      practice?.type === "practice"
+        ? stepQuestions(practice).find((item) => item.id === "practice-2")
+        : undefined;
+    expect(question?.kind === "choice" ? question.figure : undefined).toBe(
+      "vj-varjutuse-rada",
+    );
+  });
+});
+
+/**
+ * Ülesannete vastused vs. mudel.
+ *
+ * `activities.ts` arvutab iga vastuse MUDELIST (CLAUDE.md reegel 1), seega
+ * valemi näpuviga siin välja ei paistaks – küll aga paistab välja vale
+ * sisendkaugus või vale funktsioonivalik. Seepärast võrreldakse arve
+ * MUDELI enda funktsioonidega spetsifikatsiooni tabeli järgi (sisu
+ * MOODUL-varjutused.md „Testiväärtused"), mitte activities.ts iseendaga.
+ */
+describe("ülesannete vastused käivad mudeliga kokku", () => {
+  const numericQuestion = (questionId: string) => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "numeric") {
+          expect(question.variants, questionId).toBeUndefined();
+          expect(question.answer, questionId).toBeDefined();
+          return question;
+        }
+      }
+    }
+    throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  it.each([
+    ["explore-1", "Kuu täisvarju koonus", MOON_UMBRA_TIP_KM],
+    ["explore-2", "täisvarju laik Kuu lähimas punktis", solarUmbraSpotKm(MOON_PERIGEE_KM)],
+    ["explore-3", "täieliku/rõngasja piir", SOLAR_ECLIPSE_LIMIT_KM],
+    ["practice-1", "Maa täisvarju ja Kuu suhe", lunarUmbraToMoonRatio(MOON_MEAN_KM)],
+    ["practice-3", "täisvarju laik 340 000 km juures", solarUmbraSpotKm(340_000)],
+    ["exit-2", "puudujääv koonuse osa 395 000 km juures", solarUmbraGapKm(395_000)],
+  ])("%s (%s) → %s", (questionId, _what, expected) => {
+    expect(numericQuestion(questionId as string).answer).toBeCloseTo(
+      expected as number,
+      9,
+    );
+  });
+
+  it("kõik arvküsimused peale osalise harjutuse on kilomeetrites", () => {
+    // practice-1 on ühikuta suhe (9198 / 3474), ülejäänud on kaugused/laiused
+    // kilomeetrites – siin ei ole ühikuvahetust nagu moodulis
+    // `vari-ja-poolvari` (m ↔ cm).
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind !== "numeric") continue;
+        if (question.id === "practice-1") {
+          expect(question.unit, question.id).toBeUndefined();
+        } else {
+          expect(question.unit, question.id).toBe("km");
+        }
+      }
+    }
+  });
+
+  it("checker võtab vastu ka ühikuga kirjutatud arvu", () => {
+    const question = numericQuestion("explore-1");
+    expect(checkNumericAnswer(question, "374289").correct).toBe(true);
+    expect(checkNumericAnswer(question, "374289 km").correct).toBe(true);
+    // Maa koonuse pikkus on siin selgelt vale vastus.
+    expect(checkNumericAnswer(question, String(round(EARTH_UMBRA_TIP_KM))).correct).toBe(
+      false,
+    );
+  });
+
+  it("explore-3 tolerants on absoluutne ja katab kogu liuguri võre", () => {
+    const question = numericQuestion("explore-3");
+    expect(question.tolerance).toEqual({ mode: "absolute", value: 5000 });
+    expect(checkNumericAnswer(question, "380660").correct).toBe(true);
+    expect(checkNumericAnswer(question, String(round(MOON_MEAN_KM))).correct).toBe(true);
+    expect(checkNumericAnswer(question, String(round(MOON_PERIGEE_KM))).correct).toBe(
+      false,
+    );
+  });
+
+  it("lahendatud näidis ja kordamiskaart rc-3 kasutavad mudelist tulevaid arve", () => {
+    const practice = activities.steps.find((step) => step.type === "practice");
+    const worked = practice?.type === "practice" ? practice.worked : undefined;
+    // Eesti vormingus tuhandete eraldaja on tühik (NBSP), mitte koma – vt
+    // src/lib/format.ts formatNumber.
+    expect(worked?.solution.join(" ")).toContain(
+      `${round(solarUmbraSpotKm(MOON_PERIGEE_KM))}`,
+    );
+    expect(worked?.solution.join(" ")).toContain(
+      formatNumber(lunarUmbraWidthKm(MOON_MEAN_KM), 0),
+    );
+
+    const card = activities.reviewCards.find((item) => item.id === "rc-3");
+    expect(card?.answer).toContain(
+      CARD_ECLIPSE_KIND_LABEL(solarEclipseKind(MOON_MEAN_KM)),
+    );
+  });
+});
+
+function CARD_ECLIPSE_KIND_LABEL(kind: "total" | "annular"): string {
+  return kind === "total" ? "täielik" : "rõngasjas";
+}
+
+describe("õpetajajuhend katab mooduli väärarusaamad", () => {
+  const known = new Set(teacher.misconceptions.map((item) => item.id));
+
+  it("iga activities.ts silt on õpetajajuhendis lahti seletatud", () => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "choice") {
+          for (const option of question.options) {
+            if (option.misconception) {
+              expect(known, `${question.id}/${option.id}`).toContain(
+                option.misconception,
+              );
+            }
+          }
+        }
+        if (question.kind === "numeric") {
+          for (const trap of question.traps ?? []) {
+            expect(known, question.id).toContain(trap.misconception);
+          }
+        }
+      }
+    }
+  });
+
+  it("spetsifikatsiooni kuus väärarusaama on kõik olemas", () => {
+    for (const id of [
+      "varjutused-segamini",
+      "varjutus-igal-kuul",
+      "taisvari-ei-loppe",
+      "taisvari-on-suur",
+      "varjutus-koik-voi-mitte-midagi",
+      "kuu-faas-on-vari",
+    ]) {
+      expect(known, id).toContain(id);
+    }
+  });
+
+  it("tunniplaani minutid annavad kokku manifesti tunnipikkuse", () => {
+    const total = teacher.lessonPlan.reduce((sum, item) => sum + item.minutes, 0);
+    expect(total).toBe(manifest.minutes.lesson);
+  });
+
+  it("iga tunniplaani rida vastab päris sammule", () => {
+    const types = new Set(activities.steps.map((step) => step.type));
+    for (const item of teacher.lessonPlan) {
+      expect(types, item.step).toContain(item.step);
+    }
   });
 });
