@@ -29,6 +29,7 @@ export const course = defineCourse({
       modules: [
         "physics.valgusallikad",
         "physics.valguse-sirgjooneline-levimine",
+        "physics.vari-ja-poolvari",
         "physics.peegeldumisseadus",
       ],
     },

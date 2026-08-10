@@ -41,6 +41,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/valguse-sirgjooneline-levimine/manifest")).manifest,
     activities: (await import("./physics/valguse-sirgjooneline-levimine/activities")).activities,
   }),
+  "physics.vari-ja-poolvari": async () => ({
+    manifest: (await import("./physics/vari-ja-poolvari/manifest")).manifest,
+    activities: (await import("./physics/vari-ja-poolvari/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -81,6 +85,11 @@ export const moduleSimulations: Record<
   ),
   "physics.valguse-sirgjooneline-levimine": lazy(() =>
     import("./physics/valguse-sirgjooneline-levimine/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.vari-ja-poolvari": lazy(() =>
+    import("./physics/vari-ja-poolvari/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -151,6 +160,18 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "oo-puulaigud": lazy(() =>
       import("./physics/valguse-sirgjooneline-levimine/figures").then((module) => ({
         default: module.SunSpotsUnderTreeFigure,
+      })),
+    ),
+  },
+  "physics.vari-ja-poolvari": {
+    "vp-oma-vari": lazy(() =>
+      import("./physics/vari-ja-poolvari/figures").then((module) => ({
+        default: module.OwnShadowOnAsphaltFigure,
+      })),
+    ),
+    "vp-taisvari-poolvari": lazy(() =>
+      import("./physics/vari-ja-poolvari/figures").then((module) => ({
+        default: module.UmbraPenumbraFigure,
       })),
     ),
   },
