@@ -21,7 +21,10 @@ export const course = defineCourse({
     // P1. Valgus ja valguse sirgjooneline levimine. Peegeldumine ja neeldumine
     {
       title: "Valgus ja peegeldumine",
-      modules: ["physics.peegeldumisseadus"],
+      // Järjekord tuleb sisu/JAOTUS-fyysika-8.md P1 tabelist: valgusallikad
+      // enne peegeldumisseadust – enne kui valgus millegi pealt tagasi
+      // põrkab, peab olema selge, kust ta üldse tuleb.
+      modules: ["physics.valgusallikad", "physics.peegeldumisseadus"],
     },
     // P2. Valguse murdumine
     { title: "Valguse murdumine", modules: [] },

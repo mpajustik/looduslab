@@ -33,6 +33,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/vedeliku-rohk/manifest")).manifest,
     activities: (await import("./physics/vedeliku-rohk/activities")).activities,
   }),
+  "physics.valgusallikad": async () => ({
+    manifest: (await import("./physics/valgusallikad/manifest")).manifest,
+    activities: (await import("./physics/valgusallikad/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -63,6 +67,11 @@ export const moduleSimulations: Record<
   ),
   "physics.vedeliku-rohk": lazy(() =>
     import("./physics/vedeliku-rohk/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.valgusallikad": lazy(() =>
+    import("./physics/valgusallikad/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -119,6 +128,13 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "tunn-augud": lazy(() =>
       import("./physics/vedeliku-rohk/figures").then((module) => ({
         default: module.BarrelHolesFigure,
+      })),
+    ),
+  },
+  "physics.valgusallikad": {
+    "oo-linn": lazy(() =>
+      import("./physics/valgusallikad/figures").then((module) => ({
+        default: module.NightStreetFigure,
       })),
     ),
   },
