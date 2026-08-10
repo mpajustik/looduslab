@@ -112,8 +112,26 @@ Funktsioonid:
   Tagastab ingliskeelse sildi, eestikeelse teksti („täielik" /
   „rõngasjas") paneb peale Simulation.tsx – model.ts ei tea UI keelest
   midagi.
+  **Täpsustus samm 4.1n:** mudel ei kirjuta seda võrdlust eraldi välja, vaid
+  tuletab sildi täisvarju laigust (`solarUmbraSpotKm > 0`). Sisuliselt sama
+  tingimus, aga nii ei saa tekkida seisu, kus silt ütleb „täielik" ja suur
+  arv kõrval „täisvarju Maal ei ole". Vahe on ainult täpselt piiri peal
+  (380 660,2 km), mida liuguri võre niikuinii ei taba: seal loeb mudel
+  varjutuse rõngasjaks, sest laiuseta täisvarjust ei näeks maapinnal
+  seisja midagi.
 - Definitsioonipiirkond: kõik läbimõõdud ja kaugused `> 0`,
   `bodyToScreen > 0`. Muu sisend viskab vea.
+
+Rakenduskiht (samm 4.1n, spetsis algselt kirjas ei olnud): ülalolevad neli
+funktsiooni on üldine geomeetria, aga sisufail ei tohi ise teada, et ekraan
+on Maa PIND, mitte keskpunkt – see lahutamine on füüsika ja kuulub reegli 1
+järgi model.ts-i. Seepärast on mudelis ka konkreetsete taevakehadega
+funktsioonid, mis ei too ühtki uut valemit: `solarUmbraSpotKm`,
+`solarUmbraGapKm` (kui palju jääb täisvarjul Maa pinnani puudu –
+väljumispilet 2 ja simulatsiooni tekst), `lunarUmbraWidthKm`,
+`lunarPenumbraBandKm`, `lunarUmbraToMoonRatio` (harjutus 2) ning
+konstandid `MOON_UMBRA_TIP_KM`, `EARTH_UMBRA_TIP_KM` ja
+`SOLAR_ECLIPSE_LIMIT_KM`.
 
 **Miks valemid on siin uuesti, mitte imporditud moodulist
 `vari-ja-poolvari`:** moodulid laaditakse dünaamiliselt ja iga moodul on
@@ -133,6 +151,17 @@ tulemuse (vt testiväärtus „kontroll vari-ja-poolvari vastu" allpool).
   räägib moodul kaldest SÕNADEGA (samm 2 ja väärarusaam
   `varjutus-igal-kuul`), mitte simulatsioonis.
 - Orbiidid on ringid, varjutuse kestus arvutamata (fakt tuleb allikast).
+- **Päike → Kuu kauguse asemel kasutatakse Päike → Maa kaugust**
+  (149 600 000 km). Päris kaugus on päikesevarjutuse ajal 384 400 km
+  väiksem ja täpne koonus tuleks 374 289 asemel 373 328 km. Vahe on 0,26%,
+  samas kui juba arvestamata jäetud Maa orbiidi ekstsentrilisus
+  (147,1–152,1 mln km) kõigutab koonust ±1,7% ehk kuus korda rohkem –
+  väiksema paranduse tegemine suurema kõrval annaks ainult täpsema
+  välimuse. Teine põhjus on pedagoogiline: parandusega hakkaks koonuse
+  pikkus liugurist sõltuma ja explore-1 kontrollküsimus („see arv EI sõltu
+  liugurist") laguneks. Ükski vastus ei nihku üle tolerantsi: piir liiguks
+  380 660 → ~379 700 km. (Codexi leid samm 4.1n; otsus: arv jääb,
+  lihtsustus kirja.)
 
 **Testiväärtused (teadaolevad):**
 
@@ -267,8 +296,12 @@ Juhtnupud (kaks muudetavat suurust, moodulilepingu järgi):
 
 - **valik: Päikesevarjutus / Kuuvarjutus** (kaks nuppu, mitte liugur) –
   vahetab, kumb keha varju heidab
-- **liugur: Kuu kaugus Maast** 356 500–406 700 km, samm 1000 km,
-  algväärtus 384 400 km (keskmine)
+- **liugur: Kuu kaugus Maast** 356 500–406 700 km, samm **100 km**,
+  algväärtus 384 400 km (keskmine). Samm oli algselt 1000 km, aga siis ei
+  satu võre peale ei algväärtus ((384 400 − 356 500) / 1000 = 27,9) ega
+  kaugeim punkt. Algväärtus, mida liugur ise seada ei suuda, on lõks:
+  õpilane liigutab liugurit korra ja ei saa enam kunagi alguskohta tagasi
+  (parandatud sammus 4.1n).
 
 Kuvatakse suurelt:
 
@@ -286,9 +319,13 @@ Kuvatakse suurelt:
 
 Tolerantsid ja ühikud: pikkused ja laiused `km`; koonuse pikkus ja Maa
 varju laius tolerantsiga 5%; täisvarju laik Maal tolerantsiga **10%**,
-sest ta on kahe suure arvu vahe ja liuguri samm 1000 km liigutab teda
-kohe mitu protsenti; kaugused `km` tolerantsiga **absoluutne ±5000 km**
-(liuguri samm on 1000 km, protsent oleks siin kasutu).
+sest ta on kahe suure arvu vahe ja kahaneb piiri lähedal nullini – lähimas
+punktis liigutab üks liuguri samm teda 0,4%, aga 379 000 km juures juba 6%,
+seega hoiab 10% ülesande vastatavana kogu liuguri ulatuses; kaugused `km`
+tolerantsiga **absoluutne ±5000 km** (protsent oleks siin kasutu, sest arv
+ise on suur ja nullist kaugel: 5% kolmesajast kaheksakümnest tuhandest on
+19 000 km ehk üle kolmandiku kogu orbiidi kõikumisest 50 200 km – selline
+aken võtaks vastu peaaegu iga vastuse).
 
 Ülesanded:
 
