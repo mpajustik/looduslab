@@ -2,6 +2,7 @@ import { defineActivities } from "../../../engine/contract";
 import type { ReviewCard, Step } from "../../../engine/contract";
 import {
   EXAMPLE_OBJECTS,
+  SLIDERS,
   metersToCm,
   pinholeBoxDepth,
   pinholeImageHeight,
@@ -174,7 +175,7 @@ const steps: Step[] = [
     title: "Katseta simulatsiooniga",
     body: [
       "Vasakul on ese, keskel auguga sein ja paremal ekraan. Kaks kiirt – eseme tipust ja jalalt – lähevad läbi augu ja lõikuvad seal.",
-      "Liuguritega saad muuta kaugust esemeni, kambri sügavust ja augu läbimõõtu. Joonisel on suhted päris, aga kaugus mitte: ese seisab alati sama kaugel ekraani servast ja päris kaugus on kirjas arvuna.",
+      "Liuguritega saad muuta kaugust esemeni ja kambri sügavust; kolmas liugur – augu läbimõõt – ilmub pärast teist ülesannet. Joonisel on kambri sügavuse ja kujutise suhe päris, aga kaugus mitte: ese seisab alati mugaval kaugusel ja päris kaugus on kirjas arvuna.",
     ],
     questions: [
       {
@@ -211,7 +212,7 @@ const steps: Step[] = [
         // ja hägu arvu ei küsi keegi (seda valvab test).
         kind: "choice",
         id: "explore-3",
-        prompt: `Jäta kamber ${comma(TREE_WANTED_DEPTH_M, 1)} m peale ja keera augu läbimõõt 0,5 mm-lt 20 mm-ni. Mis kujutisega juhtub?`,
+        prompt: `Jäta kamber ${comma(TREE_WANTED_DEPTH_M, 1)} m peale ja keera augu läbimõõt ${comma(SLIDERS.holeMm.min, 1)} mm-lt ${comma(SLIDERS.holeMm.max, 0)} mm-ni. Mis kujutisega juhtub?`,
         options: [
           {
             id: "suurem",
@@ -224,6 +225,14 @@ const steps: Step[] = [
         ],
       },
     ],
+    // Augu liugur avaneb alles pärast ülesannet 2 (moodulileping: alguses max
+    // kaks muudetavat suurust). Pedagoogiline põhjus on tähtsam kui reegel:
+    // ülesanded 1 ja 2 näitavad, et kujutise SUURUS sõltub ainult kaugusest ja
+    // kambrist. Kui auk oleks kohe käes, jääks õpilasel kergesti mulje, et ka
+    // tema muudab suurust (väärarusaam `suurem-auk-suurem-kujutis`).
+    simulation: {
+      unlocks: [{ feature: "augu-labimoot", afterQuestion: "explore-2" }],
+    },
   },
   {
     type: "practice",

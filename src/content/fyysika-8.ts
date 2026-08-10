@@ -23,8 +23,14 @@ export const course = defineCourse({
       title: "Valgus ja peegeldumine",
       // Järjekord tuleb sisu/JAOTUS-fyysika-8.md P1 tabelist: valgusallikad
       // enne peegeldumisseadust – enne kui valgus millegi pealt tagasi
-      // põrkab, peab olema selge, kust ta üldse tuleb.
-      modules: ["physics.valgusallikad", "physics.peegeldumisseadus"],
+      // põrkab, peab olema selge, kust ta üldse tuleb. Sirgjooneline levimine
+      // on nende vahel: kust valgus tuleb → kuidas ta liigub → mis juhtub, kui
+      // ta millegi pealt tagasi põrkab.
+      modules: [
+        "physics.valgusallikad",
+        "physics.valguse-sirgjooneline-levimine",
+        "physics.peegeldumisseadus",
+      ],
     },
     // P2. Valguse murdumine
     { title: "Valguse murdumine", modules: [] },

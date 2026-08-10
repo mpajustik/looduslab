@@ -37,6 +37,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/valgusallikad/manifest")).manifest,
     activities: (await import("./physics/valgusallikad/activities")).activities,
   }),
+  "physics.valguse-sirgjooneline-levimine": async () => ({
+    manifest: (await import("./physics/valguse-sirgjooneline-levimine/manifest")).manifest,
+    activities: (await import("./physics/valguse-sirgjooneline-levimine/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -72,6 +76,11 @@ export const moduleSimulations: Record<
   ),
   "physics.valgusallikad": lazy(() =>
     import("./physics/valgusallikad/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.valguse-sirgjooneline-levimine": lazy(() =>
+    import("./physics/valguse-sirgjooneline-levimine/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -135,6 +144,13 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "oo-linn": lazy(() =>
       import("./physics/valgusallikad/figures").then((module) => ({
         default: module.NightStreetFigure,
+      })),
+    ),
+  },
+  "physics.valguse-sirgjooneline-levimine": {
+    "oo-puulaigud": lazy(() =>
+      import("./physics/valguse-sirgjooneline-levimine/figures").then((module) => ({
+        default: module.SunSpotsUnderTreeFigure,
       })),
     ),
   },

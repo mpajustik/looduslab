@@ -156,7 +156,10 @@ on kirjas arvuna (1 m ja 40 m ei mahu ühele skaalale). Kambri sügavus ja
 kujutise kõrgus on omavahel õiges suhtes.
 
 Kolm liugurit: **kaugus esemeni** 0,5–40 m, **kambri sügavus** 0,05–0,5 m ja
-**augu läbimõõt** 0,5–20 mm. Suurelt kuvatakse **kujutise kõrgus
+**augu läbimõõt** 0,5–20 mm. Augu liugur AVANEB alles pärast ülesannet 2
+(moodulileping: alguses max kaks muudetavat suurust) – ülesanded 1 ja 2 peavad
+näitama, et kujutise suurus sõltub ainult kaugusest ja kambri sügavusest.
+Eseme kõrgus ei ole liugur, vaid nupurea valik. Suurelt kuvatakse **kujutise kõrgus
 sentimeetrites**; väikeses kirjas hägu laius ja sõnaline hinnang („terav" /
 „udune") – hinnang ei ole ainus märk, kujutise serv joonisel muutub koos
 sellega (reegel: värv ega üks silt ei kanna infot üksi). Nupurida näidetega:

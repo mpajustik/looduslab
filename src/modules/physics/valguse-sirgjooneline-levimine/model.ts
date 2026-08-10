@@ -50,6 +50,29 @@ export const EXAMPLE_OBJECTS = {
 export type ExampleObjectId = keyof typeof EXAMPLE_OBJECTS;
 
 /**
+ * Simulatsiooni liugurite piirid ja sammud
+ * (sisu/MOODUL-valguse-sirgjooneline-levimine.md „explore").
+ *
+ * Miks MUDELIS, mitte Simulation.tsx-is: piirid otsustavad, kas ülesande vastust
+ * saab liuguriga üldse SEADA. Kui explore-2 vastus 0,4 m jääks kambri liuguri
+ * otsast välja või tolerants 5% jääks sammust väiksemaks, oleks ülesanne
+ * lahendamatu – ja seda ei paneks brauseris keegi tähele, sest liugur liigub
+ * ilusti edasi. Siin failis saab test neid piire ülesannete arvude vastu
+ * kontrollida (CodeRabbiti leid 2026-08-10, samm 4.1g).
+ *
+ * `holeMm` on MILLIMEETRITES, sest just nii seisab arv liuguri juures; mudelile
+ * annab ta edasi `holeDiameterFromMm`.
+ */
+export const SLIDERS = {
+  /** Kaugus esemest augu tasapinnani (m). */
+  distanceM: { min: 0.5, max: 40, step: 0.5 },
+  /** Kambri sügavus august ekraanini (m). */
+  boxDepthM: { min: 0.05, max: 0.5, step: 0.01 },
+  /** Augu läbimõõt (mm) – ainus suurus, mida õpilane näeb muus ühikus. */
+  holeMm: { min: 0.5, max: 20, step: 0.5 },
+} as const satisfies Record<string, { min: number; max: number; step: number }>;
+
+/**
  * Positiivne pikkus: 0 ega negatiivne ei ole vaadeldav olukord. Kauguse 0
  * juures oleks ese augu sees ja kujutise kõrgus ei oleks „lõpmata suur", vaid
  * määramata; sügavuse 0 juures langeks ekraan augule ja kujutist ei tekiks.
@@ -223,4 +246,70 @@ export function pinholeBlurWidth(
   const blurM = (holeM * (objectDistanceM + boxDepthM)) / objectDistanceM;
   assertFiniteResult(blurM, "Hägu laius");
   return blurM;
+}
+
+/**
+ * Kui suur osa kujutise kõrgusest tohib udu olla, et kujutist veel „teravaks"
+ * nimetada.
+ *
+ * Kokkulepe, mitte loodusseadus – aga kooliolukorras tabav: kui serva udu on
+ * alla kahekümnendiku kujutise kõrgusest, ei pane silm seda tähele. 20 mm auk
+ * annab explore-3 seisus (kamber 0,4 m, kujutis 20 cm) udu 2 cm ehk 10% ja on
+ * seega selgelt „udune"; 0,5 mm auk annab samas seisus umbes 0,26% ja on „terav".
+ */
+export const SHARP_MAX_BLUR_SHARE = 0.05;
+
+/** Kas kujutis paistab terav või udune – sõnaline hinnang simulatsiooni näidikule. */
+export type Sharpness = "sharp" | "blurry";
+
+/**
+ * Serva udu → sõnaline hinnang.
+ *
+ * Mudelis samal põhjusel, mis `classifyByRatio` moodulis `valgusallikad`:
+ * VÕRDLUSE teeb mudel, komponent ainult kuvab tulemuse. Ükski ülesanne seda
+ * sõna ei küsi (explore-3 on valikküsimus), aga näidik ja joonis peavad ütlema
+ * sama asja – kaks eri piiri kahes failis läheksid ühel päeval lahku.
+ *
+ * Suhe on udu ja KUJUTISE KÕRGUSE oma, mitte augu ja kujutise: sama auk määrib
+ * suure ja väikese kujutise serva ühepalju, seega suur kujutis on suhteliselt
+ * teravam.
+ */
+export function classifySharpness(blurM: number, imageHeightM: number): Sharpness {
+  assertPositive(blurM, "Hägu laius");
+  assertPositive(imageHeightM, "Kujutise kõrgus");
+  return blurM / imageHeightM <= SHARP_MAX_BLUR_SHARE ? "sharp" : "blurry";
+}
+
+/**
+ * Kust alates on kujutis piisavalt hele, et teda „heledaks" nimetada (m).
+ *
+ * Sama laadi kokkulepe mis `SHARP_MAX_BLUR_SHARE`: 5 mm on umbes see auk, mille
+ * juures nõelaugukaamera pilt läheb pimedas toas vaadatavast heledaks.
+ * Nõelaugukaamera pilt on üldse hämar, sest auku läbib vähe valgust – see ongi
+ * augu teine pool ja seda ütleb simulatsioon välja.
+ */
+export const BRIGHT_MIN_HOLE_M = 0.005;
+
+/** Kas kujutis paistab hele või hämar. */
+export type Brightness = "bright" | "dim";
+
+/**
+ * Augu läbimõõt → heledus.
+ *
+ * Mudelis samal põhjusel mis `classifySharpness`: see on õpilasele nähtav
+ * füüsikaväide („kujutis on hele"), seega peab võrdlus olema testitav ja ühes
+ * kohas (CLAUDE.md reegel 1; CodeRabbit ja Codex leidsid mõlemad sama asja
+ * 2026-08-10).
+ *
+ * **Heledus ja teravus on kaks eri asja ja käivad eri suundades:** heledus
+ * sõltub AINULT augu suurusest (lai auk laseb rohkem valgust läbi), teravus udu
+ * ja kujutise kõrguse suhtest. Suur kujutis laia augu juures on ühtaegu terav ja
+ * hele – kui need kaks sõna ühte lauset kokku liita, tuleb ekraanile vale väide.
+ *
+ * @param holeM augu läbimõõt MEETRITES (liugur näitab mm, teisendab
+ *   `holeDiameterFromMm`)
+ */
+export function classifyBrightness(holeM: number): Brightness {
+  assertPositive(holeM, "Augu läbimõõt");
+  return holeM >= BRIGHT_MIN_HOLE_M ? "bright" : "dim";
 }

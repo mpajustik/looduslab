@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  BRIGHT_MIN_HOLE_M,
   EXAMPLE_OBJECTS,
+  SHARP_MAX_BLUR_SHARE,
+  SLIDERS,
+  classifyBrightness,
+  classifySharpness,
   holeDiameterFromMm,
   metersToCm,
   pinholeBlurWidth,
@@ -269,13 +274,110 @@ describe("EXAMPLE_OBJECTS – simulatsiooni nupurea näited", () => {
     }
   });
 
-  it("mahuvad kauguse liuguri vahemikku 0,5–40 m", () => {
+  it("mahuvad kauguse liuguri vahemikku", () => {
     // Kui näite kaugust ei saa liuguriga seada, ei ole nupurea nupp
     // simulatsioonis lahendatav.
     for (const [id, object] of Object.entries(EXAMPLE_OBJECTS)) {
-      expect(object.distanceM, id).toBeGreaterThanOrEqual(0.5);
-      expect(object.distanceM, id).toBeLessThanOrEqual(40);
+      expect(object.distanceM, id).toBeGreaterThanOrEqual(SLIDERS.distanceM.min);
+      expect(object.distanceM, id).toBeLessThanOrEqual(SLIDERS.distanceM.max);
     }
+  });
+
+  it("iga näite kaugus on liuguri sammu kordne", () => {
+    // Nupp seab kauguse liuguri väärtuseks. Kui arv sammu vahele jääks, näitaks
+    // liugur pärast nupuvajutust naaberväärtust ja ülesande vastus läheks vale.
+    for (const [id, object] of Object.entries(EXAMPLE_OBJECTS)) {
+      const steps = object.distanceM / SLIDERS.distanceM.step;
+      expect(steps, id).toBeCloseTo(Math.round(steps), 9);
+    }
+  });
+});
+
+describe("SLIDERS – simulatsiooni liugurite piirid", () => {
+  it("vastavad spetsifikatsiooni sammule „explore“", () => {
+    expect(SLIDERS.distanceM).toEqual({ min: 0.5, max: 40, step: 0.5 });
+    expect(SLIDERS.boxDepthM).toEqual({ min: 0.05, max: 0.5, step: 0.01 });
+    expect(SLIDERS.holeMm).toEqual({ min: 0.5, max: 20, step: 0.5 });
+  });
+
+  it("iga liuguri otspunktid on mudelile kõlblikud sisendid", () => {
+    // Liugur ei tohi anda mudelile väärtust, mille peal see vea viskab.
+    for (const holeMm of [SLIDERS.holeMm.min, SLIDERS.holeMm.max]) {
+      expect(() => holeDiameterFromMm(holeMm)).not.toThrow();
+    }
+    for (const distanceM of [SLIDERS.distanceM.min, SLIDERS.distanceM.max]) {
+      for (const depthM of [SLIDERS.boxDepthM.min, SLIDERS.boxDepthM.max]) {
+        expect(() =>
+          pinholeImageHeight(EXAMPLE_OBJECTS.maja.heightM, distanceM, depthM),
+        ).not.toThrow();
+      }
+    }
+  });
+});
+
+describe("classifyBrightness – hele või hämar", () => {
+  it("liuguri väikseim auk on hämar, suurim hele", () => {
+    expect(classifyBrightness(holeDiameterFromMm(SLIDERS.holeMm.min))).toBe("dim");
+    expect(classifyBrightness(holeDiameterFromMm(SLIDERS.holeMm.max))).toBe("bright");
+  });
+
+  it("piir ise (5 mm) loeb juba heledaks", () => {
+    expect(BRIGHT_MIN_HOLE_M).toBe(0.005);
+    expect(classifyBrightness(holeDiameterFromMm(5))).toBe("bright");
+    expect(classifyBrightness(holeDiameterFromMm(4.5))).toBe("dim");
+  });
+
+  it("ei sõltu kaugusest ega kambrist – ainult august", () => {
+    // Heledus ja teravus käivad eri suundades: suur kujutis laia augu juures on
+    // ühtaegu terav JA hele. Seda paari valvab see test koos ülemisega.
+    const holeM = holeDiameterFromMm(SLIDERS.holeMm.max);
+    const bigImageM = pinholeImageHeight(6, 0.5, 0.4);
+    const blurM = pinholeBlurWidth(holeM, 0.5, 0.4);
+    expect(classifyBrightness(holeM)).toBe("bright");
+    expect(classifySharpness(blurM, bigImageM)).toBe("sharp");
+  });
+
+  it("null või negatiivne viskab vea", () => {
+    expect(() => classifyBrightness(0)).toThrow(RangeError);
+    expect(() => classifyBrightness(-0.002)).toThrow(RangeError);
+  });
+});
+
+describe("classifySharpness – terav või udune", () => {
+  // Explore-3 seis: puu 6 m 12 m kauguselt, kamber 0,4 m, kujutis 20 cm.
+  const imageM = pinholeImageHeight(6, 12, 0.4);
+
+  it("liuguri väikseim auk annab terava kujutise", () => {
+    const blurM = pinholeBlurWidth(holeDiameterFromMm(SLIDERS.holeMm.min), 12, 0.4);
+    expect(classifySharpness(blurM, imageM)).toBe("sharp");
+  });
+
+  it("liuguri suurim auk annab udu, mis on üle 5% kujutise kõrgusest", () => {
+    const blurM = pinholeBlurWidth(holeDiameterFromMm(SLIDERS.holeMm.max), 12, 0.4);
+    // 20 mm auk määrib 20 cm kujutise serva umbes 2 cm ehk 10% ulatuses.
+    expect(blurM / imageM).toBeGreaterThan(SHARP_MAX_BLUR_SHARE);
+    expect(classifySharpness(blurM, imageM)).toBe("blurry");
+  });
+
+  it("ülesande 1 seis (kamber 0,2 m, auk 2 mm) ei paista udune", () => {
+    // Ülesanne 1 küsib kujutise kõrgust – kui näidik ütleks seal „udune“, ajaks
+    // see õpilase segadusse enne, kui augu liugur üldse avaneb.
+    const taskImageM = pinholeImageHeight(6, 12, 0.2);
+    const blurM = pinholeBlurWidth(holeDiameterFromMm(2), 12, 0.2);
+    expect(classifySharpness(blurM, taskImageM)).toBe("sharp");
+  });
+
+  it("sama auk on suure kujutise juures terav ja väikese juures udune", () => {
+    // Hägu ei sõltu kujutise suurusest – seepärast otsustab SUHE.
+    const blurM = pinholeBlurWidth(holeDiameterFromMm(10), 12, 0.4);
+    expect(classifySharpness(blurM, 0.2)).toBe("blurry");
+    expect(classifySharpness(blurM, 2)).toBe("sharp");
+  });
+
+  it("null või negatiivne viskab vea", () => {
+    expect(() => classifySharpness(0, 0.2)).toThrow(RangeError);
+    expect(() => classifySharpness(0.01, 0)).toThrow(RangeError);
+    expect(() => classifySharpness(-0.01, 0.2)).toThrow(RangeError);
   });
 });
 
@@ -434,7 +536,7 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
     // 0,02 m ehk kaks sammu mõlemale poole – õpilane saab õigesse vahemikku.
     // Lühema kambri korral tuleks anda ABSOLUUTNE tolerants ±0,01 m.
     const question = numericQuestion("explore-2");
-    const sliderStepM = 0.01;
+    const sliderStepM = SLIDERS.boxDepthM.step;
     expect(question.tolerance).toEqual({ mode: "percent", value: 5 });
     expect((question.answer as number) * 0.05).toBeGreaterThan(sliderStepM);
     expect(checkNumericAnswer(question, "0,4").correct).toBe(true);
@@ -455,12 +557,23 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
   });
 
   it("simulatsiooni ülesanded on liuguritega üldse lahendatavad", () => {
-    // Kaugus 0,5–40 m, kambri sügavus 0,05–0,5 m. Kui ülesande 2 vastus jääks
-    // liuguri vahemikust välja, ei saaks õpilane teda kunagi seada.
+    // Kui ülesande 2 vastus jääks liuguri vahemikust välja, ei saaks õpilane
+    // teda kunagi seada – ja brauseris ei paistaks see kuidagi välja.
     const depthM = numericQuestion("explore-2").answer as number;
-    expect(depthM).toBeGreaterThanOrEqual(0.05);
-    expect(depthM).toBeLessThanOrEqual(0.5);
-    expect(EXAMPLE_OBJECTS.puu.distanceM).toBeLessThanOrEqual(40);
+    expect(depthM).toBeGreaterThanOrEqual(SLIDERS.boxDepthM.min);
+    expect(depthM).toBeLessThanOrEqual(SLIDERS.boxDepthM.max);
+    // Ülesande 1 kambri sügavus 0,2 m tuleb küsimuse tekstist, seega piisab
+    // kontrollist, et ka tema on liuguriga seatav.
+    expect(0.2).toBeLessThanOrEqual(SLIDERS.boxDepthM.max);
+    expect(EXAMPLE_OBJECTS.puu.distanceM).toBeLessThanOrEqual(SLIDERS.distanceM.max);
+  });
+
+  it("augu liugur avaneb pärast ülesannet 2, mitte enne", () => {
+    // Ülesanne 3 KÄSIB augu läbimõõtu keerata – kui lukk avaneks alles pärast
+    // seda küsimust, ei saaks õpilane ülesannet üldse teha.
+    const explore = activities.steps.find((step) => step.type === "explore");
+    const unlocks = explore?.type === "explore" ? explore.simulation?.unlocks : undefined;
+    expect(unlocks).toEqual([{ feature: "augu-labimoot", afterQuestion: "explore-2" }]);
   });
 });
 
