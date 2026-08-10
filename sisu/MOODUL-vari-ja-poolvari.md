@@ -159,6 +159,11 @@ ainult serv läheb hägusaks
 Õige on (b): laia allika iga serv „paistab" palli tagant natuke mööda, seega
 sööb allika laius täisvarju mõlemalt poolt. Vastust EI avaldata enne sammu 4.
 
+Nii (a) kui ka (c) saavad sildi `laiem-allikas-laiem-vari`: mõlema juur on
+sama – allika laiust ei seostata täisvarju laiusega – ja lahendus on neil
+sama (explore-2 ja explore-3). Õpetajajuhend kirjeldab mõlemat varianti ühe
+kirje all.
+
 ### 4. explore – virtuaalne labor (P1-PT1)
 
 SVG külgvaates: vasakul allikas (helendav riba, kõrgus muudetav), keskel must
@@ -174,8 +179,8 @@ Liugurid:
 - **allika laius** 0–40 cm, samm 1 cm (0 = punktallikas, sildiga)
 - **allikas → ekraan** (`b`) 1,2–5 m, samm 0,1 m
 - **allikas → pall** (`a`) 0,5–1 m, samm 0,1 m – AVANEB alles pärast
-  ülesannet 2 (moodulileping: alguses maksimaalselt kaks muudetavat suurust);
-  algväärtus 1 m
+  ülesannet 2 (silt `palli-kaugus`; moodulileping: alguses maksimaalselt kaks
+  muudetavat suurust); algväärtus 1 m
 
 **Vahemikud on valitud nii, et `b > a` on alati täidetud** (`a` suurim
 väärtus 1 m, `b` vähim 1,2 m) – nii ei pea Simulation.tsx liugureid
@@ -223,11 +228,14 @@ oleks 0,1 m ehk täpselt üks samm – protsent ei jätaks õpilasele mänguruum
    allikast, ekraan 4 m kaugusel. Ekraan on 4 korda kaugemal kui pall, seega
    on täisvari 4 korda laiem kui pall: 10 · 4 / 1 = 40 cm. Poolvarju ei ole,
    sest allikal ei ole laiust.
-2. **Osaline:** Lamp on 6 cm lai, pall 10 cm, pall 1 m ja ekraan 3 m kaugusel
-   lambist. Kui lai on täisvari? Täida: (0,1 · 3 − 0,06 · 2) / 1 = ___ m
+2. **Osaline:** Lamp on 6 cm lai. Pall on 10 cm läbimõõduga ja 1 m kaugusel
+   lambist, ekraan 3 m kaugusel lambist. Kui lai on täisvari? Täida:
+   (0,1 · 3 − 0,06 · 2) / 1 = ___ m
    (vastus 0,18 m ehk 18 cm; tolerants 5%; ühik `m`; vihje 1: „punktallikas
-   annaks 0,3 m – kui palju allika laius sellest ära sööb?"; vihje 2:
-   „0,06 · 2 = 0,12 m").
+   annaks 0,3 m – kui palju allika laius sellest ära sööb?"; vihje 2: „allika
+   laius sööb täisvarjust täpselt ühe poolvarju riba jagu: 0,12 m").
+   Vihje 2 arv tuleb `penumbraBandWidth`-ist, mitte sisufailis korrutamisest:
+   kaotatud täisvari ON täpselt ühe poolvarju riba laius (`s·(b − a)/a`).
 3. **Iseseisev (valik):** Miks on jalgade vari asfaldil terav ja pea vari
    hägune? (a) **pea on maapinnast kaugemal, seega on poolvarju riba seal
    laiem** (b) pea on ümmargune ja jalad teravad (c) Päikese valgus jõuab
@@ -239,7 +247,10 @@ oleks 0,1 m ehk täpselt üks samm – protsent ei jätaks õpilasele mänguruum
    terav (poolvari väga kitsas)? **väike LED-taskulamp pimedas toas**,
    pilvine päev õues, **käsi otse vastu lauda päikesepaistes**, valge lae
    alla peidetud lai valgusriba, **täht öötaevas kui allikas**.
-   `shuffle: true`.
+   `shuffle: true`. Mõlemad valed variandid (pilvine päev, lai valgusriba)
+   saavad sildi `laiem-allikas-laiem-vari`: õpilane ei seosta allika laiust
+   serva laiusega. `punktallikas-annab-poolvarju` siia EI sobi – kes usub, et
+   igal varjul on hägune serv, see ei valikski pilvist päeva „teravaks".
 
 ### 6. exit – väljumispilet
 
@@ -262,7 +273,7 @@ oleks 0,1 m ehk täpselt üks samm – protsent ei jätaks õpilasele mänguruum
 | `poolvari-on-pool` | poolvari on pool varjust või poolik täisvari | teooria + exit-1: poolvari on ala, kust paistab allika ÜKS OSA; laiust määrab allika laius, mitte „pool millestki" |
 | `vari-sama-suur-kui-keha` | vari on alati keha suurune | explore-1: punktallikaga on 10 cm pall 3 m peal juba 30 cm vari |
 | `laiem-allikas-laiem-vari` | suurem lamp teeb ka täisvarju suuremaks | predict + explore-2/3: laiem allikas SÖÖB täisvarju, kuni see kaob |
-| `hägu-tuleb-silmast` | hägune serv on silma või kaamera viga, mitte varju omadus | explore: joonisel on poolvari kiirtega välja joonistatud, laius on arvutatav |
+| `hagu-tuleb-silmast` | hägusale servale otsitakse põhjust mujalt kui varju geomeetriast: silma või kaamera viga, „valgus jõuab kaugemale nõrgemini“ | explore: joonisel on poolvari kiirtega välja joonistatud, laius on arvutatav |
 | `punktallikas-annab-poolvarju` | igal varjul on hägune serv | explore-1: punktallikaga on poolvari täpselt 0 |
 
 ## Õpetajale (teacher.ts)

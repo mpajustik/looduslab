@@ -9,6 +9,12 @@ import {
   umbraLengthBehindObject,
   umbraWidth,
 } from "../src/modules/physics/vari-ja-poolvari/model";
+import { manifest } from "../src/modules/physics/vari-ja-poolvari/manifest";
+import { activities } from "../src/modules/physics/vari-ja-poolvari/activities";
+import { teacher } from "../src/modules/physics/vari-ja-poolvari/teacher";
+import { activitiesSchema, manifestSchema } from "../src/engine/contractSchema";
+import { stepQuestions } from "../src/engine/contract";
+import { checkNumericAnswer } from "../src/checker/numeric";
 
 /**
  * Täisvarju ja poolvarju mudeli test.
@@ -20,8 +26,9 @@ import {
  * päriselt kontrollib (simulatsiooni ülesanded, harjutused, väljumispilet,
  * kordamiskaardid) – nii selgub näpuviga siin, mitte tunnis.
  *
- * Sisufaile (manifest, activities) siin veel ei ole – need tulevad järgmise
- * sammuga ja siis lisandub siia ka nende leping, nagu teistes moodulites.
+ * Faili teine pool (alates „manifest") valvab SISUFAILE: et moodulileping
+ * peaks paika ja et ülesannete vastused oleksid needsamad arvud, mis
+ * spetsifikatsioonis kirjas. Simulation.tsx tuleb alles järgmise sammuga.
  */
 
 describe("umbraWidth – täisvarju laius ekraanil", () => {
@@ -304,5 +311,286 @@ describe("vigased sisendid viskavad vea, mitte ei paranda ennast vaikselt", () =
     ["NaN sisendina", () => umbraWidth(0.1, Number.NaN, 1, 3)],
   ])("%s", (_what, kutse) => {
     expect(kutse).toThrow(RangeError);
+  });
+});
+
+describe("manifest", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => manifestSchema.parse(manifest)).not.toThrow();
+  });
+
+  it("viitab ainekava õpitulemusele, mõistetele ja praktilisele tööle", () => {
+    expect(manifest.outcomes).toContain("P1-T2");
+    expect(manifest.concepts).toEqual(["täisvari", "poolvari"]);
+    // P1-PT1 on siin kaetud MÕLEMAL kujul – simulatsioon explore-sammus ja
+    // päris katse teacher.ts-is. Katvusraport (samm 4.0) loeb tõe siit, seega
+    // kui päris katse juhend kunagi kaob, ei tohi see rida alles jääda.
+    expect(manifest.practicalWork).toEqual(["P1-PT1"]);
+    expect(teacher.procedure.length).toBeGreaterThan(0);
+  });
+});
+
+describe("activities", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => activitiesSchema.parse(activities)).not.toThrow();
+  });
+
+  it("on väike moodul: kuus sammu, üks ekraan korraga", () => {
+    // Suurusreegel (sisu/MALL-moodul.md): 3–6 sammu.
+    expect(activities.steps.map((step) => step.type)).toEqual([
+      "hook",
+      "theory",
+      "predict",
+      "explore",
+      "practice",
+      "exit",
+    ]);
+  });
+
+  it("ükski arvküsimus ei küsi kraade – nurki selles moodulis ei ole", () => {
+    // Sama valvur mis moodulis `valguse-sirgjooneline-levimine`: varju servad
+    // tulevad sirgetest joontest, mitte nurkadest (samm 4.1d otsus). Vaatab
+    // NII ühikut kui ka küsimuse teksti.
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "numeric") {
+          expect(
+            `${question.prompt} ${question.unit ?? ""}`.toLowerCase(),
+            question.id,
+          ).not.toMatch(/°|kraad/u);
+        }
+      }
+    }
+  });
+
+  it("hookil ja teoorial on spetsifikatsiooni joonised", () => {
+    // Sildid peavad klappima registriga (moduleFigures) – seda valvab
+    // tests/registry.test.ts alles siis, kui moodul on registris (samm 4.1l).
+    // Siin kontrollitakse, et kumbki samm ei jääks joonisteta: mõlemal seisab
+    // joonis spetsifikatsioonis nimeliselt.
+    const figures = activities.steps
+      .filter((step) => step.type === "hook" || step.type === "theory")
+      .map((step) =>
+        step.type === "hook" || step.type === "theory" ? step.figure : undefined,
+      );
+    expect(figures).toEqual(["vp-oma-vari", "vp-taisvari-poolvari"]);
+  });
+});
+
+/**
+ * Ülesannete vastused vs. spetsifikatsioon.
+ *
+ * `activities.ts` arvutab iga vastuse MUDELIST (CLAUDE.md reegel 1), seega
+ * valemi näpuviga siin välja ei paistaks – küll aga paistab välja vale allika
+ * laius, kaugus või palli mõõt. Seepärast võrreldakse arve spetsifikatsiooni
+ * tabeliga (sisu/MOODUL-vari-ja-poolvari.md), mitte mudeliga uuesti: see on
+ * ainus koht, kus keegi ütleb sõltumatult, MILLINE arv õpilase ekraanile peab
+ * jõudma.
+ */
+describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
+  const numericQuestion = (questionId: string) => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "numeric") {
+          // Variante sellel moodulil ei ole – vastus on küsimuse enda küljes.
+          expect(question.variants, questionId).toBeUndefined();
+          expect(question.answer, questionId).toBeDefined();
+          return question;
+        }
+      }
+    }
+    throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  it.each([
+    ["explore-1", "punktallika täisvari (cm)", 30],
+    ["explore-2", "5 cm lai lamp (cm)", 20],
+    ["explore-3", "kus täisvari kaob (m)", 2],
+    ["practice-1", "6 cm lai lamp (m)", 0.18],
+    ["practice-3", "täisvarju ulatus palli taga (m)", 0.5],
+    ["exit-2", "väljumispileti täisvari (m)", 0.2],
+  ])("%s (%s) → %s", (questionId, _what, expected) => {
+    expect(numericQuestion(questionId as string).answer).toBeCloseTo(
+      expected as number,
+      9,
+    );
+  });
+
+  it("laiust küsitakse simulatsioonis cm-des, arvutustes meetrites", () => {
+    // Ühikud ei ole moodulis ühtlased ja see on meelega: explore 1–2 loevad
+    // arvu EKRAANILT (näidik on sentimeetrites), ülejäänud arvküsimused annavad
+    // tekstis meetrid ja paluvad tehte teha. Kaugus on alati meetrites.
+    const expectedUnits: Record<string, string> = {
+      "explore-1": "cm",
+      "explore-2": "cm",
+      "explore-3": "m",
+      "practice-1": "m",
+      "practice-3": "m",
+      "exit-2": "m",
+    };
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind !== "numeric") continue;
+        expect(question.unit, question.id).toBe(expectedUnits[question.id]);
+      }
+    }
+  });
+
+  it("checker võtab täisvarju laiuse vastu nii sentimeetrites kui meetrites", () => {
+    // Checker teisendab m ↔ cm ise (src/checker/number.ts), seega ühik küsimuse
+    // juures ütleb ainult, mida ILMA ühikuta kirjutatud arv tähendab.
+    const question = numericQuestion("explore-1");
+    expect(checkNumericAnswer(question, "30").correct).toBe(true);
+    expect(checkNumericAnswer(question, "30 cm").correct).toBe(true);
+    expect(checkNumericAnswer(question, "0,3 m").correct).toBe(true);
+    // Punktallika asemel 5 cm laia lambiga saadud arv on vale ka õiges ühikus.
+    expect(checkNumericAnswer(question, "20").correct).toBe(false);
+    // „0,3" ilma ühikuta tähendab 0,3 cm – seepärast ütleb vihje, kust arvu
+    // lugeda.
+    expect(checkNumericAnswer(question, "0,3").correct).toBe(false);
+  });
+
+  it("kauguse tolerants on absoluutne ja liuguri sammust laiem", () => {
+    // Liuguri samm on 0,1 m ja 5% kahest meetrist oleks TÄPSELT üks samm –
+    // protsent ei jätaks õpilasele mänguruumi. Seepärast ±0,1 m.
+    const question = numericQuestion("explore-3");
+    expect(question.tolerance).toEqual({ mode: "absolute", value: 0.1 });
+    expect(question.tolerance.value).toBeGreaterThanOrEqual(
+      SLIDERS.screenDistanceM.step,
+    );
+    expect(checkNumericAnswer(question, "2").correct).toBe(true);
+    expect(checkNumericAnswer(question, "1,9").correct).toBe(true);
+    expect(checkNumericAnswer(question, "2,1").correct).toBe(true);
+    // Kaks sammu mööda on juba vale – muidu läbiks ka „täisvari kaob 3 m peal".
+    expect(checkNumericAnswer(question, "2,2").correct).toBe(false);
+    expect(checkNumericAnswer(question, "3").correct).toBe(false);
+  });
+
+  it("laiuse tolerants lubab lugemisviga, aga mitte vale seisu", () => {
+    const question = numericQuestion("explore-2");
+    expect(question.tolerance).toEqual({ mode: "percent", value: 5 });
+    expect(checkNumericAnswer(question, "20").correct).toBe(true);
+    // 30 cm on punktallika vastus ehk eelmine ülesanne – ta ei tohi läbi minna.
+    expect(checkNumericAnswer(question, "30").correct).toBe(false);
+  });
+
+  it("practice-1 vihje ütleb sama arvu, mille mudel täisvarjust ära sööb", () => {
+    // CodeRabbiti leid 2026-08-10: vihje arv oli enne arvutatud sisufailis
+    // (`0,06 · 2`), mis on füüsika väljaspool model.ts-i (reegel 1). Nüüd tuleb
+    // ta `penumbraBandWidth`-ist ja see test hoiab seost paigas: kaotatud
+    // täisvari ON täpselt ühe poolvarju riba laius.
+    const lossM =
+      umbraWidth(BALL_DIAMETER_M, 0, 1, 3) - umbraWidth(BALL_DIAMETER_M, 0.06, 1, 3);
+    expect(lossM).toBeCloseTo(penumbraBandWidth(0.06, 1, 3), 9);
+    expect(lossM).toBeCloseTo(0.12, 9);
+
+    // Ja seesama arv seisab vihjes kirjas – muidu õpetaks vihje valet tehet.
+    const hints = numericQuestion("practice-1").hints ?? [];
+    expect(hints.join(" ")).toContain("0,12");
+  });
+
+  it("simulatsiooni ülesanded on liuguritega üldse seatavad", () => {
+    // Kui mõni ülesande seis jääks liuguri vahemikust või sammu pealt välja,
+    // ei saaks õpilane teda kunagi seada – ja seda ei paneks brauseris keegi
+    // tähele.
+    const sammuPeal = (
+      value: number,
+      { min, max, step }: { min: number; max: number; step: number },
+    ) =>
+      value >= min &&
+      value <= max &&
+      Math.abs(Math.round((value - min) / step) - (value - min) / step) < 1e-9;
+
+    for (const sourceWidthM of [0, 0.05, 0.2]) {
+      expect(
+        sammuPeal(sourceWidthM, SLIDERS.sourceWidthM),
+        String(sourceWidthM),
+      ).toBe(true);
+    }
+    for (const screenM of [1.2, 2, 3]) {
+      expect(sammuPeal(screenM, SLIDERS.screenDistanceM), String(screenM)).toBe(true);
+    }
+    for (const objectM of [0.5, 1]) {
+      expect(sammuPeal(objectM, SLIDERS.objectDistanceM), String(objectM)).toBe(true);
+    }
+    // explore-3 vastus peab olema ekraani liuguriga tabatav.
+    const vanishM = numericQuestion("explore-3").answer as number;
+    expect(sammuPeal(vanishM, SLIDERS.screenDistanceM)).toBe(true);
+  });
+
+  it("explore-3 algseis on valitud nii, et üleminek oleks üldse näha", () => {
+    // Ülesanne käsib ekraani 1,2 m peale TAGASI tuua. Kui seal ei oleks
+    // täisvarju enam olemas, ei näeks õpilane kadumist, vaid ainult muutumatut
+    // ekraani – siis oleks ülesanne mõttetu.
+    expect(hasUmbra(BALL_DIAMETER_M, 0.2, 1, SLIDERS.screenDistanceM.min)).toBe(true);
+    expect(hasUmbra(BALL_DIAMETER_M, 0.2, 1, 3)).toBe(false);
+  });
+
+  it("lahendatud näidis ja kordamiskaart rc-3 ütlevad mudeliga sama arvu", () => {
+    const practice = activities.steps.find((step) => step.type === "practice");
+    const worked = practice?.type === "practice" ? practice.worked : undefined;
+    // Punktallikas, ekraan 4 m: 10 cm · 4 = 40 cm.
+    expect(worked?.answer).toContain("40 cm");
+    expect(worked?.answer).toContain("0,4 m");
+    // Sama seis mis explore-1: 10 cm · 3 = 30 cm.
+    const card = activities.reviewCards.find((item) => item.id === "rc-3");
+    expect(card?.answer).toContain("30 cm");
+  });
+});
+
+describe("õpetajajuhend katab mooduli väärarusaamad", () => {
+  const known = new Set(teacher.misconceptions.map((item) => item.id));
+
+  it("iga activities.ts silt on õpetajajuhendis lahti seletatud", () => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "choice") {
+          for (const option of question.options) {
+            if (option.misconception) {
+              expect(known, `${question.id}/${option.id}`).toContain(
+                option.misconception,
+              );
+            }
+          }
+        }
+        if (question.kind === "numeric") {
+          for (const trap of question.traps ?? []) {
+            expect(known, question.id).toContain(trap.misconception);
+          }
+        }
+      }
+    }
+  });
+
+  it("spetsifikatsiooni kuus väärarusaama on kõik olemas", () => {
+    for (const id of [
+      "vari-on-asi",
+      "poolvari-on-pool",
+      "vari-sama-suur-kui-keha",
+      "laiem-allikas-laiem-vari",
+      "hagu-tuleb-silmast",
+      "punktallikas-annab-poolvarju",
+    ]) {
+      expect(known, id).toContain(id);
+    }
+  });
+
+  it("päris katse mõõdab kaugusi LAMBIST, nagu simulatsioongi", () => {
+    // Kokkulepe, mis läbib kogu moodulit (model.ts päis): `a` ja `b` on
+    // mõlemad allikast. Pallist mõõtes annaks sama katse kolmekordse varju ja
+    // õpilase tabel ei klapiks simulatsiooniga.
+    expect(teacher.procedure.join(" ")).toContain("LAMBIST");
+  });
+
+  it("tunniplaani minutid annavad kokku manifesti tunnipikkuse", () => {
+    const total = teacher.lessonPlan.reduce((sum, item) => sum + item.minutes, 0);
+    expect(total).toBe(manifest.minutes.lesson);
+  });
+
+  it("iga tunniplaani rida vastab päris sammule", () => {
+    const types = new Set(activities.steps.map((step) => step.type));
+    for (const item of teacher.lessonPlan) {
+      expect(types, item.step).toContain(item.step);
+    }
   });
 });
