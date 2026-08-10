@@ -6,6 +6,14 @@ import {
   classifyBySize,
   pointSourceDistance,
 } from "../src/modules/physics/valgusallikad/model";
+import { manifest } from "../src/modules/physics/valgusallikad/manifest";
+import { activities } from "../src/modules/physics/valgusallikad/activities";
+import { teacher } from "../src/modules/physics/valgusallikad/teacher";
+import {
+  activitiesSchema,
+  manifestSchema,
+} from "../src/engine/contractSchema";
+import { stepQuestions } from "../src/engine/contract";
 
 /**
  * Valgusallikate mudeli test.
@@ -209,5 +217,134 @@ describe("EXAMPLE_SOURCES – simulatsiooni ja ülesannete näited", () => {
     ).toBeLessThan(
       apparentSizeDeg(EXAMPLE_SOURCES.aken.sizeM, EXAMPLE_SOURCES.aken.distanceM),
     );
+  });
+});
+
+describe("manifest", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => manifestSchema.parse(manifest)).not.toThrow();
+  });
+
+  it("viitab ainekava õpitulemusele ja õpetab punktvalgusallika mõistet", () => {
+    expect(manifest.outcomes).toContain("P1-T1");
+    expect(manifest.concepts).toContain("punktvalgusallikas");
+    // Praktilist tööd see moodul ei kata – P1-PT1 on moodulis
+    // `vari-ja-poolvari`. Katvusraport ei tohi siin rohelist näidata.
+    expect(manifest.practicalWork).toEqual([]);
+  });
+});
+
+describe("activities", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => activitiesSchema.parse(activities)).not.toThrow();
+  });
+
+  it("on väike moodul: kuus sammu, üks ekraan korraga", () => {
+    // Suurusreegel (sisu/MALL-moodul.md): 3–6 sammu. Seitsmes samm oleks
+    // märk, et moodul tuleks pooleks jagada.
+    expect(activities.steps.map((step) => step.type)).toEqual([
+      "hook",
+      "theory",
+      "predict",
+      "explore",
+      "practice",
+      "exit",
+    ]);
+  });
+});
+
+/**
+ * Ülesannete vastused vs. spetsifikatsioon.
+ *
+ * `activities.ts` arvutab iga vastuse MUDELIST (CLAUDE.md reegel 1), seega
+ * valemi näpuviga siin välja ei paistaks – küll aga paistab välja vale mõõde
+ * või kaugus. Seepärast võrreldakse arve spetsifikatsiooni tabeliga
+ * (sisu/MOODUL-valgusallikad.md), mitte mudeliga uuesti: see on ainus koht,
+ * kus keegi ütleb sõltumatult, MILLINE arv õpilase ekraanile peab jõudma.
+ */
+describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
+  const numericAnswer = (questionId: string): number => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "numeric") {
+          // Variante sellel moodulil ei ole – vastus on küsimuse enda küljes.
+          expect(question.variants, questionId).toBeUndefined();
+          expect(question.answer, questionId).toBeDefined();
+          return question.answer as number;
+        }
+      }
+    }
+    throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  it.each([
+    ["explore-2", "päevavalgustoru punktallikaks", 68.8, 1],
+    ["explore-3", "LED 0,5 m kauguselt", 0.57, 2],
+    ["practice-1", "lambipirn 4 m kauguselt", 1.15, 2],
+    ["practice-3", "Päikese näiv suurus", 0.53, 2],
+    ["exit-2", "tänavalamp 12 m kõrgusel", 0.29, 2],
+  ])("%s (%s) → %s", (questionId, _what, expected, digits) => {
+    expect(numericAnswer(questionId as string)).toBeCloseTo(
+      expected as number,
+      digits as number,
+    );
+  });
+
+  it("lahendatud näidis ja kordamiskaart rc-4 ütlevad sama arvu (0,29°)", () => {
+    const practice = activities.steps.find((step) => step.type === "practice");
+    const worked = practice?.type === "practice" ? practice.worked : undefined;
+    expect(worked?.answer).toContain("0,29");
+    const card = activities.reviewCards.find((item) => item.id === "rc-4");
+    expect(card?.answer).toContain("0,29");
+  });
+
+  it("kordamiskaart rc-5 ütleb Päikese näiva suuruse (0,53°)", () => {
+    const card = activities.reviewCards.find((item) => item.id === "rc-5");
+    expect(card?.answer).toContain("0,53");
+  });
+
+  it("simulatsiooni ülesanne 1 on üldse lahendatav", () => {
+    // Kui toru oleks 2 m kauguselt juba punktallikas, oleks explore-1 õige
+    // vastus „jah" ja explore-2 küsiks kaugust, mida ei olegi.
+    const { sizeM, distanceM } = EXAMPLE_SOURCES.paevavalgustoru;
+    expect(classifyBySize(apparentSizeDeg(sizeM, distanceM))).toBe("extended");
+    expect(pointSourceDistance(sizeM)).toBeGreaterThan(distanceM);
+  });
+});
+
+describe("õpetajajuhend katab mooduli väärarusaamad", () => {
+  const known = new Set(teacher.misconceptions.map((item) => item.id));
+
+  it("iga activities.ts silt on õpetajajuhendis lahti seletatud", () => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "choice") {
+          for (const option of question.options) {
+            if (option.misconception) {
+              expect(known, `${question.id}/${option.id}`).toContain(
+                option.misconception,
+              );
+            }
+          }
+        }
+        if (question.kind === "numeric") {
+          for (const trap of question.traps ?? []) {
+            expect(known, question.id).toContain(trap.misconception);
+          }
+        }
+      }
+    }
+  });
+
+  it("tunniplaani minutid annavad kokku manifesti tunnipikkuse", () => {
+    const total = teacher.lessonPlan.reduce((sum, item) => sum + item.minutes, 0);
+    expect(total).toBe(manifest.minutes.lesson);
+  });
+
+  it("iga tunniplaani rida vastab päris sammule", () => {
+    const types = new Set(activities.steps.map((step) => step.type));
+    for (const item of teacher.lessonPlan) {
+      expect(types, item.step).toContain(item.step);
+    }
   });
 });

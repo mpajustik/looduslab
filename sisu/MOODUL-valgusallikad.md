@@ -174,12 +174,14 @@ aken · Päike (Päike lülitab skaala kosmoseskaalale ja näitab 0,53°).
 
 ## Õpetajale (teacher.ts)
 
-- **(K) vahendid:** taskulamp või telefonituli, üks suurem lambivari või
-  matt kilekott lambi ümber, pliiats, valge paberileht. Käik: hoia
-  pliiatsit paberi kohal ja valgusta esmalt palja LED-iga (terav vari),
-  siis läbi kile hajutatud valgusega (udune vari). Küsi, kumb allikas oli
+- **(K) vahendid:** taskulamp või telefonituli, hajuti (küpsetuspaberi leht
+  või matt kilekott), pliiats, valge paberileht. Käik: hoia pliiatsit paberi
+  kohal ja valgusta esmalt palja LED-iga (terav vari), siis hoia hajutit
+  lambi EES õhus ja valgusta uuesti (udune vari). Küsi, kumb allikas oli
   punktallikale lähemal. Ohutus: **ei vaadata Päikesesse ega taskulambi
-  LED-i otse**, laserit selles tunnis ei kasutata.
+  LED-i otse**; hajutit **ei mähita lambi ümber ega kaeta lampi kinni**
+  (kuum lamp + plast on tuleoht – CodeRabbiti leid 2026-08-10); laserit
+  selles tunnis ei kasutata.
 - **Aruteluküsimused:** Miks öeldakse, et Kuu „paistab"? Miks on
   operatsioonilambil palju väikeseid LED-e (varje ei teki)? Mis juhtuks,
   kui Maalt lahkuv soojuskiirgus jääks kinni?
