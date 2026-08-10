@@ -45,6 +45,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/vari-ja-poolvari/manifest")).manifest,
     activities: (await import("./physics/vari-ja-poolvari/activities")).activities,
   }),
+  "physics.varjutused": async () => ({
+    manifest: (await import("./physics/varjutused/manifest")).manifest,
+    activities: (await import("./physics/varjutused/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -90,6 +94,11 @@ export const moduleSimulations: Record<
   ),
   "physics.vari-ja-poolvari": lazy(() =>
     import("./physics/vari-ja-poolvari/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.varjutused": lazy(() =>
+    import("./physics/varjutused/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -172,6 +181,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "vp-taisvari-poolvari": lazy(() =>
       import("./physics/vari-ja-poolvari/figures").then((module) => ({
         default: module.UmbraPenumbraFigure,
+      })),
+    ),
+  },
+  "physics.varjutused": {
+    "vj-eesti-varjutus": lazy(() =>
+      import("./physics/varjutused/figures").then((module) => ({
+        default: module.EstoniaEclipseTimelineFigure,
+      })),
+    ),
+    "vj-kaks-varjutust": lazy(() =>
+      import("./physics/varjutused/figures").then((module) => ({
+        default: module.TwoEclipsesFigure,
+      })),
+    ),
+    "vj-varjutuse-rada": lazy(() =>
+      import("./physics/varjutused/figures").then((module) => ({
+        default: module.EclipsePathMapFigure,
       })),
     ),
   },

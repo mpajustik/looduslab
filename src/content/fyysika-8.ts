@@ -30,6 +30,7 @@ export const course = defineCourse({
         "physics.valgusallikad",
         "physics.valguse-sirgjooneline-levimine",
         "physics.vari-ja-poolvari",
+        "physics.varjutused",
         "physics.peegeldumisseadus",
       ],
     },

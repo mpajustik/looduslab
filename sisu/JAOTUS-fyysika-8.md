@@ -40,7 +40,7 @@ labor · harjutusmoodul · teooriakonspekt
 | lambivalik | rakendusmoodul | P1-T1 (osa: liigituse rakendamine) | – | plaanis |
 | valguse-sirgjooneline-levimine | mikromoodul | P1-T2 (osa: sirgjooneline levimine) | valgusvihk, optiline keskkond | ehitatud |
 | vari-ja-poolvari | virtuaalne labor | P1-T2 (osa: varju joonised); P1-PT1 (sim + päris katse juhend) | täisvari, poolvari | ehitatud |
-| varjutused | rakendusmoodul | P1-T2 (osa: varju ülekanne taevakehadele) | – | spetsitud |
+| varjutused | rakendusmoodul | P1-T2 (osa: varju ülekanne taevakehadele) | – | ehitatud |
 | kuu-faasid | mikromoodul | P1-T2 (osa: valgustatud poolkera vaatenurk – õppesisu „Kuu faasid") | – | plaanis |
 | varjutused-ja-kuu-faasid | rakendusmoodul | – (jagatud kaheks: `varjutused` + `kuu-faasid`) | – | arhiveeritud |
 | liitvalgus-ja-spekter | mikromoodul | P1-T1 (osa: spektraalne koostis); P1-T3 (osa: spekter) | valge valgus, liht- ja liitvalgus, valguse spekter | plaanis |
