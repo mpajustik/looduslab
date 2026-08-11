@@ -32,6 +32,9 @@ export const course = defineCourse({
         "physics.vari-ja-poolvari",
         "physics.varjutused",
         "physics.peegeldumisseadus",
+        // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
+        // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.
+        "physics.tasapeegli-kujutis",
       ],
     },
     // P2. Valguse murdumine

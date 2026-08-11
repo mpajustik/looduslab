@@ -49,6 +49,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/varjutused/manifest")).manifest,
     activities: (await import("./physics/varjutused/activities")).activities,
   }),
+  "physics.tasapeegli-kujutis": async () => ({
+    manifest: (await import("./physics/tasapeegli-kujutis/manifest")).manifest,
+    activities: (await import("./physics/tasapeegli-kujutis/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -99,6 +103,11 @@ export const moduleSimulations: Record<
   ),
   "physics.varjutused": lazy(() =>
     import("./physics/varjutused/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.tasapeegli-kujutis": lazy(() =>
+    import("./physics/tasapeegli-kujutis/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -198,6 +207,18 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "vj-varjutuse-rada": lazy(() =>
       import("./physics/varjutused/figures").then((module) => ({
         default: module.EclipsePathMapFigure,
+      })),
+    ),
+  },
+  "physics.tasapeegli-kujutis": {
+    "tp-poe-peegel": lazy(() =>
+      import("./physics/tasapeegli-kujutis/figures").then((module) => ({
+        default: module.ShopMirrorFigure,
+      })),
+    ),
+    "tp-nailine-kujutis": lazy(() =>
+      import("./physics/tasapeegli-kujutis/figures").then((module) => ({
+        default: module.VirtualImageFigure,
       })),
     ),
   },
