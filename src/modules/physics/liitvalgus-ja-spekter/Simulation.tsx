@@ -19,6 +19,7 @@ import {
   colourAtWavelength,
   emitsAtWavelength,
   emittedBands,
+  emittedSegments,
   isCompositeLight,
   perceivedColour,
 } from "./model";
@@ -141,6 +142,7 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
 
   // --- Füüsika (kõik mudelist) ----------------------------------------------
   const source = findSource(sourceId);
+  const litParts = emittedSegments(sourceId);
   const bands = bandCount(sourceId);
   const composite = isCompositeLight(sourceId);
   const seenColour = perceivedColour(sourceId);
@@ -179,26 +181,21 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
           fill={SPECTRUM_OFF_COLOUR}
           rx={3}
         />
-        {/* Värvilised tükid peale. `flatMap`, mitte pesastatud `map`:
-            pesastatud massiiv jõuaks Reactini massiivina massiivi sees ja
-            tekitaks võtmehoiatuse ka siis, kui igal ristkülikul on võti. */}
-        {SPECTRUM_STOPS.flatMap((band) =>
-          source.emitted.map((range) => {
-            const from = Math.max(band.minNm, range.minNm);
-            const to = Math.min(band.maxNm, range.maxNm);
-            if (to <= from) return null;
-            return (
-              <rect
-                key={`${band.id}-${range.minNm}`}
-                x={xAt(from)}
-                y={BAR_Y}
-                width={xAt(to) - xAt(from)}
-                height={BAR_HEIGHT}
-                fill={bandColour(band.id)}
-              />
-            );
-          }),
-        )}
+        {/* Värvilised tükid peale. Millised kohad värviliseks lähevad, ütleb
+            MUDEL (`emittedSegments`) – siin on ainult koordinaadid ja värvid
+            (CLAUDE.md reegel 1, CodeRabbiti leid samm 4.1x). Sama funktsioon
+            annab ka ribade arvu, seega näidik „4 riba" ja joonis ei saa
+            teineteisele vastu rääkida. */}
+        {litParts.map((segment) => (
+          <rect
+            key={`${segment.bandId}-${segment.minNm}`}
+            x={xAt(segment.minNm)}
+            y={BAR_Y}
+            width={xAt(segment.maxNm) - xAt(segment.minNm)}
+            height={BAR_HEIGHT}
+            fill={bandColour(segment.bandId)}
+          />
+        ))}
         {/* Ribade nimed riba sisse: värv ei ole kunagi ainus info kandja, ja
             ülesanne 3 („milline värv on peaaegu puudu?") eeldab, et õpilane
             oskab puuduvale kohale NIME anda.

@@ -16,7 +16,9 @@ import {
   colourAtWavelength,
   emitsAtWavelength,
   emittedBands,
+  emittedSegments,
   isCompositeLight,
+  litSegments,
   perceivedColour,
   perceivedColourForBands,
   visibleRangeWidthNm,
@@ -194,6 +196,89 @@ describe("bandCount ja emittedBands – mitu vikerkaarevärvi spektris on", () =
     expect(() => bandsForRanges([range as { minNm: number; maxNm: number }])).toThrow(
       RangeError,
     );
+  });
+});
+
+describe("litSegments ja emittedSegments – mis kohad ribal on värvilised", () => {
+  it("päikesevalgus katab kõik seitse ribat täies ulatuses", () => {
+    // Spetsifikatsiooni tabel: pidev spekter 380–760 nm. Iga tükk peab
+    // ulatuma oma riba servast servani – muidu jääks joonisele triip vahele.
+    const segments = emittedSegments("sun");
+    expect(segments).toEqual(
+      SPECTRUM_BANDS.map((band) => ({
+        bandId: band.id,
+        label: band.label,
+        minNm: band.minNm,
+        maxNm: band.maxNm,
+      })),
+    );
+  });
+
+  it("naatriumlamp annab ühe kitsa tüki kollasesse: 588–590 nm", () => {
+    expect(emittedSegments("sodium")).toEqual([
+      { bandId: "yellow", label: "kollane", minNm: 588, maxNm: 590 },
+    ]);
+  });
+
+  it("laser annab ühe tüki punasesse: 645–655 nm", () => {
+    expect(emittedSegments("laser")).toEqual([
+      { bandId: "red", label: "punane", minNm: 645, maxNm: 655 },
+    ]);
+  });
+
+  it("valge LED-i tükid lõpevad oranži otsas – punasesse ta ei ulatu", () => {
+    // Mooduli tähtsaim „aha": spektris on auk seal, kus punane peaks olema.
+    expect(emittedSegments("led")).toEqual([
+      { bandId: "blue", label: "sinine", minNm: 450, maxNm: 495 },
+      { bandId: "green", label: "roheline", minNm: 495, maxNm: 570 },
+      { bandId: "yellow", label: "kollane", minNm: 570, maxNm: 590 },
+      { bandId: "orange", label: "oranž", minNm: 590, maxNm: 620 },
+    ]);
+  });
+
+  it("ühine otspunkt ei tee tükki: 588–590 ei värvi oranži riba", () => {
+    const litBands = litSegments([{ minNm: 588, maxNm: 590 }]).map(
+      (segment) => segment.bandId,
+    );
+    expect(litBands).toEqual(["yellow"]);
+  });
+
+  it("tükk lõigatakse riba servani, mitte üle serva", () => {
+    // Vahemik ulatub üle kolme riba; iga tükk peab jääma oma riba sisse.
+    expect(litSegments([{ minNm: 560, maxNm: 600 }])).toEqual([
+      { bandId: "green", label: "roheline", minNm: 560, maxNm: 570 },
+      { bandId: "yellow", label: "kollane", minNm: 570, maxNm: 590 },
+      { bandId: "orange", label: "oranž", minNm: 590, maxNm: 600 },
+    ]);
+  });
+
+  it("ühel ribal võib olla mitu tükki, kui vahemikke on mitu", () => {
+    expect(litSegments([
+      { minNm: 500, maxNm: 510 },
+      { minNm: 540, maxNm: 550 },
+    ])).toEqual([
+      { bandId: "green", label: "roheline", minNm: 500, maxNm: 510 },
+      { bandId: "green", label: "roheline", minNm: 540, maxNm: 550 },
+    ]);
+  });
+
+  it("tükid ja ribade arv räägivad sama juttu", () => {
+    // Just selle pärast on lõikamine mudelis: näidik ja joonis tulevad ühest
+    // ja samast reeglist (CodeRabbiti leid samm 4.1x).
+    for (const source of LIGHT_SOURCES) {
+      const litBandIds = new Set(
+        emittedSegments(source.id).map((segment) => segment.bandId),
+      );
+      expect(litBandIds.size).toBe(bandCount(source.id));
+      expect([...litBandIds]).toEqual(
+        emittedBands(source.id).map((band) => band.id),
+      );
+    }
+  });
+
+  it("vigane vahemik viskab vea ka siin", () => {
+    expect(() => litSegments([{ minNm: 600, maxNm: 500 }])).toThrow(RangeError);
+    expect(() => emittedSegments("kuu")).toThrow(RangeError);
   });
 });
 

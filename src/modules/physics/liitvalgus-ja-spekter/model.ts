@@ -273,14 +273,24 @@ function rangeContains(range: WavelengthRange, nm: number): boolean {
 }
 
 /**
- * Kas kaks vahemikku kattuvad TÕELISE lõiguna, mitte ainult otspunktis.
+ * Kahe vahemiku ühisosa, kui see on TÕELINE lõik – muidu `null`.
  *
- * See on `bandCount`-i süda. Ühine otspunkt ei tee ribat: naatriumlamp
- * (588–590) puudutab oranži riba (590–620) täpselt punktis 590, aga oranži
- * valgust temast ei tule – ta jääb ühe ribaga lihtvalguseks.
+ * See on kogu mooduli kattumisreegel ja ta on siin ÜHES kohas: temast
+ * sõltuvad nii `bandCount` (mitu ribat allikal on) kui ka `litSegments` (mis
+ * kohad ribal on värvilised). Kui reegel oleks kirjas kaks korda, võiks ühel
+ * päeval juhtuda, et näidik ütleb „1 riba", aga joonis värvib kaks.
+ *
+ * Ühine otspunkt ei tee ribat: naatriumlamp (588–590) puudutab oranži riba
+ * (590–620) täpselt punktis 590, aga oranži valgust temast ei tule – ta jääb
+ * ühe ribaga lihtvalguseks.
  */
-function rangesOverlap(a: WavelengthRange, b: WavelengthRange): boolean {
-  return Math.max(a.minNm, b.minNm) < Math.min(a.maxNm, b.maxNm);
+function rangeIntersection(
+  a: WavelengthRange,
+  b: WavelengthRange,
+): WavelengthRange | null {
+  const minNm = Math.max(a.minNm, b.minNm);
+  const maxNm = Math.min(a.maxNm, b.maxNm);
+  return maxNm > minNm ? { minNm, maxNm } : null;
 }
 
 /**
@@ -335,6 +345,52 @@ export function emitsAtWavelength(sourceId: string, nm: number): boolean {
 }
 
 /**
+ * Üks värviline tükk spektriribal: see osa ühest vikerkaarevärvist, mida
+ * antud vahemikud päriselt katavad.
+ *
+ * `bandId` ja `label` on kaasas selleks, et joonis teaks, mis värvi ja mis
+ * nimega tükk see on, ilma et ta peaks ribade tabelit ise uuesti läbi otsima.
+ */
+export interface SpectrumSegment extends WavelengthRange {
+  readonly bandId: SpectrumBandId;
+  readonly label: string;
+}
+
+/**
+ * Millised KOHAD spektriribal need vahemikud värviliseks teevad.
+ *
+ * Miks mudelis, mitte joonisel: see on sama kattumisküsimus, mis otsustab ka
+ * ribade arvu (`bandCount`) – ainult vastus on täpsem („kollasest 588-st
+ * 590-ni" vs „kollane on olemas"). Kui lõikamine elaks joonisel, oleks sama
+ * reegel kirjas kahes kohas ja kolmandas (`figures.tsx`) veel kord
+ * (CodeRabbiti leid samm 4.1x). Nanomeetrid on füüsika, pikslid mitte –
+ * joonisele jäävad ainult koordinaadid ja värvid (CLAUDE.md reegel 1).
+ *
+ * Tulemus on spektri järjekorras. Ühel ribal VÕIB olla mitu tükki, kui
+ * vahemikud katavad temast eri osi – seepärast on see loend, mitte üks tükk
+ * riba kohta.
+ *
+ * Ühine otspunkt tükki ei tee (vt `rangeIntersection`): naatriumlamp
+ * (588–590) ei värvi oranži riba (590–620) ühtki punkti.
+ */
+export function litSegments(
+  ranges: readonly WavelengthRange[],
+): readonly SpectrumSegment[] {
+  ranges.forEach(assertRange);
+  return SPECTRUM_BANDS.flatMap((band) =>
+    ranges.flatMap((range) => {
+      const lit = rangeIntersection(band, range);
+      return lit ? [{ bandId: band.id, label: band.label, ...lit }] : [];
+    }),
+  );
+}
+
+/** Millised kohad spektriribal see allikas värviliseks teeb. */
+export function emittedSegments(sourceId: string): readonly SpectrumSegment[] {
+  return litSegments(findSource(sourceId).emitted);
+}
+
+/**
  * Millised spektri ribad need vahemikud vähemalt osaliselt katavad.
  *
  * Eraldi (allikast sõltumatu) funktsioon selleks, et testida saaks ka
@@ -348,10 +404,12 @@ export function emitsAtWavelength(sourceId: string, nm: number): boolean {
 export function bandsForRanges(
   ranges: readonly WavelengthRange[],
 ): readonly SpectrumBand[] {
-  ranges.forEach(assertRange);
-  return SPECTRUM_BANDS.filter((band) =>
-    ranges.some((range) => rangesOverlap(band, range)),
+  // Tuletatud `litSegments`-ist, mitte arvutatud teist korda: nii ei saa
+  // „mitu ribat" ja „mis kohad on värvilised" kunagi lahku minna.
+  const litBandIds = new Set<string>(
+    litSegments(ranges).map((segment) => segment.bandId),
   );
+  return SPECTRUM_BANDS.filter((band) => litBandIds.has(band.id));
 }
 
 /** Millised spektri ribad see allikas vähemalt osaliselt katab. */

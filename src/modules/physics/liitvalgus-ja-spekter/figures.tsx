@@ -1,5 +1,5 @@
 import { SPECTRUM_OFF_COLOUR, SPECTRUM_STOPS, bandColour } from "./display";
-import { VISIBLE_MAX_NM, VISIBLE_MIN_NM } from "./model";
+import { VISIBLE_MAX_NM, VISIBLE_MIN_NM, litSegments } from "./model";
 
 /**
  * Mooduli joonised (src/engine/figures.ts).
@@ -59,26 +59,19 @@ function SpectrumBar({ y, height, lit, withLabels = false }: BarProps) {
         fill={SPECTRUM_OFF_COLOUR}
         rx={3}
       />
-      {/* `flatMap`, mitte pesastatud `map`: pesastatud massiiv jõuaks Reactini
-          massiivina massiivi sees ja tekitaks võtmehoiatuse ka siis, kui igal
-          ristkülikul on võti olemas. */}
-      {SPECTRUM_STOPS.flatMap((band) =>
-        lit.map((range) => {
-          const from = Math.max(band.minNm, range.minNm);
-          const to = Math.min(band.maxNm, range.maxNm);
-          if (to <= from) return null;
-          return (
-            <rect
-              key={`${band.id}-${range.minNm}`}
-              x={xAt(from)}
-              y={y}
-              width={xAt(to) - xAt(from)}
-              height={height}
-              fill={bandColour(band.id)}
-            />
-          );
-        }),
-      )}
+      {/* Millised kohad värviliseks lähevad, ütleb MUDEL (`litSegments`) –
+          joonis teab ainult, kus need kohad ekraanil on ja mis värvi nad on
+          (CLAUDE.md reegel 1, CodeRabbiti leid samm 4.1x). */}
+      {litSegments(lit).map((segment) => (
+        <rect
+          key={`${segment.bandId}-${segment.minNm}`}
+          x={xAt(segment.minNm)}
+          y={y}
+          width={xAt(segment.maxNm) - xAt(segment.minNm)}
+          height={height}
+          fill={bandColour(segment.bandId)}
+        />
+      ))}
       {withLabels &&
         SPECTRUM_STOPS.map((band) => (
           <text
