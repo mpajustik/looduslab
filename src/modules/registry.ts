@@ -61,6 +61,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/esemete-varvus/manifest")).manifest,
     activities: (await import("./physics/esemete-varvus/activities")).activities,
   }),
+  "physics.valgusfiltrid": async () => ({
+    manifest: (await import("./physics/valgusfiltrid/manifest")).manifest,
+    activities: (await import("./physics/valgusfiltrid/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -126,6 +130,11 @@ export const moduleSimulations: Record<
   ),
   "physics.esemete-varvus": lazy(() =>
     import("./physics/esemete-varvus/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.valgusfiltrid": lazy(() =>
+    import("./physics/valgusfiltrid/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -271,6 +280,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "ev-kolm-eset": lazy(() =>
       import("./physics/esemete-varvus/figures").then((module) => ({
         default: module.ThreeObjectsFigure,
+      })),
+    ),
+  },
+  "physics.valgusfiltrid": {
+    "vf-lava-prozektor": lazy(() =>
+      import("./physics/valgusfiltrid/figures").then((module) => ({
+        default: module.StageSpotlightFigure,
+      })),
+    ),
+    "vf-uks-filter": lazy(() =>
+      import("./physics/valgusfiltrid/figures").then((module) => ({
+        default: module.SingleFilterFigure,
+      })),
+    ),
+    "vf-kaks-pesa": lazy(() =>
+      import("./physics/valgusfiltrid/figures").then((module) => ({
+        default: module.TwoSlotsFigure,
       })),
     ),
   },

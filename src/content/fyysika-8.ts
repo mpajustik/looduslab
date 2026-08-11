@@ -41,6 +41,11 @@ export const course = defineCourse({
         // SEADUST (α = β) ta ei vaja: siin on kõik pinnad matid ja küsimus on
         // „mis tuleb tagasi", mitte „mis nurga all".
         "physics.esemete-varvus",
+        // Valgusfiltrid on P1-T3 KOLMAS tahk: liitvalgus ütles, millest valgus
+        // koosneb, esemete värvus vaatas, mis tuleb esemelt TAGASI – siin
+        // vaadatakse, mis läheb esemest LÄBI. Ta EELDAB mõlemat eelmist
+        // (sisu/JAOTUS-fyysika-8.md P1 tabel), peegeldumise seadust aga mitte.
+        "physics.valgusfiltrid",
         "physics.peegeldumisseadus",
         // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
         // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.
