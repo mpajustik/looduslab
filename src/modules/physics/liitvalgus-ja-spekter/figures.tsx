@@ -86,7 +86,7 @@ function SpectrumBar({ y, height, lit, withLabels = false }: BarProps) {
             x={(xAt(band.minNm) + xAt(band.maxNm)) / 2}
             y={y + height / 2}
             textAnchor="middle"
-            fill="#ffffff"
+            fill={band.labelColour}
             fontSize={10}
             transform={`rotate(-90 ${(xAt(band.minNm) + xAt(band.maxNm)) / 2} ${y + height / 2})`}
           >

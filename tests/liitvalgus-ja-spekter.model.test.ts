@@ -25,8 +25,10 @@ import { manifest } from "../src/modules/physics/liitvalgus-ja-spekter/manifest"
 import { activities } from "../src/modules/physics/liitvalgus-ja-spekter/activities";
 import { teacher } from "../src/modules/physics/liitvalgus-ja-spekter/teacher";
 import {
+  DARK_LABEL_COLOUR,
   SPECTRUM_STOPS,
   bandColour,
+  bandLabelColour,
 } from "../src/modules/physics/liitvalgus-ja-spekter/display";
 import { activitiesSchema, manifestSchema } from "../src/engine/contractSchema";
 import { stepQuestions } from "../src/engine/contract";
@@ -554,6 +556,48 @@ describe("jooniste värvid (display.ts)", () => {
 
   it("tundmatu riba viskab vea, mitte ei jäta joonisele auku", () => {
     expect(() => bandColour("roosa")).toThrow(RangeError);
+    expect(() => bandLabelColour("roosa")).toThrow(RangeError);
+  });
+
+  /**
+   * Sildi ja riba kontrast (WCAG 2.1, väike tekst: 4,5:1).
+   *
+   * Joonisel on riba nimi kirjutatud riba enda peale 10 px fondiga ja teda
+   * loetakse projektorilt klassi tagant. Kollasel ja oranžil ribal andis valge
+   * tekst kontrasti 2,9:1 ja 3,6:1 – seepärast on nende silt tume
+   * (CodeRabbiti leid samm 4.1w).
+   */
+  const relativeLuminance = (hex: string) => {
+    const channel = (from: number) => {
+      const srgb = Number.parseInt(hex.slice(from, from + 2), 16) / 255;
+      return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+  };
+
+  const contrast = (a: string, b: string) => {
+    const [light, dark] = [relativeLuminance(a), relativeLuminance(b)].sort(
+      (x, y) => y - x,
+    );
+    return (light + 0.05) / (dark + 0.05);
+  };
+
+  it("iga riba nimi on riba peal loetav (kontrast vähemalt 4,5:1)", () => {
+    for (const stop of SPECTRUM_STOPS) {
+      expect(contrast(stop.colour, stop.labelColour), stop.id).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+  });
+
+  it("valge silt kollasel või oranžil ribal EI läbiks seda kontrolli", () => {
+    // Test, mis leiu punaseks tegi: ilma tumeda sildita jäi kollane 2,9:1 ja
+    // oranž 3,6:1 peale. Kui keegi kunagi kõik sildid valgeks tagasi keerab,
+    // kukub ülemine test – see rida ütleb, miks.
+    for (const bandId of ["yellow", "orange"]) {
+      expect(contrast(bandColour(bandId), "#ffffff"), bandId).toBeLessThan(4.5);
+      expect(bandLabelColour(bandId)).toBe(DARK_LABEL_COLOUR);
+    }
   });
 });
 

@@ -60,6 +60,41 @@ export function bandColour(bandId: string): string {
 }
 
 /**
+ * Ribad, mille peal peab sildi tekst olema TUME.
+ *
+ * Kollane (#ca8a04) ja oranž (#ea580c) on nii heledad, et valge tekst annab
+ * kontrasti 2,9:1 ja 3,6:1 – WCAG nõuab väiksel tekstil 4,5:1 ja meie tekst on
+ * joonisel 10 px. Tumeda sildiga on samad ribad 5,6:1 ja 4,7:1. See ei ole
+ * pisiasi: joonist loetakse projektorilt klassi tagant (CLAUDE.md „fondid
+ * loetavad ka projektorilt"). Kontrasti valvab test (CodeRabbiti leid samm
+ * 4.1w).
+ */
+const DARK_LABEL_BANDS: readonly SpectrumBandId[] = ["yellow", "orange"];
+
+/** Sildi värv tumeda riba peal. */
+export const LIGHT_LABEL_COLOUR = "#ffffff";
+
+/**
+ * Sildi värv heleda riba peal – sama toon mis rakenduse tekst (`--color-ink`,
+ * slate-900).
+ *
+ * Riba tumeda aluse toon (`SPECTRUM_OFF_COLOUR`, slate-800) EI kõlba: oranžil
+ * ribal annab ta 4,1:1 ehk jääks piirist napilt alla. Testi ootus on 4,5:1,
+ * seega ta kukuks – ja just nii see viga leitigi.
+ */
+export const DARK_LABEL_COLOUR = "#0f172a";
+
+/** Millise värviga kirjutada riba NIMI riba enda peale. */
+export function bandLabelColour(bandId: string): string {
+  // Läbi `bandColour`-i, et tundmatu id viskaks vea siingi – vaikselt valge
+  // silt tundmatul ribal oleks täpselt see, mida see fail vältida püüab.
+  bandColour(bandId);
+  return DARK_LABEL_BANDS.includes(bandId as SpectrumBandId)
+    ? DARK_LABEL_COLOUR
+    : LIGHT_LABEL_COLOUR;
+}
+
+/**
  * Spektririba värv seal, kus allikas EI kiirga (ja väljaspool nähtavat ala).
  *
  * Tume, mitte valge: spektroskoop näitab pimedust, mitte tühja paberit. Valge
@@ -75,4 +110,5 @@ export const SPECTRUM_STOPS = SPECTRUM_BANDS.map((band) => ({
   minNm: band.minNm,
   maxNm: band.maxNm,
   colour: bandColour(band.id),
+  labelColour: bandLabelColour(band.id),
 }));
