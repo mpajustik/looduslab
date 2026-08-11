@@ -45,7 +45,7 @@ labor · harjutusmoodul · teooriakonspekt
 | varjutused-ja-kuu-faasid | rakendusmoodul | – (jagatud kaheks: `varjutused` + `kuu-faasid`) | – | arhiveeritud |
 | liitvalgus-ja-spekter | mikromoodul | P1-T1 (osa: spektraalne koostis); P1-T3 (osa: spekter) | valge valgus, liht- ja liitvalgus, valguse spekter | ehitatud |
 | esemete-varvus | mikromoodul | P1-T3 (osa: peegeldumine, neeldumine ja värvus) | – | ehitatud |
-| valgusfiltrid | virtuaalne labor | P1-T3 (osa: valgusfilter); P1-PT2 (sim + päris katse juhend) | – | plaanis |
+| valgusfiltrid | virtuaalne labor | P1-T3 (osa: valgusfilter); P1-PT2 (sim + päris katse juhend) | – | spetsitud |
 | peegeldumisseadus | juhitud tund (piloot) | P1-T2 (osa: peegeldumisseadus, joonised, katse); P1-PT3 | valguskiir, tasapeegel, mattpind, langemisnurk, peegeldumisnurk, pinna ristsirge | spetsitud |
 | tasapeegli-kujutis | virtuaalne labor | P1-T2 (osa: näiline kujutis, sümmeetria); P1-PT4 (sim + päris katse juhend) | – | ehitatud |
 | peeglikiri | rakendusmoodul | P1-T2 (osa: tasapeegli kujutise ülekanne) | – | plaanis |
