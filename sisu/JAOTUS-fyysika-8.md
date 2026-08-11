@@ -47,7 +47,7 @@ labor · harjutusmoodul · teooriakonspekt
 | esemete-varvus | mikromoodul | P1-T3 (osa: peegeldumine, neeldumine ja värvus) | – | plaanis |
 | valgusfiltrid | virtuaalne labor | P1-T3 (osa: valgusfilter); P1-PT2 (sim + päris katse juhend) | – | plaanis |
 | peegeldumisseadus | juhitud tund (piloot) | P1-T2 (osa: peegeldumisseadus, joonised, katse); P1-PT3 | valguskiir, tasapeegel, mattpind, langemisnurk, peegeldumisnurk, pinna ristsirge | spetsitud |
-| tasapeegli-kujutis | virtuaalne labor | P1-T2 (osa: näiline kujutis, sümmeetria); P1-PT4 (sim + päris katse juhend) | – | plaanis |
+| tasapeegli-kujutis | virtuaalne labor | P1-T2 (osa: näiline kujutis, sümmeetria); P1-PT4 (sim + päris katse juhend) | – | spetsitud |
 | peeglikiri | rakendusmoodul | P1-T2 (osa: tasapeegli kujutise ülekanne) | – | plaanis |
 | nurkpeegel | mikromoodul | P1-T2 (osa: kiirte käik kahe peegli vahel, periskoop) | – | plaanis |
 | helkur | rakendusmoodul | P1-T2 (osa: nurkpeegli ülekanne) | – | plaanis |
@@ -90,8 +90,11 @@ labor · harjutusmoodul · teooriakonspekt
   näeb (värvuste tajumine).
 - **valgusfiltrid** – filter laseb läbi „oma" värvi; sim + (K) katse;
   anaglüüfpilt punase ja sinise filtriga.
-- **tasapeegli-kujutis** – kujutis on näiline, sama kaugel, vasak-parem
-  vahetus; sim + (K) katse.
+- **tasapeegli-kujutis** – kujutis on näiline, esemega ühesuurune ja peegli
+  taga sama kaugel; kui suurt peeglit on vaja, et end täies pikkuses näha
+  (pool pikkusest, kaugusest sõltumata); sim + (K) katse. Vasak-parem
+  „vahetus" läks mooduli `peeglikiri` alla, et see moodul jääks väikeseks –
+  vt sisu/MOODUL-tasapeegli-kujutis.md „Piirid".
 - **peeglikiri** – prompter (uudistelugeja loeb ekraanilt läbi peegli),
   kiirabiauto peegelkiri, peeglikirja kirjutamine.
 - **nurkpeegel** – kaks peeglit nurga all, kiir pöördub; periskoop.
