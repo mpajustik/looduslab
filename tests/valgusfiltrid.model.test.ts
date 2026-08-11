@@ -1,4 +1,22 @@
 import { describe, expect, it } from "vitest";
+import { checkNumericAnswer } from "../src/checker/numeric";
+import { stepQuestions } from "../src/engine/contract";
+import {
+  activitiesSchema,
+  manifestSchema,
+} from "../src/engine/contractSchema";
+import { activities } from "../src/modules/physics/valgusfiltrid/activities";
+import {
+  CHANNEL_STOPS,
+  DARK_LABEL_COLOUR,
+  SINGLE_FILTER_RAY_Y,
+  TWO_SLOT_RAY_Y,
+  channelColour,
+  filterColour,
+  swatchColour,
+  swatchLabelColour,
+} from "../src/modules/physics/valgusfiltrid/display";
+import { manifest } from "../src/modules/physics/valgusfiltrid/manifest";
 import {
   CHANNELS,
   type ChannelId,
@@ -10,6 +28,7 @@ import {
   perceivedColourForChannels,
   transmittedChannels,
 } from "../src/modules/physics/valgusfiltrid/model";
+import { teacher } from "../src/modules/physics/valgusfiltrid/teacher";
 
 /**
  * Valgusfiltrite mudeli test.
@@ -440,6 +459,423 @@ describe("tabelite terviklus", () => {
         (filter.passes as readonly string[]).includes(channel.id),
       );
       expect(passing.length, channel.id).toBeGreaterThan(0);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Samm 4.1ff: manifest, sammud, joonised, õpetajajuhend
+// ---------------------------------------------------------------------------
+
+describe("manifest", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => manifestSchema.parse(manifest)).not.toThrow();
+  });
+
+  it("viitab õpitulemusele P1-T3 ja praktilisele tööle P1-PT2", () => {
+    // P1-PT2 katab see moodul MÕLEMAL kujul: simulatsioon on virtuaalne labor
+    // ja teacher.ts sisaldab päris katse juhendi.
+    expect(manifest.outcomes).toEqual(["P1-T3"]);
+    expect(manifest.practicalWork).toEqual(["P1-PT2"]);
+  });
+
+  it("õpetab valgusfiltrit, mida ainekava põhimõistete loendis ei ole", () => {
+    // Katvusraport paneb selle `extraConcepts` alla ehk MÄRKUSEKS – see on
+    // teadlik valik (sisu/MOODUL-valgusfiltrid.md „Ainekava seos").
+    expect(manifest.concepts).toEqual(["valgusfilter"]);
+  });
+});
+
+describe("activities", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => activitiesSchema.parse(activities)).not.toThrow();
+  });
+
+  it("on väike moodul: kuus sammu, üks ekraan korraga", () => {
+    // Suurusreegel (sisu/MALL-moodul.md): 3–6 sammu.
+    expect(activities.steps.map((step) => step.type)).toEqual([
+      "hook",
+      "theory",
+      "predict",
+      "explore",
+      "practice",
+      "exit",
+    ]);
+  });
+
+  it("spetsifikatsiooni kolm joonist on õigetes kohtades", () => {
+    // Sildid peavad klappima registriga (moduleFigures) – seda valvab
+    // tests/registry.test.ts alles siis, kui moodul on registris.
+    const figures: (string | undefined)[] = [];
+    for (const step of activities.steps) {
+      if (step.type === "hook" || step.type === "theory") figures.push(step.figure);
+      for (const question of stepQuestions(step)) {
+        if (question.figure) figures.push(question.figure);
+      }
+    }
+    expect(figures).toEqual([
+      "vf-lava-prozektor",
+      "vf-uks-filter",
+      "vf-kaks-pesa",
+    ]);
+  });
+
+  it("lambi valik avaneb alles pärast kolmandat ülesannet", () => {
+    // Enne seda on lamp valge ja labor uurib ainult filtreid – nii jääb
+    // korraga muutuma kaks asja, mitte kolm.
+    const explore = activities.steps.find((step) => step.type === "explore");
+    const simulation = explore?.type === "explore" ? explore.simulation : undefined;
+    expect(simulation?.unlocks).toEqual([
+      { feature: "valguse-valik", afterQuestion: "explore-3" },
+    ]);
+  });
+
+  it("teooria räägib ainult ühest filtrist – kahe filtri koosmõju avastab õpilane ise", () => {
+    // Ainekava metoodiline soovitus: „valgusfiltrite tööpõhimõte las õpilane
+    // ise avastab". Kui teooria ütleks ühisosa välja, oleks ennustus (samm 3)
+    // ja explore-3 mõttetud.
+    const theory = activities.steps.find((step) => step.type === "theory");
+    const text = theory?.type === "theory" ? theory.body.join(" ") : "";
+    expect(text).not.toContain("kaks filtrit");
+    expect(text).not.toContain("ühisosa");
+  });
+});
+
+/**
+ * Ülesannete vastused vs. mudel.
+ *
+ * `activities.ts` võtab iga vastuse MUDELIST (CLAUDE.md reegel 1), seega
+ * näpuviga arvutuses siin välja ei paistaks – küll aga paistab välja vale
+ * funktsioonivalik, vale filter või vale valgus. Seepärast on ootus kirjutatud
+ * SPETSIFIKATSIOONI järgi (sisu/MOODUL-valgusfiltrid.md „Sammud").
+ */
+describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
+  const numericQuestion = (questionId: string) => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "numeric") {
+          expect(question.variants, questionId).toBeUndefined();
+          expect(question.answer, questionId).toBeDefined();
+          return question;
+        }
+      }
+    }
+    throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  const choiceQuestion = (questionId: string) => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "choice") return question;
+      }
+    }
+    throw new Error(`Valikküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  const correctText = (questionId: string) =>
+    choiceQuestion(questionId).options.find((option) => option.correct)?.text;
+
+  const NUMERIC_IDS = ["explore-1", "practice-1", "exit-2"];
+
+  it.each([
+    ["explore-1", "punane filter jätab valgest valgusest kinni", 2],
+    ["practice-1", "kollane filter jätab kinni", 1],
+    ["exit-2", "sinine filter jätab kinni", 2],
+  ])("%s (%s) → %s", (questionId, _what, expected) => {
+    expect(numericQuestion(questionId as string).answer).toBe(expected as number);
+  });
+
+  it("ükski arvvastus ei kanna ühikut – loendatakse värve, mitte protsente", () => {
+    for (const id of NUMERIC_IDS) {
+      expect(numericQuestion(id).unit, id).toBeUndefined();
+    }
+  });
+
+  it("kõik arvvastused on täpsed: ±0,5 ehk naaberarv läheb valeks", () => {
+    for (const id of NUMERIC_IDS) {
+      const question = numericQuestion(id);
+      const answer = question.answer as number;
+      expect(question.tolerance, id).toEqual({ mode: "absolute", value: 0.5 });
+      expect(checkNumericAnswer(question, String(answer)).correct, id).toBe(true);
+      expect(checkNumericAnswer(question, String(answer - 1)).correct, id).toBe(false);
+      expect(checkNumericAnswer(question, String(answer + 1)).correct, id).toBe(false);
+    }
+  });
+
+  it("ennustuse õige vastus on sama, mille mudel kahe filtriga annab", () => {
+    expect(perceivedColour("white", ["yellow", "blue"])).toBe("pime");
+    expect(correctText("predict-1")).toContain("pime");
+  });
+
+  it("explore-2 ja explore-3 vastused tulevad mudelilt, mitte peast", () => {
+    expect(perceivedColour("white", ["yellow"])).toBe("kollane");
+    expect(correctText("explore-2")).toContain("Kollane");
+    expect(correctText("explore-3")).toContain("pime");
+  });
+
+  it("explore-4: järjekorra vahetus ei muuda midagi", () => {
+    // See on mooduli keskne avastus, seega peab ta kehtima KÕIGI filtripaaride
+    // ja kõigi valguste peal, mitte ainult ülesande oma peal.
+    for (const light of LIGHTS) {
+      for (const first of FILTERS) {
+        for (const second of FILTERS) {
+          expect(
+            perceivedColour(light.id, [first.id, second.id]),
+            `${light.id}: ${first.id}+${second.id}`,
+          ).toBe(perceivedColour(light.id, [second.id, first.id]));
+        }
+      }
+    }
+    expect(perceivedColour("white", ["blue", "yellow"])).toBe("pime");
+    expect(correctText("explore-4")).toContain("Ei muutu midagi");
+  });
+
+  it("explore-5: punane valgus rohelise filtriga ei anna rohelist", () => {
+    expect(perceivedColour("red", ["green"])).toBe("pime");
+    expect(correctText("explore-5")).toBe("Pime");
+  });
+
+  it("practice-2 vastus tuleb joonise filtripaarist (kollane + roheline)", () => {
+    expect(perceivedColour("white", ["yellow", "green"])).toBe("roheline");
+    expect(correctText("practice-2")).toBe("Roheline");
+  });
+
+  it("practice-3: kollases valguses sinist ei ole, seega sinine filter ei anna midagi", () => {
+    expect(perceivedColour("yellow", ["blue"])).toBe("pime");
+    expect(correctText("practice-3")).toContain("pime");
+  });
+
+  it("lahendatud näidis kasutab mudelist tulevat värvi", () => {
+    const practice = activities.steps.find((step) => step.type === "practice");
+    const worked = practice?.type === "practice" ? practice.worked : undefined;
+    expect(worked?.answer).toContain(perceivedColour("white", ["green"]));
+    expect(worked?.solution.join(" ")).toContain("3 värvi");
+  });
+
+  it("kordamiskaardid näitavad mudeli arve ja värve", () => {
+    const kaart = (id: string) => activities.reviewCards.find((card) => card.id === id);
+    expect(kaart("rc-3")?.answer).toContain("1 (3 − 2)");
+    expect(kaart("rc-4")?.answer).toContain(
+      perceivedColour("white", ["yellow", "blue"]),
+    );
+    expect(activities.reviewCards).toHaveLength(5);
+  });
+});
+
+describe("jooniste värvid (display.ts)", () => {
+  it("igal mudeli kanalil on värv ja kanalid on mudeli järjekorras", () => {
+    expect(CHANNEL_STOPS.map((stop) => stop.id)).toEqual(
+      CHANNELS.map((channel) => channel.id),
+    );
+    for (const stop of CHANNEL_STOPS) {
+      expect(stop.colour, stop.id).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
+
+  it("kaks kanalit ei jaga sama värvi – muidu ei saaks nooli eristada", () => {
+    const colours = CHANNEL_STOPS.map((stop) => stop.colour);
+    expect(new Set(colours).size).toBe(colours.length);
+  });
+
+  /**
+   * Iga paistev värv, mida mudel ANDA SAAB, peab olema joonistatav.
+   *
+   * Käime läbi kõik kaheksa kanalihulka (mitte ainult praeguste tabelite
+   * kombinatsioonid) – nii jääks uus värvinimi mudelis siin kohe vahele, selle
+   * asemel et ilmuda ekraanile värvitu ristkülikuna.
+   */
+  const allChannelSubsets = (): ChannelId[][] => {
+    const ids = CHANNELS.map((channel) => channel.id);
+    const subsets: ChannelId[][] = [];
+    for (let mask = 0; mask < 2 ** ids.length; mask += 1) {
+      subsets.push(ids.filter((_, index) => (mask & (1 << index)) !== 0));
+    }
+    return subsets;
+  };
+
+  it("kõigil kaheksal paistval värvil on laigu värv olemas", () => {
+    const names = allChannelSubsets().map((subset) =>
+      perceivedColourForChannels(subset),
+    );
+    expect(new Set(names).size).toBe(8);
+    for (const name of names) {
+      expect(swatchColour(name), name).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
+
+  it("iga valguse ja filtripaari ekraanivärv on joonistatav", () => {
+    for (const light of LIGHTS) {
+      for (const combo of slotCombinations()) {
+        const name = perceivedColour(light.id, combo);
+        expect(
+          () => swatchColour(name),
+          `${light.id}/${combo.join("+")}`,
+        ).not.toThrow();
+      }
+    }
+  });
+
+  it("iga filtri klaasi toon tuleb sellest, mida ta läbi laseb", () => {
+    // Tuletatud mudelist, mitte oma tabelist: kollane filter laseb läbi punase
+    // ja rohelise ehk paistab kollane.
+    for (const filter of FILTERS) {
+      expect(filterColour(filter.id), filter.id).toBe(
+        swatchColour(perceivedColourForChannels(filter.passes)),
+      );
+    }
+    expect(filterColour("yellow")).toBe(swatchColour("kollane"));
+  });
+
+  it("tundmatu kanal, värv või filter viskab vea, mitte ei jäta joonisele auku", () => {
+    expect(() => channelColour("roosa")).toThrow(RangeError);
+    expect(() => swatchColour("roosa")).toThrow(RangeError);
+    expect(() => swatchLabelColour("roosa")).toThrow(RangeError);
+    expect(() => filterColour("roosa")).toThrow(RangeError);
+  });
+
+  /**
+   * Sildi ja laigu kontrast (WCAG 2.1, väike tekst: 4,5:1).
+   *
+   * Joonisel ja simulatsioonis on värvi nimi kirjutatud laigu enda peale
+   * 10–12 px fondiga ja seda loetakse projektorilt klassi tagant. Valge tekst
+   * valgel või kollasel laigul jääks loetamatuks.
+   */
+  const relativeLuminance = (hex: string) => {
+    const channel = (from: number) => {
+      const srgb = Number.parseInt(hex.slice(from, from + 2), 16) / 255;
+      return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+  };
+
+  const contrast = (a: string, b: string) => {
+    const [pale, dark] = [relativeLuminance(a), relativeLuminance(b)].sort(
+      (x, y) => y - x,
+    );
+    return (pale + 0.05) / (dark + 0.05);
+  };
+
+  it("iga värvi nimi on oma laigu peal loetav (kontrast vähemalt 4,5:1)", () => {
+    for (const subset of allChannelSubsets()) {
+      const name = perceivedColourForChannels(subset);
+      expect(
+        contrast(swatchColour(name), swatchLabelColour(name)),
+        name,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("valge silt valgel või kollasel laigul EI läbiks seda kontrolli", () => {
+    // Test, mis silditooni valiku tingis: ilma tumeda sildita jäävad need kaks
+    // laiku 1,1:1 ja 2,9:1 peale.
+    for (const name of ["valge", "kollane"]) {
+      expect(contrast(swatchColour(name), "#ffffff"), name).toBeLessThan(4.5);
+      expect(swatchLabelColour(name)).toBe(DARK_LABEL_COLOUR);
+    }
+  });
+
+  it("„pime\" ekraan on tumehall, mitte must – ta peab jääma nähtavaks", () => {
+    // Päris must ekraan sulaks joonise raamiga kokku ja õpilane ei näeks, kas
+    // ekraan seal üldse on. Sõna „PIME" peab tema peal olema loetav.
+    expect(swatchColour("pime")).not.toBe("#000000");
+    expect(
+      contrast(swatchColour("pime"), swatchColour("valge")),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+/**
+ * Jooniste nooltekõrgused (figures.tsx) – CodeRabbiti leid samm 4.1ff.
+ *
+ * Kõrgused olid algul MASSIIVID, mida indekseeriti kanali järjekorranumbriga.
+ * `noUncheckedIndexedAccess` ei ole projektis sees, seega neljas kanal annaks
+ * `undefined`, mille tüüp on ikka `number` – nool joonistuks koordinaadiga
+ * `NaN` ja kaoks jooniselt VAIKSELT ära. Nüüd on nad `Record<ChannelId,
+ * number>`, täpselt nagu display.ts värvid ja samal põhjusel: uus kanal ei
+ * kompileeru enne, kui ka tema koht joonisel on kirjas.
+ */
+describe("jooniste nooltekõrgused katavad kõik kanalid", () => {
+  it.each([
+    ["vf-uks-filter", SINGLE_FILTER_RAY_Y],
+    ["vf-kaks-pesa", TWO_SLOT_RAY_Y],
+  ])("%s", (_figure, rayY) => {
+    for (const channel of CHANNELS) {
+      expect(rayY[channel.id], channel.id).toBeTypeOf("number");
+      expect(Number.isFinite(rayY[channel.id]), channel.id).toBe(true);
+    }
+    // Kaks noolt samal kõrgusel kataksid teineteist – joonisel oleks siis
+    // kolme värvi asemel näha kaks.
+    const heights = CHANNELS.map((channel) => rayY[channel.id]);
+    expect(new Set(heights).size).toBe(CHANNELS.length);
+  });
+});
+
+describe("õpetajajuhend katab mooduli väärarusaamad ja praktilise töö", () => {
+  const known = new Set(teacher.misconceptions.map((item) => item.id));
+
+  it("iga activities.ts silt on õpetajajuhendis lahti seletatud", () => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "choice") {
+          for (const option of question.options) {
+            if (option.misconception) {
+              expect(known, `${question.id}/${option.id}`).toContain(
+                option.misconception,
+              );
+            }
+          }
+        }
+        if (question.kind === "numeric") {
+          for (const trap of question.traps ?? []) {
+            expect(known, question.id).toContain(trap.misconception);
+          }
+        }
+      }
+    }
+  });
+
+  it("spetsifikatsiooni kuus väärarusaama on kõik olemas", () => {
+    for (const id of [
+      "filter-lisab-varvi",
+      "filtrid-segavad-varve",
+      "filtrite-jarjekord-loeb",
+      "filter-ei-vota-midagi",
+      "filter-teeb-valgust",
+      "filter-lahutab-nagu-prisma",
+    ]) {
+      expect(known, id).toContain(id);
+    }
+  });
+
+  it("P1-PT2 katse käik algab kirjaliku hüpoteesiga", () => {
+    // Ainekava nõuab praktiliselt töölt hüpoteesi – suuline arvamus ununeb
+    // kohe, kui tulemus on ekraanil.
+    expect(teacher.procedure[0]).toContain("hüpotees");
+    expect(teacher.procedure.join(" ")).toContain("järjekord");
+  });
+
+  it("õpetaja saab teada, kus simulatsioon ja päris klass lahku lähevad", () => {
+    // Kaks ühesugust kilet üksteise peal on mudeli piir (idealiseering 2) ja
+    // päris „pime" ei ole päris must – mõlemad peavad olema kirjas, muidu
+    // paistab õnnestunud katse õpilasele ebaõnnestununa.
+    expect(teacher.whyRealDiffers).toContain("aks ühesugust punast kilet");
+    expect(teacher.whyRealDiffers).toContain("punakas");
+  });
+
+  it("ohutus ütleb välja, et kile EI kaitse silma", () => {
+    expect(teacher.safety).toContain("kile EI kaitse silma");
+    expect(teacher.safety).toContain("varjutust");
+  });
+
+  it("tunniplaani minutid annavad kokku manifesti tunnipikkuse", () => {
+    const total = teacher.lessonPlan.reduce((sum, item) => sum + item.minutes, 0);
+    expect(total).toBe(manifest.minutes.lesson);
+  });
+
+  it("iga tunniplaani rida vastab päris sammule", () => {
+    const types = new Set(activities.steps.map((step) => step.type));
+    for (const item of teacher.lessonPlan) {
+      expect(types, item.step).toContain(item.step);
     }
   });
 });
