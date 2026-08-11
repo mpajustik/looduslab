@@ -292,17 +292,25 @@ Juhtnupud (kaks muudetavat suurust, moodulilepingu järgi):
 Algväärtus 550 satub võrele ((550 − 380) / 5 = 34) – õpilane saab pärast
 liigutamist alguskohta tagasi. Sama lõks, mis moodulis `varjutused`.
 
-Tolerantsid ja ühikud: lainepikkused `nm`, tolerants **absoluutne ±10 nm**
+Tolerantsid ja ühikud: lainepikkused `nm`, tolerants **absoluutne ±5 nm**
 (protsent oleks eksitav: 5% kuuesajast on 30 nm ehk poolteist ribat, 5%
 neljasajast aga 20 nm – sama vastus oleks eri kohtades eri rangusega);
 ribade arv on täisarv, ühikuta, tolerants **0**.
+
+**Miks ±5 nm, mitte ±10 nm** (Codexi leid samm 4.1v): laser kiirgab
+645–655 nm. Tolerantsiga ±10 võtaks checker vastu ka 640 ja 660 – need on
+liuguri võre peal olemas ja simulatsioon näitab riba seal TUMEDANA. Õpilane
+saaks õige vastuse koha eest, mille kohta sama ekraan ütleb „ei kiirga".
+±5 nm juures on lubatud täpselt 645, 650 ja 655 ehk needsamad liuguri
+asendid, kus riba on värviline – simulatsioon ja kontroll räägivad sama
+juttu. Kui laseri vahemik kunagi muutub, tuleb tolerants üle vaadata.
 
 Ülesanded:
 
 1. „Vali päikesevalgus. Mitu vikerkaarevärvi on spektris olemas?"
    (7; tolerants 0; ühikuta)
 2. „Vali punane laser ja otsi liuguriga üles koht, kus riba on värviline.
-   Mis lainepikkusel laser kiirgab?" (650 nm; tolerants ±10 nm; ühik `nm`;
+   Mis lainepikkusel laser kiirgab?" (650 nm; tolerants ±5 nm; ühik `nm`;
    vihje 1: „liigu punase otsa poole"; vihje 2: „riba on kitsas – ainult
    paar liuguri sammu lai")
 3. „Vali valge LED-lamp. Ta paistab valge, aga vaata spektrit hoolega.
