@@ -36,6 +36,11 @@ export const course = defineCourse({
         // Peegeldumist ta ei vaja, seega on ta jaotuskava järjekorras enne
         // peegeldumisseadust (sisu/JAOTUS-fyysika-8.md P1 tabel).
         "physics.liitvalgus-ja-spekter",
+        // Esemete värvus EELDAB liitvalgust ja spektrit („valges valguses on
+        // kõik värvid koos") ja tuleb seepärast kohe tema järel. Peegeldumise
+        // SEADUST (α = β) ta ei vaja: siin on kõik pinnad matid ja küsimus on
+        // „mis tuleb tagasi", mitte „mis nurga all".
+        "physics.esemete-varvus",
         "physics.peegeldumisseadus",
         // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
         // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.

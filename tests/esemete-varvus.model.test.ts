@@ -16,8 +16,11 @@ import { activities } from "../src/modules/physics/esemete-varvus/activities";
 import { teacher } from "../src/modules/physics/esemete-varvus/teacher";
 import {
   CHANNEL_STOPS,
+  CHANNEL_STOPS_ON_DARK,
   DARK_LABEL_COLOUR,
+  DARK_ROOM_COLOUR,
   channelColour,
+  channelColourOnDark,
   swatchColour,
   swatchLabelColour,
 } from "../src/modules/physics/esemete-varvus/display";
@@ -584,6 +587,39 @@ describe("jooniste värvid (display.ts)", () => {
       expect(contrast(swatchColour(name), "#ffffff"), name).toBeLessThan(4.5);
       expect(swatchLabelColour(name)).toBe(DARK_LABEL_COLOUR);
     }
+  });
+
+  /**
+   * Pimeda toa toonid (samm 4.1cc).
+   *
+   * Simulatsiooni taust on `DARK_ROOM_COLOUR` ja iga noole juures seisab tema
+   * kanali NIMI sama tooniga 11 px fondiga. Väike tekst nõuab 4,5:1 – seda
+   * loetakse projektorilt klassi tagant.
+   */
+  it("pimeda toa kanalitoonid katavad mudeli kanalid samas järjekorras", () => {
+    expect(CHANNEL_STOPS_ON_DARK.map((stop) => stop.id)).toEqual(
+      CHANNELS.map((channel) => channel.id),
+    );
+    const colours = CHANNEL_STOPS_ON_DARK.map((stop) => stop.colour);
+    expect(new Set(colours).size).toBe(colours.length);
+  });
+
+  it("iga kanali nimi on pimeda toa taustal loetav (vähemalt 4,5:1)", () => {
+    for (const stop of CHANNEL_STOPS_ON_DARK) {
+      expect(contrast(stop.colour, DARK_ROOM_COLOUR), stop.id).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("valge tausta toonid EI läbiks pimeda toa kontrolli", () => {
+    // Test, mis teise tooniloendi tingis: joonise tumedad toonid annavad
+    // pimeda toa taustal 2,8:1 … 3,3:1 ja nool jääks projektoril nähtamatuks.
+    for (const stop of CHANNEL_STOPS) {
+      expect(contrast(stop.colour, DARK_ROOM_COLOUR), stop.id).toBeLessThan(4.5);
+    }
+  });
+
+  it("tundmatu kanal viskab vea ka pimeda toa tooni küsides", () => {
+    expect(() => channelColourOnDark("roosa")).toThrow(RangeError);
   });
 });
 

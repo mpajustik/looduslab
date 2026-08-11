@@ -57,6 +57,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/liitvalgus-ja-spekter/manifest")).manifest,
     activities: (await import("./physics/liitvalgus-ja-spekter/activities")).activities,
   }),
+  "physics.esemete-varvus": async () => ({
+    manifest: (await import("./physics/esemete-varvus/manifest")).manifest,
+    activities: (await import("./physics/esemete-varvus/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -117,6 +121,11 @@ export const moduleSimulations: Record<
   ),
   "physics.liitvalgus-ja-spekter": lazy(() =>
     import("./physics/liitvalgus-ja-spekter/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.esemete-varvus": lazy(() =>
+    import("./physics/esemete-varvus/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -245,6 +254,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "ls-kolm-spektrit": lazy(() =>
       import("./physics/liitvalgus-ja-spekter/figures").then((module) => ({
         default: module.ThreeSpectraFigure,
+      })),
+    ),
+  },
+  "physics.esemete-varvus": {
+    "ev-must-ja-valge-sark": lazy(() =>
+      import("./physics/esemete-varvus/figures").then((module) => ({
+        default: module.ShirtsInSunFigure,
+      })),
+    ),
+    "ev-punane-oun": lazy(() =>
+      import("./physics/esemete-varvus/figures").then((module) => ({
+        default: module.RedAppleFigure,
+      })),
+    ),
+    "ev-kolm-eset": lazy(() =>
+      import("./physics/esemete-varvus/figures").then((module) => ({
+        default: module.ThreeObjectsFigure,
       })),
     ),
   },

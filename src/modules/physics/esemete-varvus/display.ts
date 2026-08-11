@@ -60,6 +60,42 @@ export const CHANNEL_STOPS = CHANNELS.map((channel) => ({
 }));
 
 /**
+ * Sama kolm kanalit PIMEDA TOA taustal (`DARK_ROOM_COLOUR`).
+ *
+ * Miks teine toon samale kanalile: ülemised värvid on meelega tumedad, sest
+ * joonised (figures.tsx) on valgel taustal. Simulatsioon on aga pime tuba, ja
+ * seal annab #b91c1c tumesinise taustaga kontrasti 2,8:1 – nool oleks
+ * projektoril praktiliselt nähtamatu, tema NIMI aga loetamatu (WCAG nõuab
+ * väiksel tekstil 4,5:1). Heledad toonid annavad 6,6:1 … 10,5:1 ja seda valvab
+ * test.
+ *
+ * See EI ole füüsika muutumine: mudeli jaoks on kanal ikka „punane". Ainus
+ * erinevus on, mis pikslivärviga teda millisel taustal joonistada – täpselt
+ * sama otsus, mis kogu selles failis.
+ */
+const CHANNEL_COLOURS_ON_DARK: Record<ChannelId, string> = {
+  red: "#f87171",
+  green: "#4ade80",
+  blue: "#60a5fa",
+};
+
+/** Kanali värv pimeda toa taustal. Tundmatu id viskab vea, nagu ülalgi. */
+export function channelColourOnDark(channelId: string): string {
+  const colour = CHANNEL_COLOURS_ON_DARK[channelId as ChannelId];
+  if (colour === undefined) {
+    throw new RangeError(`Tundmatu värvikanal: ${channelId}`);
+  }
+  return colour;
+}
+
+/** Kanalid koos pimeda toa värvidega `CHANNELS` järjekorras. */
+export const CHANNEL_STOPS_ON_DARK = CHANNELS.map((channel) => ({
+  id: channel.id,
+  label: channel.label,
+  colour: channelColourOnDark(channel.id),
+}));
+
+/**
  * Paistva värvi NIMI (mudeli vastus) → laigu värv ekraanil.
  *
  * Võtmed on täpselt need kaheksa sõna, mida `perceivedColour` tagastada saab.
