@@ -53,6 +53,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/tasapeegli-kujutis/manifest")).manifest,
     activities: (await import("./physics/tasapeegli-kujutis/activities")).activities,
   }),
+  "physics.liitvalgus-ja-spekter": async () => ({
+    manifest: (await import("./physics/liitvalgus-ja-spekter/manifest")).manifest,
+    activities: (await import("./physics/liitvalgus-ja-spekter/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -108,6 +112,11 @@ export const moduleSimulations: Record<
   ),
   "physics.tasapeegli-kujutis": lazy(() =>
     import("./physics/tasapeegli-kujutis/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.liitvalgus-ja-spekter": lazy(() =>
+    import("./physics/liitvalgus-ja-spekter/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -219,6 +228,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "tp-nailine-kujutis": lazy(() =>
       import("./physics/tasapeegli-kujutis/figures").then((module) => ({
         default: module.VirtualImageFigure,
+      })),
+    ),
+  },
+  "physics.liitvalgus-ja-spekter": {
+    "ls-tanavavalgusti": lazy(() =>
+      import("./physics/liitvalgus-ja-spekter/figures").then((module) => ({
+        default: module.StreetLampFigure,
+      })),
+    ),
+    "ls-spekter-riba": lazy(() =>
+      import("./physics/liitvalgus-ja-spekter/figures").then((module) => ({
+        default: module.SpectrumStripFigure,
+      })),
+    ),
+    "ls-kolm-spektrit": lazy(() =>
+      import("./physics/liitvalgus-ja-spekter/figures").then((module) => ({
+        default: module.ThreeSpectraFigure,
       })),
     ),
   },

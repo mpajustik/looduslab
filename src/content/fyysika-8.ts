@@ -31,6 +31,11 @@ export const course = defineCourse({
         "physics.valguse-sirgjooneline-levimine",
         "physics.vari-ja-poolvari",
         "physics.varjutused",
+        // Liitvalgus ja spekter on valgusallikate TEINE pool (P1-T1: liigitus
+        // spektraalse koostise järgi) ja eeldus moodulile `esemete-varvus`.
+        // Peegeldumist ta ei vaja, seega on ta jaotuskava järjekorras enne
+        // peegeldumisseadust (sisu/JAOTUS-fyysika-8.md P1 tabel).
+        "physics.liitvalgus-ja-spekter",
         "physics.peegeldumisseadus",
         // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
         // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.
