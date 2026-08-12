@@ -50,6 +50,14 @@ export const course = defineCourse({
         // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
         // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.
         "physics.tasapeegli-kujutis",
+        // Nõguspeegel on peegeldumisseaduse KOLMAS aste: seadus ise (tasane
+        // pind) → tema tagajärg tasapeeglil → sama seadus kõveral pinnal, kus
+        // ristsirge tuleb kera keskpunktist. Ta EELDAB peegeldumisseadust,
+        // seega ei saa ta tulla enne teda. Jaotuskava järjekorras (P1 tabel) on
+        // tema ees veel `nurkpeegel` ja `kumerpeegel` – neid pole veel ehitatud
+        // ja nõguspeegel neid ei vaja, seega tuleb ta praegu siia lõppu; kui
+        // nad valmis saavad, lähevad nad selle rea ETTE.
+        "physics.noguspeegel",
       ],
     },
     // P2. Valguse murdumine

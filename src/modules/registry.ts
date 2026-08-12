@@ -65,6 +65,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/valgusfiltrid/manifest")).manifest,
     activities: (await import("./physics/valgusfiltrid/activities")).activities,
   }),
+  "physics.noguspeegel": async () => ({
+    manifest: (await import("./physics/noguspeegel/manifest")).manifest,
+    activities: (await import("./physics/noguspeegel/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -135,6 +139,11 @@ export const moduleSimulations: Record<
   ),
   "physics.valgusfiltrid": lazy(() =>
     import("./physics/valgusfiltrid/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.noguspeegel": lazy(() =>
+    import("./physics/noguspeegel/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -297,6 +306,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "vf-kaks-pesa": lazy(() =>
       import("./physics/valgusfiltrid/figures").then((module) => ({
         default: module.TwoSlotsFigure,
+      })),
+    ),
+  },
+  "physics.noguspeegel": {
+    "np-taskulamp": lazy(() =>
+      import("./physics/noguspeegel/figures").then((module) => ({
+        default: module.TorchFigure,
+      })),
+    ),
+    "np-ristsirge": lazy(() =>
+      import("./physics/noguspeegel/figures").then((module) => ({
+        default: module.NormalFigure,
+      })),
+    ),
+    "np-kolm-kiirt": lazy(() =>
+      import("./physics/noguspeegel/figures").then((module) => ({
+        default: module.ThreeRaysFigure,
       })),
     ),
   },
