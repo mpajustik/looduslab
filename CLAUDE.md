@@ -91,11 +91,11 @@ stiiliküsimus) – leide EI parandata pimesi. Sisselogimine
 (`coderabbit auth login`) käib kasutaja enda terminalis – CodeRabbit
 keeldub agendi-terminalis sisse logimast.
 
-**AJUTINE ERAND alates 2026-08-12:** CodeRabbit CLI vastab igale ülevaatusele
-`403 You are not a member of the requested organization` (viga nende serveri
-poolel). Seni jookseb **Codex igal sammul, ka tavasammul** – muidu jääks samm
-ilma ühegi teise silmapaarita. Täpsem kord ja erandi kustutamise tingimus on
-skillis `/ulevaatus` („AJUTINE ERAND").
+Kui review vastab `403 You are not a member of the requested organization`,
+on CLI lihtsalt välja logitud – kontrolli `coderabbit auth status` ja logi
+vajadusel uuesti sisse. See EI ole viga CodeRabbiti poolel ega puudutav
+seat: Free-plaanil on `Seat: not assigned` normaalne ja CLI-review töötab
+sellest hoolimata.
 
 **Riskisammul** (model.ts, checker, engine, migratsioonid, Edge Functionid,
 saladused) lisab `/ulevaatus` teise mudeli: `npm run review` käivitab
