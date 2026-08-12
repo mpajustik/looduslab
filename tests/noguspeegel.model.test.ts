@@ -1,0 +1,385 @@
+import { describe, expect, it } from "vitest";
+import {
+  MIRROR_HALF_HEIGHT_CM,
+  SAFE_HEIGHT_RATIO,
+  SLIDERS,
+  centimetresFromMetres,
+  focalLength,
+  metresFromCentimetres,
+  mirrorDepth,
+  normalAngleDeg,
+  reflectParallelRay,
+} from "../src/modules/physics/noguspeegel/model";
+
+/**
+ * Nõguspeegli mudeli test.
+ *
+ * Väärtused on võetud spetsifikatsioonist (sisu/MOODUL-noguspeegel.md
+ * „Füüsika" → testiväärtuste tabel ja aberratsioonitabel ning sammude juures
+ * kirjas olevad vastused), mitte mudelist tagurpidi tuletatud – muidu testiks
+ * test iseennast. Kaasa on võetud ka need arvud, mille peal moodul õpilast
+ * hiljem päriselt kontrollib (simulatsiooni ülesanded, harjutused,
+ * väljumispilet, kordamiskaardid) – nii selgub näpuviga siin, mitte tunnis.
+ *
+ * Pikkused on mudelis meetrites, nurgad kraadides.
+ */
+
+describe("focalLength – fookus on pool raadiusest", () => {
+  it.each([
+    [0.5, 0.25],
+    [1, 0.5],
+    [1.6, 0.8],
+    [0.04, 0.02],
+  ])("R = %s m → f = %s m", (radiusM, expected) => {
+    expect(focalLength(radiusM)).toBeCloseTo(expected, 9);
+  });
+
+  it("vigane raadius viskab vea", () => {
+    expect(() => focalLength(0)).toThrow(RangeError);
+    expect(() => focalLength(-1)).toThrow(RangeError);
+    expect(() => focalLength(Number.NaN)).toThrow(RangeError);
+    expect(() => focalLength(Number.POSITIVE_INFINITY)).toThrow(RangeError);
+  });
+});
+
+describe("mirrorDepth – kui sügaval on kohtumispunkt", () => {
+  it.each([
+    [1, 0, 0],
+    [1, 0.6, 0.2],
+    [1, 0.1, 0.0050126],
+    [0.5, 0.1, 0.0101021],
+  ])("R = %s m, h = %s m → %s m", (radiusM, heightM, expected) => {
+    expect(mirrorDepth(radiusM, heightM)).toBeCloseTo(expected, 6);
+  });
+
+  it("|h| = R on poolkera: sügavus on täpselt R", () => {
+    expect(mirrorDepth(0.5, 0.5)).toBeCloseTo(0.5, 9);
+    expect(mirrorDepth(0.5, -0.5)).toBeCloseTo(0.5, 9);
+  });
+
+  it("negatiivne kõrgus annab sama sügavuse mis positiivne", () => {
+    expect(mirrorDepth(1, -0.6)).toBeCloseTo(mirrorDepth(1, 0.6), 9);
+  });
+
+  it("kiir ei saa peeglist mööda minna: |h| > R viskab vea", () => {
+    expect(() => mirrorDepth(0.5, 0.51)).toThrow(RangeError);
+    expect(() => mirrorDepth(0.5, -0.51)).toThrow(RangeError);
+  });
+
+  it("vigased arvud viskavad vea", () => {
+    expect(() => mirrorDepth(0, 0.1)).toThrow(RangeError);
+    expect(() => mirrorDepth(1, Number.NaN)).toThrow(RangeError);
+    expect(() => mirrorDepth(1, Number.POSITIVE_INFINITY)).toThrow(RangeError);
+  });
+});
+
+describe("normalAngleDeg – ristsirge on raadiuse siht", () => {
+  it.each([
+    [1, 0.5, 30],
+    [0.4, 0.2, 30],
+    [1, 0.6, 36.87],
+    [1, 0, 0],
+  ])("R = %s m, h = %s m → %s°", (radiusM, heightM, expected) => {
+    expect(normalAngleDeg(radiusM, heightM)).toBeCloseTo(expected, 2);
+  });
+
+  it("−h annab sama nurga mis +h (peegel on sümmeetriline)", () => {
+    expect(normalAngleDeg(1, -0.5)).toBeCloseTo(30, 9);
+  });
+
+  it("peegli servas on ristsirge peateljega risti: 90°", () => {
+    expect(normalAngleDeg(0.5, 0.5)).toBeCloseTo(90, 9);
+    expect(normalAngleDeg(0.5, -0.5)).toBeCloseTo(90, 9);
+  });
+
+  it("|h| > R viskab vea", () => {
+    expect(() => normalAngleDeg(1, 1.0001)).toThrow(RangeError);
+  });
+});
+
+describe("reflectParallelRay – paralleelse kiire saatus", () => {
+  it("R = 1 m, h = 0,6 m: α = β = 36,870°, kalle 73,740°, lõige 0,375 m", () => {
+    const ray = reflectParallelRay(1, 0.6);
+    expect(ray.depthM).toBeCloseTo(0.2, 9);
+    expect(ray.incidenceDeg).toBeCloseTo(36.87, 3);
+    expect(ray.reflectionDeg).toBeCloseTo(36.87, 3);
+    expect(ray.deflectionDeg).toBeCloseTo(73.74, 3);
+    // Täpne arv: 3-4-5 kolmnurk annab siin murruna 0,375.
+    expect(ray.axisCrossM).toBeCloseTo(0.375, 9);
+  });
+
+  it("R = 1 m, h = 0,1 m: α = β = 5,739°, kalle 11,478°, lõige 0,49748 m", () => {
+    const ray = reflectParallelRay(1, 0.1);
+    expect(ray.incidenceDeg).toBeCloseTo(5.739, 3);
+    expect(ray.deflectionDeg).toBeCloseTo(11.478, 3);
+    expect(ray.axisCrossM).toBeCloseTo(0.49748, 4);
+  });
+
+  it("R = 0,5 m, h = 0,1 m: α = β = 11,537°, kalle 23,074°, lõige 0,24484 m", () => {
+    const ray = reflectParallelRay(0.5, 0.1);
+    expect(ray.incidenceDeg).toBeCloseTo(11.537, 3);
+    expect(ray.deflectionDeg).toBeCloseTo(23.074, 3);
+    expect(ray.axisCrossM).toBeCloseTo(0.24484, 4);
+  });
+
+  it("h = 0 on kokkulepe: piirväärtus on täpselt fookus R/2", () => {
+    const ray = reflectParallelRay(1, 0);
+    expect(ray.depthM).toBeCloseTo(0, 9);
+    expect(ray.incidenceDeg).toBeCloseTo(0, 9);
+    expect(ray.deflectionDeg).toBeCloseTo(0, 9);
+    expect(ray.axisCrossM).toBeCloseTo(focalLength(1), 9);
+  });
+
+  it("peegli serv (|h| = R) viskab vea, ei tagasta lõpmatust", () => {
+    expect(() => reflectParallelRay(0.5, 0.5)).toThrow(RangeError);
+    expect(() => reflectParallelRay(0.5, -0.5)).toThrow(RangeError);
+    expect(() => reflectParallelRay(1, 1)).toThrow(RangeError);
+  });
+
+  it("vigased arvud viskavad vea", () => {
+    expect(() => reflectParallelRay(-1, 0.1)).toThrow(RangeError);
+    expect(() => reflectParallelRay(1, Number.NaN)).toThrow(RangeError);
+  });
+});
+
+/**
+ * Codexi leid (samm 4.1ii): lõplikest sisenditest võib tulla NaN või
+ * lõpmatus, ja see jõuaks joonisele vaikselt vale füüsikana. Mudel viskab
+ * sellises kohas vea, ei tagasta arvu, mille taga ta seista ei saa.
+ */
+describe("ülevool ei tohi anda vaikset NaN-i", () => {
+  it("mirrorDepth: R² ja h² voolavad üle, vahe oleks NaN", () => {
+    expect(() => mirrorDepth(1e308, 1e307)).toThrow(RangeError);
+  });
+
+  it("normalAngleDeg: sama sisend annab ausa nurga, mitte NaN-i", () => {
+    // Siin ülevoolu ei teki (jagatis |h|/R jääb alla ühe), seega on ainus
+    // õige käitumine päris vastus – test hoiab selle vahe nähtaval.
+    expect(normalAngleDeg(1e308, 1e307)).toBeCloseTo(
+      normalAngleDeg(1, 0.1),
+      9,
+    );
+  });
+
+  it("reflectParallelRay: teljelõige voolaks serva lähedal üle", () => {
+    expect(() => reflectParallelRay(1e308, 1e308 * (1 - 1e-15))).toThrow(
+      RangeError,
+    );
+  });
+
+  it("tavalised suured, aga mõistlikud arvud jäävad tööle", () => {
+    // Peegelteleskoobi mõõtu peegel (R = 20 m) ei tohi kontrollide taha jääda.
+    // f = 10 m, aberratsioon h/R = 0,05 juures on ~0,13 % → 9,98748 m.
+    expect(reflectParallelRay(20, 1).axisCrossM).toBeCloseTo(9.98748, 4);
+  });
+});
+
+/**
+ * Kümme raadiust × kümme kõrgust – need paarid katavad nii lameda kui ka
+ * sügava peegli ja neid kasutavad kõik allpool olevad seaduspärade testid.
+ * h püsib alati rangelt alla R (peegli serv on eraldi kontrollitud).
+ */
+const RADII_M = [0.1, 0.25, 0.4, 0.5, 0.75, 1, 1.2, 1.6, 2, 5];
+const HEIGHT_RATIOS = [0, 0.05, 0.1, 0.2, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99];
+
+describe("peegeldumisseadus on invariant, mitte üks testirida", () => {
+  it("α = β ja kalle = 2α iga R ja h korral", () => {
+    for (const radiusM of RADII_M) {
+      for (const ratio of HEIGHT_RATIOS) {
+        const heightM = ratio * radiusM;
+        const ray = reflectParallelRay(radiusM, heightM);
+        expect(ray.reflectionDeg).toBe(ray.incidenceDeg);
+        expect(ray.deflectionDeg).toBe(2 * ray.incidenceDeg);
+      }
+    }
+  });
+
+  it("langemisnurk on sama arv, mille annab normalAngleDeg", () => {
+    for (const radiusM of RADII_M) {
+      for (const ratio of HEIGHT_RATIOS) {
+        const heightM = ratio * radiusM;
+        expect(reflectParallelRay(radiusM, heightM).incidenceDeg).toBeCloseTo(
+          normalAngleDeg(radiusM, heightM),
+          9,
+        );
+      }
+    }
+  });
+});
+
+describe("sümmeetria: +h ja −h annavad sama vastuse", () => {
+  it("kõik väljad on samad", () => {
+    for (const radiusM of RADII_M) {
+      for (const ratio of HEIGHT_RATIOS) {
+        const heightM = ratio * radiusM;
+        expect(reflectParallelRay(radiusM, -heightM)).toEqual(
+          reflectParallelRay(radiusM, heightM),
+        );
+      }
+    }
+  });
+});
+
+describe("mõõtkava: peegli suuremaks tegemine venitab ainult joonist", () => {
+  it("reflectParallelRay(1, 0.2) = 2 × reflectParallelRay(0.5, 0.1)", () => {
+    const big = reflectParallelRay(1, 0.2);
+    const small = reflectParallelRay(0.5, 0.1);
+    expect(big.axisCrossM).toBeCloseTo(2 * small.axisCrossM, 9);
+    expect(big.depthM).toBeCloseTo(2 * small.depthM, 9);
+    // Nurgad on mõõtkavast SÕLTUMATUD – need ei kahekordistu.
+    expect(big.incidenceDeg).toBeCloseTo(small.incidenceDeg, 9);
+  });
+
+  it("kaks korda suurem peegel iga R ja h korral", () => {
+    for (const radiusM of RADII_M) {
+      for (const ratio of HEIGHT_RATIOS) {
+        const heightM = ratio * radiusM;
+        expect(reflectParallelRay(2 * radiusM, 2 * heightM).axisCrossM).toBeCloseTo(
+          2 * reflectParallelRay(radiusM, heightM).axisCrossM,
+          9,
+        );
+      }
+    }
+  });
+});
+
+describe("sfääriline aberratsioon on ühesuunaline ja monotoonne", () => {
+  it("lõikepunkt ei ole kunagi fookusest kaugemal", () => {
+    for (const radiusM of RADII_M) {
+      for (const ratio of HEIGHT_RATIOS) {
+        const ray = reflectParallelRay(radiusM, ratio * radiusM);
+        expect(ray.axisCrossM).toBeLessThanOrEqual(focalLength(radiusM) + 1e-12);
+      }
+    }
+  });
+
+  it("|h| kasvades lõikepunkt ainult läheneb peeglile", () => {
+    for (const radiusM of RADII_M) {
+      let previous = Number.POSITIVE_INFINITY;
+      for (let ratio = 0; ratio <= 0.99; ratio += 0.01) {
+        const current = reflectParallelRay(radiusM, ratio * radiusM).axisCrossM;
+        expect(current).toBeLessThanOrEqual(previous);
+        previous = current;
+      }
+    }
+  });
+
+  it("aberratsioonitabel spetsifikatsioonist", () => {
+    expect(reflectParallelRay(1, 0).axisCrossM).toBeCloseTo(0.5, 9);
+    expect(reflectParallelRay(1, 0.1).axisCrossM).toBeCloseTo(0.49748, 4);
+    expect(reflectParallelRay(0.5, 0.1).axisCrossM).toBeCloseTo(0.24484, 4);
+    expect(reflectParallelRay(1, 0.6).axisCrossM).toBeCloseTo(0.375, 9);
+  });
+});
+
+describe("simulatsiooni turvavöönd hoiab lauset „koonduvad ühte punkti“", () => {
+  it("h/R ≤ 0,2 korral on erinevus fookusest alla 3 %", () => {
+    for (const radiusM of RADII_M) {
+      for (let ratio = 0; ratio <= SAFE_HEIGHT_RATIO + 1e-12; ratio += 0.01) {
+        const focusM = focalLength(radiusM);
+        const crossM = reflectParallelRay(radiusM, ratio * radiusM).axisCrossM;
+        expect(Math.abs(focusM - crossM) / focusM).toBeLessThan(0.03);
+      }
+    }
+  });
+
+  it("liugurite piirid jäävad turvavööndisse", () => {
+    // Halvim juht: kõige kõrgem kiir kõige väiksema raadiusega peeglil.
+    const worstRatio =
+      SLIDERS.rayHeightCm.max / SLIDERS.radiusCm.min;
+    expect(worstRatio).toBeLessThanOrEqual(SAFE_HEIGHT_RATIO);
+  });
+
+  it("peegel ei ole valitud kiirest madalam", () => {
+    expect(SLIDERS.rayHeightCm.max).toBe(MIRROR_HALF_HEIGHT_CM);
+  });
+
+  it("liuguri iga raadiuse juures on peegli servakiir alla 3 % vea", () => {
+    const { min, max, step } = SLIDERS.radiusCm;
+    for (let radiusCm = min; radiusCm <= max; radiusCm += step) {
+      const radiusM = metresFromCentimetres(radiusCm);
+      const heightM = metresFromCentimetres(MIRROR_HALF_HEIGHT_CM);
+      const focusM = focalLength(radiusM);
+      const crossM = reflectParallelRay(radiusM, heightM).axisCrossM;
+      expect(Math.abs(focusM - crossM) / focusM).toBeLessThan(0.03);
+    }
+  });
+});
+
+describe("ühikuteisendused – ainsad kaks kohta, kus ühik muutub", () => {
+  it.each([
+    [100, 1],
+    [50, 0.5],
+    [10, 0.1],
+    [0, 0],
+    [-10, -0.1],
+  ])("%s cm → %s m", (lengthCm, expected) => {
+    expect(metresFromCentimetres(lengthCm)).toBeCloseTo(expected, 9);
+  });
+
+  it.each([
+    [1, 100],
+    [0.25, 25],
+    [0.02, 2],
+  ])("%s m → %s cm", (lengthM, expected) => {
+    expect(centimetresFromMetres(lengthM)).toBeCloseTo(expected, 9);
+  });
+
+  it("teisendus edasi-tagasi annab sama arvu", () => {
+    for (const lengthCm of [0, 1, 10, 50, 160, 200]) {
+      expect(centimetresFromMetres(metresFromCentimetres(lengthCm))).toBeCloseTo(
+        lengthCm,
+        9,
+      );
+    }
+  });
+
+  it("vigane sisend viskab vea", () => {
+    expect(() => metresFromCentimetres(Number.NaN)).toThrow(RangeError);
+    expect(() => centimetresFromMetres(Number.POSITIVE_INFINITY)).toThrow(
+      RangeError,
+    );
+  });
+});
+
+/**
+ * Need on arvud, mida moodul õpilaselt päriselt küsib. Kui mudel ja
+ * spetsifikatsioon lähevad lahku, peab see selguma siin – mitte tunnis.
+ * Õpilase pool räägib sentimeetrites, seega käib iga arv läbi teisenduse.
+ */
+describe("õpilase arvud tulevad mudelist", () => {
+  function focusCm(radiusCm: number): number {
+    return centimetresFromMetres(focalLength(metresFromCentimetres(radiusCm)));
+  }
+
+  it.each([
+    ["explore-1: R = 100 cm", 100, 50],
+    ["explore-2: R = 160 cm", 160, 80],
+    ["practice-1 näidis: R = 60 cm", 60, 30],
+    ["practice-2 lünk: R = 90 cm", 90, 45],
+    ["exit-2: R = 24 cm", 24, 12],
+    ["rc-3: R = 70 cm", 70, 35],
+  ])("%s → fookus %s cm", (_nimi, radiusCm, expected) => {
+    expect(focusCm(radiusCm)).toBeCloseTo(expected, 9);
+  });
+
+  it("practice-3 pöördülesanne: fookus 2 cm → raadius 4 cm", () => {
+    // Pöördülesandel ei ole oma funktsiooni (R = 2f on sama valem tagurpidi);
+    // test kontrollib, et vastus 4 cm on mudeliga kooskõlas.
+    expect(focusCm(4)).toBeCloseTo(2, 9);
+  });
+
+  it("explore-3: kiire kõrgusel 10 cm on α = β ja ekraanil 5,7°", () => {
+    const ray = reflectParallelRay(
+      metresFromCentimetres(100),
+      metresFromCentimetres(10),
+    );
+    expect(ray.incidenceDeg).toBe(ray.reflectionDeg);
+    // Ekraanil kuvatakse üks koht pärast koma (tolerants 0,5°).
+    expect(ray.incidenceDeg).toBeCloseTo(5.7, 1);
+  });
+
+  it("simulatsiooni algseis: R = 100 cm → fookus 50 cm, tolerants 2 cm katab", () => {
+    expect(Math.abs(focusCm(100) - 50)).toBeLessThan(2);
+  });
+});
