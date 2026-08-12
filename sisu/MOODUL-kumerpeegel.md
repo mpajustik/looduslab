@@ -267,7 +267,7 @@ tulemused eestikeelse kümnendkomaga. Pikkused meetrites, nurgad kraadides.
 | `reflectParallelRay(0.5, 0.5)` | **viskab vea** (h = R, vt piirjuhud) |
 | `reflectParallelRay(1, 0.9)` | **viskab vea** (h > R·√3/2, lõige tuleks negatiivne) |
 | `reflectParallelRay(1, Math.sqrt(3) / 2)` | **viskab vea** (θ = 60° täpselt, lõige oleks 0) |
-| `reflectParallelRay(1, 0.86)` | lubatud, α = β = 59,316 · lõige 0,0202 (väärtus vahetult enne piiri – arv on väike, aga positiivne) |
+| `reflectParallelRay(1, 0.86)` | lubatud, α = β = 59,317 · lõige 0,0202 (väärtus vahetult enne piiri – arv on väike, aga positiivne) |
 | `centimetresFromMetres(focalLength(0.6))` | 30 (õpilase vastus practice-1-s) |
 
 Piirjuhud ja vigased sisendid:
