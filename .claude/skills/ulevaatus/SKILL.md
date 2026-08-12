@@ -21,6 +21,31 @@ Kui mõlemad osutavad samale reale, tõstab see tõenäosust, et tegu on päris
 veaga – aga ei tõesta seda. Kontrolli leid ikka sisendi ja koodi vastu üle;
 ka kaks ülevaatajat võivad korraga eksida.
 
+## AJUTINE ERAND: CodeRabbit on katki, Codex jookseb IGAL sammul
+
+Seis alates 2026-08-12: CodeRabbit CLI vastab igale ülevaatusele `403 You
+are not a member of the requested organization`. Viga on CodeRabbiti serveri
+poolel – CLI, sisselogimine, org ja repo ligipääs on kontrollitud ja korras.
+
+Kuni CodeRabbit uuesti tööle saab (kasutaja otsus 2026-08-12):
+
+- **Codex jookseb igal sammul, ka tavasammul.** Allpool olev riskisammu
+  loend otsustab siis ainult selle, kas ülevaatus on KOHUSTUSLIK (riskisamm,
+  linnuke plaanifaili) või asendab ta puuduvat CodeRabbitit (tavasamm) –
+  jooksutada tuleb ta mõlemal juhul. Ilma selleta läheks samm ilma ühegi
+  teise silmapaarita, ja see on halvem kui Codexi kulu.
+- Proovi CodeRabbitit siiski iga sammu juures ÜKS kord (`wsl -d Ubuntu --
+  coderabbit review --uncommitted --include-untracked --agent`). Nii on kohe
+  näha, kui viga on nende poolel ära parandatud.
+- `/ulevaatus kiire` tähendab seni „ainult üks ülevaataja" ja see ülevaataja
+  on Codex, mitte CodeRabbit.
+- Commit-sõnumis ütle mõlemad asjad välja: et CodeRabbit ei jooksnud (koos
+  veateatega) ja mida Codex leidis.
+
+**Kui CodeRabbit uuesti töötab, kustuta see peatükk** – siis kehtib jälle
+tabel ülal ja Codex jääb riskisammudele. Kaks reeglit korraga ei tohi
+kehtida.
+
 ## Samm 0: masinkontrollid enne kõike muud
 
 `npm run lint && npm run test && npm run build`. Punane = paranda
