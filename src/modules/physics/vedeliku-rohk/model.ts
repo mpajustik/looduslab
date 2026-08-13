@@ -147,12 +147,21 @@ export function depthFromPressure(
  * arvutus käib paskalites. Negatiivne sisend on siin lubatud, sest see on
  * puhas ühikuteisendus – ta võib teisendada ka kahe rõhu VAHET, mis on
  * vabalt negatiivne.
+ *
+ * Tulemuse kontroll on siin sama, mis mujal failis, kuigi JAGAMINE üle voolata
+ * ei saa: lõplikust arvust tuleb jagades alati lõplik arv. Ühikuteisendus on
+ * viimane koht enne ekraanile jõudmist ja kõik kolm seda mustrit kasutavat
+ * moodulit (`kumerpeegel`, `noguspeegel` ja see fail) valvavad oma teisendusi
+ * ühtemoodi – nii ei pea keegi funktsiooni kohal mõtlema, KUMMAS suunas see
+ * teisendus käib (Codexi leid, sammud 4.1mm ja 4.1qq).
  */
 export function toKilopascals(pressurePa: number): number {
   if (!Number.isFinite(pressurePa)) {
     throw new RangeError(`Rõhk peab olema arv, aga oli ${pressurePa}`);
   }
-  return pressurePa / 1000;
+  const pressureKPa = pressurePa / 1000;
+  assertFiniteResult(pressureKPa, "Rõhk kilopaskalites");
+  return pressureKPa;
 }
 
 /**
@@ -166,5 +175,7 @@ export function metresFromCentimetres(lengthCm: number): number {
   if (!Number.isFinite(lengthCm)) {
     throw new RangeError(`Pikkus peab olema arv, aga oli ${lengthCm}`);
   }
-  return lengthCm / 100;
+  const lengthM = lengthCm / 100;
+  assertFiniteResult(lengthM, "Pikkus meetrites");
+  return lengthM;
 }

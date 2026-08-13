@@ -349,6 +349,20 @@ describe("ühikuteisendused – ainsad kaks kohta, kus ühik muutub", () => {
       RangeError,
     );
   });
+
+  /**
+   * Codexi leid (samm 4.1mm, siia toodud sammuga 4.1qq): sisend on lõplik arv,
+   * aga korrutis voolab üle. Liuguri piirides (50…200 cm) seda ei juhtu, aga
+   * teisendus on viimane koht enne ekraanile jõudmist – siit tohib välja tulla
+   * ainult arv, mille taga mudel seista saab.
+   */
+  it("lõplikust sisendist ei tohi tulla lõpmatust", () => {
+    expect(() => centimetresFromMetres(1e308)).toThrow(RangeError);
+    expect(() => centimetresFromMetres(-1e308)).toThrow(RangeError);
+    // Jagamine üle ei voola, aga alla küll: väga väike arv jääb siin ausalt
+    // nulli lähedale ja see EI ole viga.
+    expect(metresFromCentimetres(1e-320)).toBeGreaterThanOrEqual(0);
+  });
 });
 
 /**

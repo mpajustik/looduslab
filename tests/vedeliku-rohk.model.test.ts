@@ -210,6 +210,17 @@ describe("ühikud", () => {
       RangeError,
     );
   });
+
+  /**
+   * Mõlemad teisendused JAGAVAD, seega üle voolata ei saa: lõplikust arvust
+   * tuleb jagades alati lõplik arv (samm 4.1qq). Alavool on siin aus vastus,
+   * mitte viga – väga väike sügavus ongi peaaegu null.
+   */
+  it("lõplikust sisendist tuleb lõplik arv ka ääremistes arvudes", () => {
+    expect(Number.isFinite(toKilopascals(1e308))).toBe(true);
+    expect(Number.isFinite(metresFromCentimetres(-1e308))).toBe(true);
+    expect(metresFromCentimetres(1e-320)).toBeGreaterThanOrEqual(0);
+  });
 });
 
 describe("harjutuste ja väljumispileti vastused", () => {

@@ -308,16 +308,27 @@ export function metresFromCentimetres(lengthCm: number): number {
   if (!Number.isFinite(lengthCm)) {
     throw new RangeError(`Pikkus peab olema arv, aga oli ${lengthCm}`);
   }
-  return lengthCm / 100;
+  const lengthM = lengthCm / 100;
+  assertFiniteResult(lengthM, "Pikkus meetrites");
+  return lengthM;
 }
 
 /**
  * Meetrid → sentimeetrid. Teine kahest kohast: mudeli vastus teisendatakse
  * siin enne ekraanile ja ülesande vastuseks panemist.
+ *
+ * Sisendikontroll ei päästa siin üksi: `centimetresFromMetres(1e308)` on
+ * lõpliku arvuna korralik sisend, aga korrutis voolab üle `Infinity`-ks
+ * (Codexi leid, samm 4.1mm). Liuguri piirides (50…200 cm) sellist arvu ei
+ * teki, aga teisendus on viimane koht enne ekraanile jõudmist – siit ei tohi
+ * välja tulla arvu moodi väärtust, mille taga mudel seista ei saa. Sama
+ * kontroll on `kumerpeegel/model.ts`-is.
  */
 export function centimetresFromMetres(lengthM: number): number {
   if (!Number.isFinite(lengthM)) {
     throw new RangeError(`Pikkus peab olema arv, aga oli ${lengthM}`);
   }
-  return lengthM * 100;
+  const lengthCm = lengthM * 100;
+  assertFiniteResult(lengthCm, "Pikkus sentimeetrites");
+  return lengthCm;
 }
