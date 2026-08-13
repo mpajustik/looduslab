@@ -73,6 +73,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/kumerpeegel/manifest")).manifest,
     activities: (await import("./physics/kumerpeegel/activities")).activities,
   }),
+  "physics.kumerpeegli-rakendused": async () => ({
+    manifest: (await import("./physics/kumerpeegli-rakendused/manifest")).manifest,
+    activities: (await import("./physics/kumerpeegli-rakendused/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -153,6 +157,11 @@ export const moduleSimulations: Record<
   ),
   "physics.kumerpeegel": lazy(() =>
     import("./physics/kumerpeegel/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.kumerpeegli-rakendused": lazy(() =>
+    import("./physics/kumerpeegli-rakendused/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -349,6 +358,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "kp-kolm-kiirt": lazy(() =>
       import("./physics/kumerpeegel/figures").then((module) => ({
         default: module.ThreeRaysFigure,
+      })),
+    ),
+  },
+  "physics.kumerpeegli-rakendused": {
+    "kr-kolm-peeglit": lazy(() =>
+      import("./physics/kumerpeegli-rakendused/figures").then((module) => ({
+        default: module.ThreeMirrorsFigure,
+      })),
+    ),
+    "kr-vaatevali": lazy(() =>
+      import("./physics/kumerpeegli-rakendused/figures").then((module) => ({
+        default: module.ViewFieldFigure,
+      })),
+    ),
+    "kr-ristmik": lazy(() =>
+      import("./physics/kumerpeegli-rakendused/figures").then((module) => ({
+        default: module.CrossroadsFigure,
       })),
     ),
   },

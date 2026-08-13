@@ -65,6 +65,11 @@ export const course = defineCourse({
         // järel – kursusefail otsustab järjekorra, mitte tabeli rea number
         // (docs/SISUHALDUS.md).
         "physics.kumerpeegel",
+        // Rakendusmoodul käib oma mikromooduli JÄREL: uut seadust ega uut
+        // joonist siin ei tule, vaid kumerpeegli kiirte käik ja näiline fookus
+        // kantakse üle kolme päris seadmesse. Teooria algab lausega
+        // „meeldetuletus eelmisest moodulist", seega ta eeldab teda otsesõnu.
+        "physics.kumerpeegli-rakendused",
       ],
     },
     // P2. Valguse murdumine
