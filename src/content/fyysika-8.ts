@@ -54,10 +54,17 @@ export const course = defineCourse({
         // pind) → tema tagajärg tasapeeglil → sama seadus kõveral pinnal, kus
         // ristsirge tuleb kera keskpunktist. Ta EELDAB peegeldumisseadust,
         // seega ei saa ta tulla enne teda. Jaotuskava järjekorras (P1 tabel) on
-        // tema ees veel `nurkpeegel` ja `kumerpeegel` – neid pole veel ehitatud
-        // ja nõguspeegel neid ei vaja, seega tuleb ta praegu siia lõppu; kui
-        // nad valmis saavad, lähevad nad selle rea ETTE.
+        // tema ees veel `nurkpeegel` – teda pole ehitatud ja nõguspeegel teda
+        // ei vaja, seega tuleb ta siia, kui valmis saab.
         "physics.noguspeegel",
+        // Kumerpeegel on sama kerapinna TEINE pool: nõguspeegel näitas kera
+        // sisemist pinda ja päris fookust, siin peegeldub valgus väljastpoolt
+        // ja fookus on näiline. Jaotuskava tabelis on ta nõguspeegli ees, aga
+        // moodul ISE eeldab teda: teooria, sammud ja kordamiskaardid võrdlevad
+        // kogu aeg nõguspeegliga („eelmine moodul"). Seepärast käib ta tema
+        // järel – kursusefail otsustab järjekorra, mitte tabeli rea number
+        // (docs/SISUHALDUS.md).
+        "physics.kumerpeegel",
       ],
     },
     // P2. Valguse murdumine

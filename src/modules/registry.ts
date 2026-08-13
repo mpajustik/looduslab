@@ -69,6 +69,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/noguspeegel/manifest")).manifest,
     activities: (await import("./physics/noguspeegel/activities")).activities,
   }),
+  "physics.kumerpeegel": async () => ({
+    manifest: (await import("./physics/kumerpeegel/manifest")).manifest,
+    activities: (await import("./physics/kumerpeegel/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -144,6 +148,11 @@ export const moduleSimulations: Record<
   ),
   "physics.noguspeegel": lazy(() =>
     import("./physics/noguspeegel/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.kumerpeegel": lazy(() =>
+    import("./physics/kumerpeegel/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -322,6 +331,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "np-kolm-kiirt": lazy(() =>
       import("./physics/noguspeegel/figures").then((module) => ({
+        default: module.ThreeRaysFigure,
+      })),
+    ),
+  },
+  "physics.kumerpeegel": {
+    "kp-turvapeegel": lazy(() =>
+      import("./physics/kumerpeegel/figures").then((module) => ({
+        default: module.ShopMirrorFigure,
+      })),
+    ),
+    "kp-ristsirge": lazy(() =>
+      import("./physics/kumerpeegel/figures").then((module) => ({
+        default: module.NormalFigure,
+      })),
+    ),
+    "kp-kolm-kiirt": lazy(() =>
+      import("./physics/kumerpeegel/figures").then((module) => ({
         default: module.ThreeRaysFigure,
       })),
     ),

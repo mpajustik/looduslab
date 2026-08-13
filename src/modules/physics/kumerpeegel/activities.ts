@@ -198,7 +198,11 @@ const steps: Step[] = [
     id: "explore-1",
     title: "Uuri kumerpeegliga",
     body: [
-      "Vasakul on kumerpeegel külgvaates: tipp kummub valguse poole ja katkendlik joon on peatelg. Peeglist vasakule jääb peegli tagune ala – sinna ei jõua ükski valguskiir.",
+      // Paigutus on sama, mis mooduli joonistel (figures.tsx): peegel paremal,
+      // tipp kummub valguse poole ja peegli tagune ala jääb temast vasakule.
+      // Nii peab see olema, sest näiline fookus on peegli TAGA – tema jaoks
+      // läheb pool joonist.
+      "Paremal on kumerpeegel külgvaates: tipp kummub valguse poole ja katkendlik joon on peatelg. Peeglist vasakule jääb heledam ala – see on peegli tagune, sinna ei jõua ükski valguskiir.",
       "Paremalt tuleb neli peateljega paralleelset kiirt; nooleotsad näitavad, kummale poole valgus liigub. Valitud kiir on paksu joonega. Tema kohtumispunktist läheb katkendlik joon läbi peegli kera keskpunkti – see on selle punkti ristsirge. Nurgakaarte juures on kirjas langemis- ja peegeldumisnurk.",
       "Liuguritega saad muuta kera raadiust ja valitud kiire kõrgust. Mõõdujoon peegli taga näitab, kui kaugel tipust on näiline fookus.",
     ],
