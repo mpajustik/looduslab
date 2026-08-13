@@ -54,7 +54,7 @@ labor · harjutusmoodul · teooriakonspekt
 | kumerpeegel | mikromoodul | P1-T2 (osa: kumerpeegli kiirte käik) | kumerpeegel | ehitatud |
 | kumerpeegli-rakendused | rakendusmoodul | P1-T2 (osa: kumerpeegli ülekanne) | – | ehitatud |
 | noguspeegel | mikromoodul | P1-T2 (osa: nõguspeegli kiirte käik, fookus) | nõguspeegel, fookus | ehitatud |
-| noguspeegli-rakendused | rakendusmoodul | P1-T2 (osa: nõguspeegli ülekanne) | – | plaanis |
+| noguspeegli-rakendused | rakendusmoodul | P1-T2 (osa: nõguspeegli ülekanne) | – | spetsitud |
 
 **Sisu lühidalt (uued read):**
 
@@ -105,8 +105,15 @@ labor · harjutusmoodul · teooriakonspekt
 - **kumerpeegli-rakendused** – liikluspeegel ristmikul, turvapeegel poes,
   auto külgpeegel („esemed on lähemal kui paistavad").
 - **noguspeegel** – koondav, paralleelsed kiired lõikuvad fookuses.
-- **noguspeegli-rakendused** – meigi-/habemeajamispeegel (suurendus),
-  taskulambi ja autotule peegeldi, peegelteleskoop, päikeseahi.
+- **noguspeegli-rakendused** – taskulambi ja autotule peegeldi (allikas
+  fookuses → paralleelne vihk) ning peegelteleskoop ja päikeseahi
+  (paralleelne vihk → fookus): sama peegel kahes suunas. Suurendavad
+  peeglid (hambaarsti peegel ülekandeülesandes, meigipeegel
+  kordamiskaardil) jäävad ühe sõna peale, sest suurenduse seletamine
+  nõuaks kujutise konstrueerimist, mis on gümnaasium (vt
+  MOODUL-noguspeegli-rakendused.md „Piirid"). Habemeajamispeegel oli siin
+  varem eraldi kirjas – ta on meigipeegliga sama juhtum ja moodulisse
+  omaette näitena ei jõudnud.
 
 **Katvuse kontroll:** kõik õpitulemused, praktilised tööd ja mõisted kaetud.
 
