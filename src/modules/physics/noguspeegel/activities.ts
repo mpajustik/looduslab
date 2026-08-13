@@ -224,7 +224,12 @@ const steps: Step[] = [
       {
         kind: "choice",
         id: "explore-3",
-        prompt: `Sea kiire kõrguseks ${cm(RAY_HEIGHT_CM)} cm ja loe langemisnurk. Kui suur on peegeldumisnurk?`,
+        // Raadius öeldakse siin UUESTI: eelmine ülesanne jättis liuguri 160 cm
+        // peale ja õige variandi juures olev nurk kehtib ainult
+        // START_RADIUS_CM juures. Ilma selle lauseta loeks õpilane ekraanilt
+        // ühe nurga ja vastusevariandist teise (CodeRabbiti leid sammust
+        // 4.1nn, kus sama viga parandati moodulis kumerpeegel).
+        prompt: `Sea raadiuseks ${cm(START_RADIUS_CM)} cm tagasi ja kiire kõrguseks ${cm(RAY_HEIGHT_CM)} cm, siis loe langemisnurk. Kui suur on peegeldumisnurk?`,
         options: [
           {
             id: "null",

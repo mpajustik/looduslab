@@ -597,6 +597,25 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
     expect(correct[0].text).toContain("5,7°");
   });
 
+  it("explore-3 ütleb raadiuse uuesti – eelmine ülesanne jättis liuguri 160 cm peale", () => {
+    // CodeRabbiti leid (samm 4.1nn, kumerpeegel): vastusevariandi nurk kehtib
+    // ainult 100 cm juures. 160 cm peal näitaks ekraan teist arvu ja õpilane
+    // loeks variandist 5,7°.
+    const prompt = choiceQuestion("explore-3").prompt;
+    expect(prompt).toContain("100 cm");
+    const shown = reflectParallelRay(
+      metresFromCentimetres(100),
+      metresFromCentimetres(MIRROR_HALF_HEIGHT_CM),
+    );
+    expect(shown.incidenceDeg).toBeCloseTo(5.739, 3);
+    // Sama seis 160 cm juures annaks päris teise arvu – just see vahe oli viga.
+    const flat = reflectParallelRay(
+      metresFromCentimetres(160),
+      metresFromCentimetres(MIRROR_HALF_HEIGHT_CM),
+    );
+    expect(Math.abs(flat.incidenceDeg - shown.incidenceDeg)).toBeGreaterThan(0.5);
+  });
+
   it("practice-3 õige punkt on B ja punktide järjekorda ei segata", () => {
     const question = choiceQuestion("practice-3");
     expect(question.shuffle).toBe(false);
