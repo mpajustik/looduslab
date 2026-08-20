@@ -57,6 +57,13 @@ export const course = defineCourse({
         // tasapeegli kujutise järel). Kõveraid peegleid ta ei vaja ega maini,
         // seega tuleb ta enne neid – valgus liigub siin ikka tasastel pindadel.
         "physics.nurkpeegel",
+        // Helkur on nurkpeegli rakendus ja käib oma mikromooduli JÄREL, täpselt
+        // nagu kumerpeegli ja nõguspeegli rakendused: uut seadust siin ei tule,
+        // teooria algab meeldetuletusega („kaks peeglit täisnurga all pööravad
+        // kiirt 180°") ja kannab selle üle päris asjasse. Kõveraid peegleid ta
+        // ei vaja ega maini, seega tuleb ta enne neid – ja jaotuskava P1 tabelis
+        // on ta samuti kohe nurkpeegli järel.
+        "physics.helkur",
         // Nõguspeegel on peegeldumisseaduse KOLMAS aste: seadus ise (tasane
         // pind) → tema tagajärg tasapeeglil → sama seadus kõveral pinnal, kus
         // ristsirge tuleb kera keskpunktist. Ta EELDAB peegeldumisseadust,

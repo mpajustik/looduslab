@@ -85,6 +85,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/nurkpeegel/manifest")).manifest,
     activities: (await import("./physics/nurkpeegel/activities")).activities,
   }),
+  "physics.helkur": async () => ({
+    manifest: (await import("./physics/helkur/manifest")).manifest,
+    activities: (await import("./physics/helkur/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -180,6 +184,11 @@ export const moduleSimulations: Record<
   ),
   "physics.nurkpeegel": lazy(() =>
     import("./physics/nurkpeegel/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.helkur": lazy(() =>
+    import("./physics/helkur/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -424,6 +433,18 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "np-loe-nurgad": lazy(() =>
       import("./physics/nurkpeegel/figures").then((module) => ({
         default: module.ReadAnglesFigure,
+      })),
+    ),
+  },
+  "physics.helkur": {
+    "hl-kaks-jalakaijat": lazy(() =>
+      import("./physics/helkur/figures").then((module) => ({
+        default: module.TwoWalkersFigure,
+      })),
+    ),
+    "hl-kolm-pinda": lazy(() =>
+      import("./physics/helkur/figures").then((module) => ({
+        default: module.ThreeSurfacesFigure,
       })),
     ),
   },
