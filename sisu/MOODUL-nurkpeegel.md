@@ -243,8 +243,11 @@ UI ega õpetajajuhend ei tohi päris füüsikana esitada):
 3. **Kiir on lõputult peenike joon.** Päris valgusvihul on laius, seega
    päris nurkpeeglist tuleb tagasi vihk, mitte joon.
 4. **Kõik toimub ühes tasandis.** Kahe peegli nurkpeegel saadab kiire
-   tagasi ainult siis, kui valgus tuli peeglite tasandiga paralleelselt.
-   Ruumis on selleks vaja kolme peeglit – seepärast ongi helkur täpitud
+   tagasi ainult siis, kui valgus tuli peeglite ühisservaga – kahe peegli
+   kokkusaamise joonega – risti. Ainult need kiire osad, mis on
+   peeglipindadega risti, pannakse kahe peegeldusega vastassuunda; serva
+   sihis liikuvat osa ei pööra kumbki peegel. Ruumis on täieliku
+   tagasitulekuni vaja kolme peeglit – seepärast ongi helkur täpitud
    pisikeste kuubinurkadega (moodul `helkur`).
 5. **Peeglid on parajalt pikad: piisavalt, et mõlemad langemispunktid
    peale mahuksid, aga mitte nii pikad, et nad sissetuleva kiire ette
