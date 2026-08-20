@@ -81,6 +81,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/noguspeegli-rakendused/manifest")).manifest,
     activities: (await import("./physics/noguspeegli-rakendused/activities")).activities,
   }),
+  "physics.nurkpeegel": async () => ({
+    manifest: (await import("./physics/nurkpeegel/manifest")).manifest,
+    activities: (await import("./physics/nurkpeegel/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -171,6 +175,11 @@ export const moduleSimulations: Record<
   ),
   "physics.noguspeegli-rakendused": lazy(() =>
     import("./physics/noguspeegli-rakendused/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.nurkpeegel": lazy(() =>
+    import("./physics/nurkpeegel/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -396,6 +405,25 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "nr-kaks-suunda": lazy(() =>
       import("./physics/noguspeegli-rakendused/figures").then((module) => ({
         default: module.TwoDirectionsFigure,
+      })),
+    ),
+  },
+  "physics.nurkpeegel": {
+    "np-ule-aia": lazy(() =>
+      import("./physics/nurkpeegel/figures").then((module) => ({
+        default: module.OverFenceFigure,
+      })),
+    ),
+    "np-kaks-peeglit": lazy(() =>
+      import("./physics/nurkpeegel/figures").then((module) => ({
+        default: module.TwoMirrorsFigure,
+      })),
+    ),
+    // Joonis on ühe KÜSIMUSE juures (practice-3), mitte terve sammu oma –
+    // register ei tee neil vahet, seda teeb samm ise.
+    "np-loe-nurgad": lazy(() =>
+      import("./physics/nurkpeegel/figures").then((module) => ({
+        default: module.ReadAnglesFigure,
       })),
     ),
   },

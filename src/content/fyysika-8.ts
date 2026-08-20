@@ -50,12 +50,17 @@ export const course = defineCourse({
         // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
         // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.
         "physics.tasapeegli-kujutis",
+        // Nurkpeegel on peegeldumisseaduse teine rakendus: sama seadus, aga
+        // KAKS tasast peeglit järjest. Ta eeldab ainult `peegeldumisseadus`t
+        // (langemisnurk = peegeldumisnurk mõlemal peeglil) ja on siin
+        // jaotuskava järjekorras (sisu/JAOTUS-fyysika-8.md P1 tabel: kohe
+        // tasapeegli kujutise järel). Kõveraid peegleid ta ei vaja ega maini,
+        // seega tuleb ta enne neid – valgus liigub siin ikka tasastel pindadel.
+        "physics.nurkpeegel",
         // Nõguspeegel on peegeldumisseaduse KOLMAS aste: seadus ise (tasane
         // pind) → tema tagajärg tasapeeglil → sama seadus kõveral pinnal, kus
         // ristsirge tuleb kera keskpunktist. Ta EELDAB peegeldumisseadust,
-        // seega ei saa ta tulla enne teda. Jaotuskava järjekorras (P1 tabel) on
-        // tema ees veel `nurkpeegel` – teda pole ehitatud ja nõguspeegel teda
-        // ei vaja, seega tuleb ta siia, kui valmis saab.
+        // seega ei saa ta tulla enne teda.
         "physics.noguspeegel",
         // Kumerpeegel on sama kerapinna TEINE pool: nõguspeegel näitas kera
         // sisemist pinda ja päris fookust, siin peegeldub valgus väljastpoolt
