@@ -261,7 +261,7 @@ tulemused eestikeelse kümnendkomaga. Nurgad kraadides, pikkused meetrites.
 | `offsetAtDistanceM(2, 100)` | 3,4920769 |
 | `offsetAtDistanceM(1, 50)` | 0,87275325 (pool kaugust, pool kõrvalekallet) |
 | `offsetAtDistanceM(0.5, 100)` | 0,87268678 (hajuvuskoonuse RAADIUS 100 m peal) |
-| `offsetAtDistanceM(0.1, 100)` | 0,17453356 (kõige kitsam liuguri seis: plekk 0,35 m) |
+| `offsetAtDistanceM(0.1, 100)` | 0,17453310 (kõige kitsam liuguri seis: plekk 0,35 m) |
 | `offsetAtDistanceM(0, 100)` | **0** (täpne helkur ei möödu millestki) |
 | `offsetAtDistanceM(1, 0)` | **0** (auto juures ei ole veel kõrvale mindud) |
 | `offsetAtDistanceM(90, 10)` | **viskab vea** (tan 90° ei ole olemas) |
