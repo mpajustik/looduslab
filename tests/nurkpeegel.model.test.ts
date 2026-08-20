@@ -1,4 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { checkNumericAnswer } from "../src/checker/numeric";
+import { stepQuestions } from "../src/engine/contract";
+import { activitiesSchema, manifestSchema } from "../src/engine/contractSchema";
+import { activities } from "../src/modules/physics/nurkpeegel/activities";
+import { manifest } from "../src/modules/physics/nurkpeegel/manifest";
+import { teacher } from "../src/modules/physics/nurkpeegel/teacher";
 import {
   type Vector2,
   deviationDeg,
@@ -293,6 +299,368 @@ describe("invariandid – need on mooduli päris väited", () => {
       expect(path.middleDirection.y).toBeGreaterThan(0);
       // Peegeldumisseadus peeglil 1 vektorkujul: x jääb samaks, y pöördub.
       expect(path.middleDirection.x).toBeCloseTo(path.incidentDirection.x, 12);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Mooduli sisu: manifest, sammud, õpetajajuhend (samm 4.1bbb)
+// ---------------------------------------------------------------------------
+
+describe("manifest", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => manifestSchema.parse(manifest)).not.toThrow();
+  });
+
+  it("viitab õpitulemusele P1-T2 ega võta endale praktilist tööd", () => {
+    // Uut seadust ei tule ja P1-PT1…PT4 on kõik teiste moodulite all.
+    expect(manifest.outcomes).toEqual(["P1-T2"]);
+    expect(manifest.practicalWork).toEqual([]);
+  });
+
+  it("ei võta endale teiste moodulite ainekava põhimõisteid", () => {
+    // `tasapeegel` kuulub moodulitele peegeldumisseadus ja tasapeegli-kujutis,
+    // `kumerpeegel`, `nõguspeegel` ja `fookus` kõverpeeglite moodulitele.
+    // Katvusraport võrdleb mõisteid NIME järgi, seega on „nurkpeegel" ja
+    // „periskoop" tema jaoks tundmatud nimed ja lähevad õigesti märkuseks.
+    expect(manifest.concepts).toEqual(["nurkpeegel", "periskoop"]);
+    for (const concept of manifest.concepts) {
+      for (const owned of [
+        "tasapeegel",
+        "kumerpeegel",
+        "nõguspeegel",
+        "fookus",
+        "valguskiir",
+        "valgusvihk",
+      ]) {
+        expect(concept.toLowerCase(), owned).not.toBe(owned);
+      }
+    }
+  });
+
+  it("on mikromoodul: tund 15 min", () => {
+    expect(manifest.minutes.lesson).toBe(15);
+  });
+});
+
+/** Kogu tekst, mida ÕPILANE selles moodulis näeb – ühes hunnikus. */
+function studentTexts(): string[] {
+  const texts: string[] = [];
+  for (const step of activities.steps) {
+    texts.push(step.title);
+    if ("body" in step && step.body) texts.push(...step.body);
+    if (step.type === "practice" && step.worked) {
+      texts.push(step.worked.prompt, ...step.worked.solution, step.worked.answer);
+    }
+    for (const question of stepQuestions(step)) {
+      texts.push(question.prompt, ...(question.hints ?? []));
+      if (question.kind === "choice") {
+        texts.push(...question.options.map((option) => option.text));
+      }
+      if (question.kind === "numeric") {
+        texts.push(...(question.traps ?? []).map((trap) => trap.feedback));
+      }
+    }
+  }
+  for (const card of activities.reviewCards) {
+    texts.push(card.question, card.answer);
+  }
+  return texts;
+}
+
+/** Ülesanne id järgi – veateade nimetab puuduja, mitte ei viska undefined-it. */
+function numericQuestion(questionId: string) {
+  for (const step of activities.steps) {
+    for (const question of stepQuestions(step)) {
+      if (question.id === questionId && question.kind === "numeric") {
+        expect(question.variants, questionId).toBeUndefined();
+        expect(question.answer, questionId).toBeDefined();
+        return question;
+      }
+    }
+  }
+  throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+}
+
+function choiceQuestion(questionId: string) {
+  for (const step of activities.steps) {
+    for (const question of stepQuestions(step)) {
+      if (question.id === questionId && question.kind === "choice") return question;
+    }
+  }
+  throw new Error(`Valikküsimust "${questionId}" ei ole moodulis`);
+}
+
+describe("activities", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => activitiesSchema.parse(activities)).not.toThrow();
+  });
+
+  it("on väike moodul: kuus sammu, üks ekraan korraga", () => {
+    // Suurusreegel (sisu/MALL-moodul.md): 3–6 sammu, üks õpieesmärk.
+    expect(activities.steps.map((step) => step.type)).toEqual([
+      "hook",
+      "theory",
+      "predict",
+      "explore",
+      "practice",
+      "exit",
+    ]);
+  });
+
+  it("spetsifikatsiooni kolm joonist on õigetes kohtades", () => {
+    // Sildid peavad klappima registriga (moduleFigures) – seda valvab
+    // tests/registry.test.ts alles siis, kui moodul on registris.
+    const figures: (string | undefined)[] = [];
+    for (const step of activities.steps) {
+      if (step.type === "hook" || step.type === "theory") figures.push(step.figure);
+      for (const question of stepQuestions(step)) {
+        if (question.figure) figures.push(question.figure);
+      }
+    }
+    expect(figures).toEqual(["np-ule-aia", "np-kaks-peeglit", "np-loe-nurgad"]);
+  });
+
+  it("pöörde lüliti avaneb alles pärast esimest ülesannet", () => {
+    // Enne seda näeb õpilane ainult kaht peegeldust eraldi ja jõuab seoseni
+    // α + β = θ ise. Kui pöörde arv oleks kohe ekraanil, oleks mooduli vastus
+    // („2θ") käes enne küsimust.
+    const explore = activities.steps.find((step) => step.type === "explore");
+    expect(explore?.type).toBe("explore");
+    if (explore?.type !== "explore") return;
+    expect(explore.simulation?.unlocks).toEqual([
+      { feature: "poorde-lyliti", afterQuestion: "explore-1" },
+    ]);
+  });
+
+  it("õpilase pool ei ületa mooduli piire: kujutisi siin ei loeta", () => {
+    // sisu/MOODUL-nurkpeegel.md „Piirid": kujutiste arv nurkpeeglis
+    // (kaleidoskoop) on TEINE õpieesmärk ja jääb õpetajajuhendisse; helkur on
+    // järgmise mooduli oma ja tohib olla ainult ühe lausega ilma seletuseta.
+    // Väiketäheks enne kontrolli: lause alguses olev „Kujutis" lipsaks muidu
+    // läbi (CodeRabbiti leid, samm 4.1xx).
+    const all = studentTexts().join(" ").toLowerCase();
+    expect(all).not.toContain("kujutis");
+    expect(all).not.toContain("kaleidoskoop");
+    expect(all).not.toContain("peeglikiri");
+    const helkur = studentTexts().filter((text) =>
+      text.toLowerCase().includes("helkur"),
+    );
+    expect(helkur.length).toBeLessThanOrEqual(2);
+  });
+
+  it("iga arvküsimus on kraadides ja sama tolerantsiga", () => {
+    // Kogu moodul on kraadides – ühikuteisendusi siin ei ole. 0,5° on
+    // LUGEMISTOLERANTS: liuguri samm on 5° ja pööre liigub 10° kaupa, seega
+    // naaberväärtus jääb kindlalt välja.
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "numeric") {
+          expect(question.unit, question.id).toBe("°");
+          expect(question.tolerance, question.id).toEqual({
+            mode: "absolute",
+            value: 0.5,
+          });
+        }
+      }
+    }
+  });
+});
+
+/**
+ * Ülesannete vastused vs. mudel.
+ *
+ * `activities.ts` võtab iga pöörde ja langemisnurga MUDELIST (CLAUDE.md reegel
+ * 1), seega näpuviga arvutuses siin välja ei paistaks – küll aga paistab välja
+ * vale liuguriseis, vale ühik või vale tolerants. Seepärast on ootus
+ * kirjutatud SPETSIFIKATSIOONI järgi (sisu/MOODUL-nurkpeegel.md „Sammud").
+ */
+describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
+  it("explore-1: algseisus on langemisnurk teisel peeglil 40°", () => {
+    expect(numericQuestion("explore-1").answer).toBe(40);
+  });
+
+  it("explore-2: algseisu pööre on 120°", () => {
+    expect(numericQuestion("explore-2").answer).toBe(120);
+  });
+
+  it("explore-3: 75° peeglite nurk annab pöördeks 150°", () => {
+    expect(numericQuestion("explore-3").answer).toBe(150);
+  });
+
+  it("practice-1, practice-2 ja practice-3 on spetsi arvud", () => {
+    expect(numericQuestion("practice-1").answer).toBe(160);
+    // Pöördülesanne: pööre on teada, peeglite nurk otsitav.
+    expect(numericQuestion("practice-2").prompt).toContain("160°");
+    expect(numericQuestion("practice-2").answer).toBe(80);
+    expect(numericQuestion("practice-3").answer).toBe(45);
+  });
+
+  it("exit-1: 70° peeglite nurk annab pöördeks 140°", () => {
+    expect(numericQuestion("exit-1").answer).toBe(140);
+  });
+
+  it("iga ülesande seis on mudeli piirides", () => {
+    // Ükski ülesanne ei tohi küsida arvu, mida mudel keeldub andmast:
+    // θ > 45° ja α < 2θ − 90° (kahe peegeldusega tee). Explore-1 ja
+    // practice-3 on ainsad kaks kohta, kus langemisnurk üldse ette antakse.
+    expect(() => secondIncidenceDeg(60, 20)).not.toThrow();
+    expect(() => secondIncidenceDeg(70, 25)).not.toThrow();
+    expect(() => secondIncidenceDeg(80, 30)).not.toThrow();
+    // Sama seis ühe sammu võrra kitsama nurga juures oleks juba keelatud –
+    // nii on näha, et piir ei ole kaugel ja seisud on valitud, mitte juhuslikud.
+    expect(() => secondIncidenceDeg(55, 20)).toThrow(RangeError);
+  });
+
+  it("lugemistolerants ei luba peeglite nurka pöörde vastuseks", () => {
+    // Kogu mooduli kõige sagedasem viga: pööre = peeglite nurk. Ta peab
+    // kukkuma läbi ja saama LÕKSU tagasiside, mitte üldise „vale".
+    const deviation = numericQuestion("explore-2");
+    expect(checkNumericAnswer(deviation, "120").correct).toBe(true);
+    expect(checkNumericAnswer(deviation, "60").correct).toBe(false);
+    const inverse = numericQuestion("practice-2");
+    expect(checkNumericAnswer(inverse, "80").correct).toBe(true);
+    expect(checkNumericAnswer(inverse, "160").correct).toBe(false);
+  });
+
+  it("lõksud katavad mõlemat pidi eksimise", () => {
+    // Nii see, kes kordab peeglite nurka pöörde asemel, kui ka see, kes
+    // kordab pöörde arvu peeglite nurga asemel.
+    const trapAnswers = ["explore-2", "explore-3", "practice-2", "exit-1"].map(
+      (id) => numericQuestion(id).traps?.[0]?.answer,
+    );
+    expect(trapAnswers).toEqual([60, 75, 160, 70]);
+    for (const id of ["explore-2", "explore-3", "practice-2", "exit-1"]) {
+      expect(numericQuestion(id).traps?.[0]?.misconception, id).toBe(
+        "peeglite-nurk-on-poorde-nurk",
+      );
+    }
+  });
+
+  it("predict-1 õige vastus on tagasitulek ja mõlemad valed on nimetatud", () => {
+    const question = choiceQuestion("predict-1");
+    expect(
+      question.options.filter((option) => option.correct).map((option) => option.id),
+    ).toEqual(["tagasi"]);
+    const wrong = question.options.filter((option) => !option.correct);
+    expect(wrong.map((option) => option.misconception)).toEqual([
+      "kaks-peeglit-tuhistavad",
+      "peeglite-nurk-on-poorde-nurk",
+    ]);
+  });
+
+  it("explore-4 kannab mudeli arvu ja püüab mõlemad langemisnurga-väärarusaamad", () => {
+    const question = choiceQuestion("explore-4");
+    const correct = question.options.filter((option) => option.correct);
+    expect(correct.map((option) => option.id)).toEqual(["alati-vastassuunas"]);
+    // 180° tuleb mudelist ja on sama arv, mis ekraanil.
+    expect(correct[0].text).toContain(`${deviationDeg(90)}°`);
+    const wrong = question.options.filter((option) => !option.correct);
+    expect(wrong.map((option) => option.misconception)).toEqual([
+      "poore-soltub-langemisnurgast",
+      "tagasitulek-soltub-langemisnurgast",
+    ]);
+  });
+
+  it("practice-4 ülekandeülesandel on kolm õiget kohta", () => {
+    const question = choiceQuestion("practice-4");
+    expect(question.multiple).toBe(true);
+    expect(question.options.filter((option) => option.correct)).toHaveLength(3);
+    const wrong = question.options.filter((option) => !option.correct);
+    expect(wrong.map((option) => option.misconception)).toEqual([
+      "periskoop-poorab-pilti",
+      "pikem-tee-suurendab",
+    ]);
+  });
+
+  it("exit-2 vale variant „jääb kinni\" on meelega sildita", () => {
+    // Ta ei ole ükski mooduli väärarusaamadest: `kaks-peeglit-tuhistavad`
+    // tähendab vastupidist („kiir läheb lihtsalt edasi"). Vale sildi all
+    // jõuaks õpetaja koondvaatesse väärarusaam, mida õpilasel ei olnud
+    // (CodeRabbiti leid, samm 4.1bbb).
+    const question = choiceQuestion("exit-2");
+    const trapped = question.options.find((option) => option.id === "jaab-kinni");
+    expect(trapped?.correct).toBe(false);
+    expect(trapped?.misconception).toBeUndefined();
+    expect(
+      question.options.find((option) => option.id === "valjub-90")?.misconception,
+    ).toBe("peeglite-nurk-on-poorde-nurk");
+  });
+
+  it("periskoobi arv on mudeli oma: paralleelsed peeglid ei pööra midagi", () => {
+    expect(deviationDeg(0)).toBe(0);
+    expect(choiceQuestion("practice-4").prompt).toContain("0°");
+  });
+});
+
+describe("õpetajajuhend katab mooduli väärarusaamad ja ohutuse", () => {
+  const known = new Set(teacher.misconceptions.map((item) => item.id));
+
+  it("iga activities.ts silt on õpetajajuhendis lahti seletatud", () => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "choice") {
+          for (const option of question.options) {
+            if (option.misconception) {
+              expect(known, `${question.id}/${option.id}`).toContain(
+                option.misconception,
+              );
+            }
+          }
+        }
+        if (question.kind === "numeric") {
+          for (const trap of question.traps ?? []) {
+            expect(known, question.id).toContain(trap.misconception);
+          }
+        }
+      }
+    }
+  });
+
+  it("spetsifikatsiooni kaheksa väärarusaama on kõik olemas", () => {
+    for (const id of [
+      "peeglite-nurk-on-poorde-nurk",
+      "kaks-peeglit-tuhistavad",
+      "poore-soltub-langemisnurgast",
+      "tagasitulek-soltub-langemisnurgast",
+      "periskoop-poorab-pilti",
+      "teine-peegel-ei-jargi-seadust",
+      "pikem-tee-suurendab",
+      "nurkpeegel-vajab-taisnurka",
+    ]) {
+      expect(known, id).toContain(id);
+    }
+  });
+
+  it("ohutus ütleb välja, et nurkpeegel saadab kiire katsetaja enda poole", () => {
+    // Selle mooduli oht ei tule peeglist, vaid laserist: just see omadus, mis
+    // teeb mooduli huvitavaks, suunab kiire tagasi osuti hoidja poole.
+    expect(teacher.safety).toContain("Laserosutit");
+    expect(teacher.safety).toContain("tagasi");
+    expect(teacher.safety).toContain("taskulamp");
+  });
+
+  it("õpetaja saab teada, miks päris katse arvud lohisevad", () => {
+    // model.ts idealiseeringud 1–3 – UI ei tohi neid päris füüsikana esitada.
+    expect(teacher.whyRealDiffers).toContain("klaas");
+    expect(teacher.whyRealDiffers).toContain("5 %");
+  });
+
+  it("klassikatse hoiatab kitsa nurga eest", () => {
+    // Kitsamas kiilus ei ole pööre enam 2θ (model.ts piir θ > 45°). Kui
+    // õpetaja seda ei tea, paistab reegli piir katse äpardusena.
+    expect(teacher.twoMirrorActivity.join(" ")).toContain("60°…90°");
+  });
+
+  it("tunniplaani minutid annavad kokku manifesti tunnipikkuse", () => {
+    const total = teacher.lessonPlan.reduce((sum, item) => sum + item.minutes, 0);
+    expect(total).toBe(manifest.minutes.lesson);
+  });
+
+  it("iga tunniplaani rida vastab päris sammule", () => {
+    const types = new Set(activities.steps.map((step) => step.type));
+    for (const item of teacher.lessonPlan) {
+      expect(types, item.step).toContain(item.step);
     }
   });
 });
