@@ -77,6 +77,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/kumerpeegli-rakendused/manifest")).manifest,
     activities: (await import("./physics/kumerpeegli-rakendused/activities")).activities,
   }),
+  "physics.noguspeegli-rakendused": async () => ({
+    manifest: (await import("./physics/noguspeegli-rakendused/manifest")).manifest,
+    activities: (await import("./physics/noguspeegli-rakendused/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -162,6 +166,11 @@ export const moduleSimulations: Record<
   ),
   "physics.kumerpeegli-rakendused": lazy(() =>
     import("./physics/kumerpeegli-rakendused/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.noguspeegli-rakendused": lazy(() =>
+    import("./physics/noguspeegli-rakendused/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -375,6 +384,18 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "kr-ristmik": lazy(() =>
       import("./physics/kumerpeegli-rakendused/figures").then((module) => ({
         default: module.CrossroadsFigure,
+      })),
+    ),
+  },
+  "physics.noguspeegli-rakendused": {
+    "nr-kolm-seadet": lazy(() =>
+      import("./physics/noguspeegli-rakendused/figures").then((module) => ({
+        default: module.ThreeDevicesFigure,
+      })),
+    ),
+    "nr-kaks-suunda": lazy(() =>
+      import("./physics/noguspeegli-rakendused/figures").then((module) => ({
+        default: module.TwoDirectionsFigure,
       })),
     ),
   },

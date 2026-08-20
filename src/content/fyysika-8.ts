@@ -70,6 +70,15 @@ export const course = defineCourse({
         // kantakse üle kolme päris seadmesse. Teooria algab lausega
         // „meeldetuletus eelmisest moodulist", seega ta eeldab teda otsesõnu.
         "physics.kumerpeegli-rakendused",
+        // Nõguspeegli rakendused käivad viimasena: teooria algab lausega
+        // „meeldetuletus eelmisest moodulist" ja võtab moodulist `noguspeegel`
+        // nii fookuse kui ka kiirte käigu. Jaotuskava tabelis (P1) on ta
+        // `noguspeegel`-i järel ja seda järjekorda ta ka vajab. Kumerpeegli
+        // rakenduste JÄREL on ta seepärast, et need kaks moodulit vastavad
+        // samale küsimusele („milleks seda peeglit kasutatakse") kahe eri
+        // peegli kohta – õpilane läbib nad paarina, hajutav enne, koondav
+        // pärast (docs/SISUHALDUS.md – järjekorra otsustab kursusefail).
+        "physics.noguspeegli-rakendused",
       ],
     },
     // P2. Valguse murdumine

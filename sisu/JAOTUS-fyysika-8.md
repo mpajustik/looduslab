@@ -54,7 +54,7 @@ labor · harjutusmoodul · teooriakonspekt
 | kumerpeegel | mikromoodul | P1-T2 (osa: kumerpeegli kiirte käik) | kumerpeegel | ehitatud |
 | kumerpeegli-rakendused | rakendusmoodul | P1-T2 (osa: kumerpeegli ülekanne) | – | ehitatud |
 | noguspeegel | mikromoodul | P1-T2 (osa: nõguspeegli kiirte käik, fookus) | nõguspeegel, fookus | ehitatud |
-| noguspeegli-rakendused | rakendusmoodul | P1-T2 (osa: nõguspeegli ülekanne) | – | spetsitud |
+| noguspeegli-rakendused | rakendusmoodul | P1-T2 (osa: nõguspeegli ülekanne) | – | ehitatud |
 
 **Sisu lühidalt (uued read):**
 
