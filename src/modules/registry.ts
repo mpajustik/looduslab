@@ -93,6 +93,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/kuu-faasid/manifest")).manifest,
     activities: (await import("./physics/kuu-faasid/activities")).activities,
   }),
+  "physics.lambivalik": async () => ({
+    manifest: (await import("./physics/lambivalik/manifest")).manifest,
+    activities: (await import("./physics/lambivalik/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -198,6 +202,11 @@ export const moduleSimulations: Record<
   ),
   "physics.kuu-faasid": lazy(() =>
     import("./physics/kuu-faasid/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.lambivalik": lazy(() =>
+    import("./physics/lambivalik/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -471,6 +480,18 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "kf-kaks-sirpi": lazy(() =>
       import("./physics/kuu-faasid/figures").then((module) => ({
         default: module.TwoCrescentsFigure,
+      })),
+    ),
+  },
+  "physics.lambivalik": {
+    "lv-poeriiul": lazy(() =>
+      import("./physics/lambivalik/figures").then((module) => ({
+        default: module.ShelfFigure,
+      })),
+    ),
+    "lv-kolm-varvust": lazy(() =>
+      import("./physics/lambivalik/figures").then((module) => ({
+        default: module.ThreeColoursFigure,
       })),
     ),
   },

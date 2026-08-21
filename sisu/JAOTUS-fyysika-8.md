@@ -37,7 +37,7 @@ labor · harjutusmoodul · teooriakonspekt
 | Slug | Tüüp | Katab | Õpetab mõisted | Staatus |
 |---|---|---|---|---|
 | valgusallikad | mikromoodul | P1-T1 (osa: soojuslikud ja külmad allikad; punkt- vs laiendatud allikas) | punktvalgusallikas | ehitatud |
-| lambivalik | rakendusmoodul | P1-T1 (osa: liigituse rakendamine) | – | spetsitud |
+| lambivalik | rakendusmoodul | P1-T1 (osa: liigituse rakendamine) | – | ehitatud |
 | valguse-sirgjooneline-levimine | mikromoodul | P1-T2 (osa: sirgjooneline levimine) | valgusvihk, optiline keskkond | ehitatud |
 | vari-ja-poolvari | virtuaalne labor | P1-T2 (osa: varju joonised); P1-PT1 (sim + päris katse juhend) | täisvari, poolvari | ehitatud |
 | varjutused | rakendusmoodul | P1-T2 (osa: varju ülekanne taevakehadele) | – | ehitatud |

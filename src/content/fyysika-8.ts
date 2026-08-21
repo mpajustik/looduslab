@@ -28,6 +28,12 @@ export const course = defineCourse({
       // ta millegi pealt tagasi põrkab.
       modules: [
         "physics.valgusallikad",
+        // Lambivalik on valgusallikate rakendusmoodul ja käib oma mikromooduli
+        // JÄREL, täpselt nagu `helkur`, `varjutused` ja peeglite rakendused:
+        // uut liigitust siin ei tule, vaid „soojuslik / külm" ja „punkt- /
+        // laiendatud allikas" kantakse üle poeriiulile. Jaotuskava P1 tabelis
+        // (sisu/JAOTUS-fyysika-8.md) on ta samuti kohe `valgusallikad`-e järel.
+        "physics.lambivalik",
         "physics.valguse-sirgjooneline-levimine",
         "physics.vari-ja-poolvari",
         "physics.varjutused",

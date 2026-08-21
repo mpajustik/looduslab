@@ -95,7 +95,14 @@ const INCANDESCENT_EFFICACY = luminousEfficacy(
   INCANDESCENT.powerW,
 );
 const CFL_EFFICACY = luminousEfficacy(CFL.lumensLm, CFL.powerW);
-const LED_EFFICACY = luminousEfficacy(LED.lumensLm, LED.powerW);
+/**
+ * LED-i valgusviljakus (100 lm/W).
+ *
+ * Eksporditud, sest simulatsiooni kastike „Kui palju vatte kulub" arvutab
+ * võimsuse SAMA viljakusega – muidu näitaks ekraan üht arvu ja explore-4 õige
+ * vastus oleks teine.
+ */
+export const LED_EFFICACY = luminousEfficacy(LED.lumensLm, LED.powerW);
 
 /** Mitu korda on LED hõõglambist viljakam – teooria ja näidise väide. */
 const LED_VS_INCANDESCENT = LED_EFFICACY / INCANDESCENT_EFFICACY;
@@ -106,8 +113,12 @@ const LED_VS_INCANDESCENT = LED_EFFICACY / INCANDESCENT_EFFICACY;
  * Simulatsiooni nupurida. Pindala ja soovitatav tihedus on STSENAARIUMI arvud
  * (sisu/MOODUL-lambivalik.md): nad tulevad mudelisse argumendina, nii saab
  * õpetaja rääkida ka töökojast ilma mudelit puutumata.
+ *
+ * Eksporditud samal põhjusel mis {@link LAMPS}: sama neli ruumi on ka
+ * simulatsiooni nupureas (Simulation.tsx). Teine loend läheks ühel päeval
+ * lahku ja siis küsiks explore-1 arvu, mida ekraanil ei ole.
  */
-const ROOMS = [
+export const ROOMS = [
   { name: "magamistuba", areaM2: 12, lumensPerM2: 100 },
   { name: "elutuba", areaM2: 18, lumensPerM2: 150 },
   { name: "köögi tööpind", areaM2: 4, lumensPerM2: 300 },
@@ -151,10 +162,13 @@ const LIVING_ROOM_LAMP_COUNT = LIVING_ROOM_LUMENS / LED.lumensLm;
 /**
  * Liugurite algväärtused. Mõlemad on liuguri võre peal (`SLIDERS`), seega saab
  * õpilane alguskoha alati tagasi – see oli mooduli `varjutused` õppetund.
- * Simulation.tsx kasutab samu arve (sama muster kui moodulis `helkur`).
+ *
+ * Simulation.tsx impordib needsamad arvud, ei kirjuta neid uuesti: explore-4
+ * lõks ON algseisu võimsus (`START_WATTS_LED`), seega kaks eri algväärtust
+ * teeksid lõksust vaikselt vale arvu.
  */
-const START_LUMENS = 800;
-const START_KELVIN = 2700;
+export const START_LUMENS = 800;
+export const START_KELVIN = 2700;
 /**
  * Algseisu (ühe tavalise LED-lambi) võimsus – explore-4 lõks.
  *
