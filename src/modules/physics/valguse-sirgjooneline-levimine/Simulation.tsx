@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   EXAMPLE_OBJECTS,
@@ -428,77 +429,56 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         {formatImageMetres(imageHeightM)}.
       </p>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={distanceSliderId} className="text-base font-medium text-ink">
-          Kaugus esemeni: {formatDistance(distanceM)}
-        </label>
-        <input
-          id={distanceSliderId}
-          type="range"
-          min={SLIDERS.distanceM.min}
-          max={SLIDERS.distanceM.max}
-          step={SLIDERS.distanceM.step}
-          value={distanceM}
-          onChange={(event) =>
-            setDistanceM(clampSlider(event.target.value, SLIDERS.distanceM, DEFAULT_DISTANCE_M))
-          }
-          aria-valuetext={`${formatNumber(distanceM, 1)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatDistance(SLIDERS.distanceM.min)}</span>
-          <span>{formatDistance(SLIDERS.distanceM.max)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={distanceSliderId}
+        label="Kaugus esemeni"
+        value={distanceM}
+        min={SLIDERS.distanceM.min}
+        max={SLIDERS.distanceM.max}
+        step={SLIDERS.distanceM.step}
+        onChange={(event) =>
+          setDistanceM(clampSlider(event.target.value, SLIDERS.distanceM, DEFAULT_DISTANCE_M))
+        }
+        valueText={formatDistance(distanceM)}
+        ariaValueText={`${formatNumber(distanceM, 1)} meetrit`}
+        minLabel={formatDistance(SLIDERS.distanceM.min)}
+        maxLabel={formatDistance(SLIDERS.distanceM.max)}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={depthSliderId} className="text-base font-medium text-ink">
-          Kambri sügavus: {formatDepth(depthM)}
-        </label>
-        <input
-          id={depthSliderId}
-          type="range"
-          min={SLIDERS.boxDepthM.min}
-          max={SLIDERS.boxDepthM.max}
-          step={SLIDERS.boxDepthM.step}
-          value={depthM}
-          onChange={(event) =>
-            setDepthM(clampSlider(event.target.value, SLIDERS.boxDepthM, DEFAULT_DEPTH_M))
-          }
-          aria-valuetext={`${formatNumber(depthM, 2)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatDepth(SLIDERS.boxDepthM.min)}</span>
-          <span>{formatDepth(SLIDERS.boxDepthM.max)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={depthSliderId}
+        label="Kambri sügavus"
+        value={depthM}
+        min={SLIDERS.boxDepthM.min}
+        max={SLIDERS.boxDepthM.max}
+        step={SLIDERS.boxDepthM.step}
+        onChange={(event) =>
+          setDepthM(clampSlider(event.target.value, SLIDERS.boxDepthM, DEFAULT_DEPTH_M))
+        }
+        valueText={formatDepth(depthM)}
+        ariaValueText={`${formatNumber(depthM, 2)} meetrit`}
+        minLabel={formatDepth(SLIDERS.boxDepthM.min)}
+        maxLabel={formatDepth(SLIDERS.boxDepthM.max)}
+      />
 
       {/* Augu liugur avaneb pärast ülesannet 2 – enne seda on nähtaval kaks
           muudetavat suurust, nii nagu moodulileping nõuab. */}
       {holeAvailable ? (
-        <div className="flex flex-col gap-2">
-          <label htmlFor={holeSliderId} className="text-base font-medium text-ink">
-            Augu läbimõõt: {formatHole(holeMm)}
-          </label>
-          <input
-            id={holeSliderId}
-            type="range"
-            min={SLIDERS.holeMm.min}
-            max={SLIDERS.holeMm.max}
-            step={SLIDERS.holeMm.step}
-            value={holeMm}
-            onChange={(event) =>
-              setHoleMm(clampSlider(event.target.value, SLIDERS.holeMm, DEFAULT_HOLE_MM))
-            }
-            aria-valuetext={`${formatNumber(holeMm, 1)} millimeetrit`}
-            className="h-11 w-full accent-brand"
-          />
-          <div className="flex justify-between text-sm text-ink-soft">
-            <span>{formatHole(SLIDERS.holeMm.min)}</span>
-            <span>{formatHole(SLIDERS.holeMm.max)}</span>
-          </div>
-        </div>
+        <SliderField
+          id={holeSliderId}
+          label="Augu läbimõõt"
+          value={holeMm}
+          min={SLIDERS.holeMm.min}
+          max={SLIDERS.holeMm.max}
+          step={SLIDERS.holeMm.step}
+          onChange={(event) =>
+            setHoleMm(clampSlider(event.target.value, SLIDERS.holeMm, DEFAULT_HOLE_MM))
+          }
+          valueText={formatHole(holeMm)}
+          ariaValueText={`${formatNumber(holeMm, 1)} millimeetrit`}
+          minLabel={formatHole(SLIDERS.holeMm.min)}
+          maxLabel={formatHole(SLIDERS.holeMm.max)}
+        />
       ) : null}
 
       {/* Näited: kiirvalik, mis paneb paika eseme kõrguse ja tema tüüpilise

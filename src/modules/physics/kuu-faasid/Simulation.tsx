@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   dayFromPhaseAngle,
@@ -249,29 +250,22 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         <Readout label="Päev tsüklis" value={`${formatNumber(dayInCycle, 1)} / 29,5`} />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={sliderId} className="text-base font-medium text-ink">
-          Kuu asukoht orbiidil: {formatNumber(angleDeg, 0)}°
-        </label>
-        <input
-          id={sliderId}
-          type="range"
-          min={SLIDERS.phaseAngleDeg.min}
-          max={SLIDERS.phaseAngleDeg.max}
-          step={SLIDERS.phaseAngleDeg.step}
-          value={angleDeg}
-          onChange={(event) =>
-            setAngleDeg(clampSlider(event.target.value, SLIDERS.phaseAngleDeg, DEFAULT_ANGLE_DEG))
-          }
-          aria-valuetext={`${formatNumber(angleDeg, 0)} kraadi`}
-          aria-describedby={sliderHintId}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>0° (kuuloomine)</span>
-          <span>360° (kuuloomine)</span>
-        </div>
-      </div>
+      <SliderField
+        id={sliderId}
+        label="Kuu asukoht orbiidil"
+        value={angleDeg}
+        min={SLIDERS.phaseAngleDeg.min}
+        max={SLIDERS.phaseAngleDeg.max}
+        step={SLIDERS.phaseAngleDeg.step}
+        onChange={(event) =>
+          setAngleDeg(clampSlider(event.target.value, SLIDERS.phaseAngleDeg, DEFAULT_ANGLE_DEG))
+        }
+        valueText={`${formatNumber(angleDeg, 0)}°`}
+        ariaValueText={`${formatNumber(angleDeg, 0)} kraadi`}
+        minLabel="0° (kuuloomine)"
+        maxLabel="360° (kuuloomine)"
+        describedBy={sliderHintId}
+      />
 
       {shadowAvailable ? (
         <div className="flex flex-col gap-3 border-t border-line pt-4">

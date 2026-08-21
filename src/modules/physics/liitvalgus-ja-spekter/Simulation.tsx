@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import {
   LIGHT_LABEL_COLOUR,
   SPECTRUM_OFF_COLOUR,
@@ -344,24 +345,19 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor={sliderId} className="text-base font-medium text-ink">
-          Lainepikkus: {wavelengthNm} nm
-        </label>
-        <input
+        <SliderField
           id={sliderId}
-          type="range"
+          label="Lainepikkus"
+          value={wavelengthNm}
           min={SLIDERS.wavelengthNm.min}
           max={SLIDERS.wavelengthNm.max}
           step={SLIDERS.wavelengthNm.step}
-          value={wavelengthNm}
           onChange={(event) => setWavelengthNm(clampWavelength(event.target.value))}
-          aria-valuetext={`${wavelengthNm} nanomeetrit, ${markerColourName}`}
-          className="h-11 w-full accent-brand"
+          valueText={`${wavelengthNm} nm`}
+          ariaValueText={`${wavelengthNm} nanomeetrit, ${markerColourName}`}
+          minLabel={`${SLIDERS.wavelengthNm.min} nm`}
+          maxLabel={`${SLIDERS.wavelengthNm.max} nm`}
         />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{SLIDERS.wavelengthNm.min} nm</span>
-          <span>{SLIDERS.wavelengthNm.max} nm</span>
-        </div>
         {/* Liuguri all seisab kolm asja korraga: koht, värvi NIMI ja kas
             valitud allikas seda värvi kiirgab. Just see viimane lause on
             ülesande 2 vastus – ja seepärast tuleb ta mudelist, mitte

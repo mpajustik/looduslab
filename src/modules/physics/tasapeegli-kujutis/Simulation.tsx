@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   SLIDERS,
@@ -421,84 +422,63 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         <Readout label="Kujutis on peegli taga" value={formatMetres(imageDistanceM)} />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={distanceSliderId} className="text-base font-medium text-ink">
-          Sina → peegel: {formatMetres(objectDistanceM)}
-        </label>
-        <input
-          id={distanceSliderId}
-          type="range"
-          min={SLIDERS.objectDistanceM.min}
-          max={SLIDERS.objectDistanceM.max}
-          step={SLIDERS.objectDistanceM.step}
-          value={objectDistanceM}
-          onChange={(event) =>
-            setObjectDistanceM(
-              clampSlider(event.target.value, SLIDERS.objectDistanceM, DEFAULT_DISTANCE_M),
-            )
-          }
-          aria-valuetext={`${formatNumber(objectDistanceM, 1)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatMetres(SLIDERS.objectDistanceM.min)}</span>
-          <span>{formatMetres(SLIDERS.objectDistanceM.max)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={distanceSliderId}
+        label="Sina → peegel"
+        value={objectDistanceM}
+        min={SLIDERS.objectDistanceM.min}
+        max={SLIDERS.objectDistanceM.max}
+        step={SLIDERS.objectDistanceM.step}
+        onChange={(event) =>
+          setObjectDistanceM(
+            clampSlider(event.target.value, SLIDERS.objectDistanceM, DEFAULT_DISTANCE_M),
+          )
+        }
+        valueText={formatMetres(objectDistanceM)}
+        ariaValueText={`${formatNumber(objectDistanceM, 1)} meetrit`}
+        minLabel={formatMetres(SLIDERS.objectDistanceM.min)}
+        maxLabel={formatMetres(SLIDERS.objectDistanceM.max)}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={mirrorSliderId} className="text-base font-medium text-ink">
-          Peegli kõrgus: {formatMetres(mirrorHeightM)}
-        </label>
-        <input
-          id={mirrorSliderId}
-          type="range"
-          min={SLIDERS.mirrorHeightM.min}
-          max={SLIDERS.mirrorHeightM.max}
-          step={SLIDERS.mirrorHeightM.step}
-          value={mirrorHeightM}
-          onChange={(event) =>
-            setMirrorHeightM(
-              clampSlider(event.target.value, SLIDERS.mirrorHeightM, DEFAULT_MIRROR_M),
-            )
-          }
-          aria-valuetext={`${formatNumber(mirrorHeightM, 2)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatMetres(SLIDERS.mirrorHeightM.min)}</span>
-          <span>{formatMetres(SLIDERS.mirrorHeightM.max)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={mirrorSliderId}
+        label="Peegli kõrgus"
+        value={mirrorHeightM}
+        min={SLIDERS.mirrorHeightM.min}
+        max={SLIDERS.mirrorHeightM.max}
+        step={SLIDERS.mirrorHeightM.step}
+        onChange={(event) =>
+          setMirrorHeightM(
+            clampSlider(event.target.value, SLIDERS.mirrorHeightM, DEFAULT_MIRROR_M),
+          )
+        }
+        valueText={formatMetres(mirrorHeightM)}
+        ariaValueText={`${formatNumber(mirrorHeightM, 2)} meetrit`}
+        minLabel={formatMetres(SLIDERS.mirrorHeightM.min)}
+        maxLabel={formatMetres(SLIDERS.mirrorHeightM.max)}
+      />
 
       {/* Pikkuse liugur avaneb pärast ülesannet 4 – enne seda on nähtaval kaks
           muudetavat suurust, nii nagu moodulileping nõuab. Silmade kõrgus tuleb
           pikkusest (`eyeHeight`), seega eraldi liugurit tema jaoks ei ole. */}
       {personHeightAvailable ? (
-        <div className="flex flex-col gap-2">
-          <label htmlFor={personSliderId} className="text-base font-medium text-ink">
-            Sinu pikkus: {formatMetres(personHeightM)}
-          </label>
-          <input
-            id={personSliderId}
-            type="range"
-            min={SLIDERS.personHeightM.min}
-            max={SLIDERS.personHeightM.max}
-            step={SLIDERS.personHeightM.step}
-            value={personHeightM}
-            onChange={(event) =>
-              setPersonHeightM(
-                clampSlider(event.target.value, SLIDERS.personHeightM, DEFAULT_PERSON_M),
-              )
-            }
-            aria-valuetext={`${formatNumber(personHeightM, 2)} meetrit`}
-            className="h-11 w-full accent-brand"
-          />
-          <div className="flex justify-between text-sm text-ink-soft">
-            <span>{formatMetres(SLIDERS.personHeightM.min)}</span>
-            <span>{formatMetres(SLIDERS.personHeightM.max)}</span>
-          </div>
-        </div>
+        <SliderField
+          id={personSliderId}
+          label="Sinu pikkus"
+          value={personHeightM}
+          min={SLIDERS.personHeightM.min}
+          max={SLIDERS.personHeightM.max}
+          step={SLIDERS.personHeightM.step}
+          onChange={(event) =>
+            setPersonHeightM(
+              clampSlider(event.target.value, SLIDERS.personHeightM, DEFAULT_PERSON_M),
+            )
+          }
+          valueText={formatMetres(personHeightM)}
+          ariaValueText={`${formatNumber(personHeightM, 2)} meetrit`}
+          minLabel={formatMetres(SLIDERS.personHeightM.min)}
+          maxLabel={formatMetres(SLIDERS.personHeightM.max)}
+        />
       ) : null}
 
       <div className="flex justify-center">

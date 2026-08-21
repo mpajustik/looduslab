@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import { LIQUID_DENSITIES, pressure, toKilopascals, type LiquidId } from "./model";
 
@@ -267,26 +268,19 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         <Readout label="Rõhk vedelikus" value={`${formatNumber(pressureKPa, 1)} kPa`} tone="pressure" />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={sliderId} className="text-base font-medium text-ink">
-          Sügavus (vedeliku pinnast)
-        </label>
-        <input
-          id={sliderId}
-          type="range"
-          min={MIN_DEPTH_M}
-          max={MAX_DEPTH_M}
-          step={DEPTH_STEP_M}
-          value={depthM}
-          onChange={(event) => setDepthM(clampDepth(event.target.value))}
-          aria-valuetext={`${formatNumber(depthM, 1)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatNumber(MIN_DEPTH_M, 1)} m</span>
-          <span>{formatNumber(MAX_DEPTH_M, 1)} m</span>
-        </div>
-      </div>
+      <SliderField
+        id={sliderId}
+        label="Sügavus (vedeliku pinnast)"
+        value={depthM}
+        min={MIN_DEPTH_M}
+        max={MAX_DEPTH_M}
+        step={DEPTH_STEP_M}
+        onChange={(event) => setDepthM(clampDepth(event.target.value))}
+        valueText={`${formatNumber(depthM, 1)} m`}
+        ariaValueText={`${formatNumber(depthM, 1)} meetrit`}
+        minLabel={`${formatNumber(MIN_DEPTH_M, 1)} m`}
+        maxLabel={`${formatNumber(MAX_DEPTH_M, 1)} m`}
+      />
 
       <div className="flex flex-col gap-2">
         <span className="text-base font-medium text-ink">Vedelik</span>

@@ -70,6 +70,10 @@ kas ta näeb õpetaja materjali.
 - Alguses nähtaval max 2 muudetavat suurust, ülejäänud avanevad hiljem
 - „Alusta uuesti" nupp alati samas kohas (üleval paremal)
 - Mõõdetav väärtus kuvatakse suurelt ja ühikuga
+- Liuguri enda väärtus on nähtav LIUGURI JUURES (sildi real paremal,
+  `ui/SliderField`) – mitte ainult joonise juures olevas näidikus. Telefonis
+  on joonis kerimise taga ja õpilane ei näeks lohistades, mida ta seab.
+  Näidik (`Readout`) näitab TULEMUST, liugur näitab SISENDIT
 
 ## Tagasiside keel
 

@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   BALL_DIAMETER_M,
@@ -458,90 +459,70 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         </p>
       )}
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={sourceSliderId} className="text-base font-medium text-ink">
-          Allika laius: {formatSourceWidth(sourceWidthM)}
-          {sourceWidthM === 0 ? " (punktvalgusallikas)" : ""}
-        </label>
-        <input
-          id={sourceSliderId}
-          type="range"
-          min={SLIDERS.sourceWidthM.min}
-          max={SLIDERS.sourceWidthM.max}
-          step={SLIDERS.sourceWidthM.step}
-          value={sourceWidthM}
-          onChange={(event) =>
-            setSourceWidthM(
-              clampSlider(event.target.value, SLIDERS.sourceWidthM, DEFAULT_SOURCE_M),
-            )
-          }
-          aria-valuetext={
-            sourceWidthM === 0
-              ? "0 sentimeetrit, punktvalgusallikas"
-              : `${formatNumber(metersToCm(sourceWidthM), 0)} sentimeetrit`
-          }
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatSourceWidth(SLIDERS.sourceWidthM.min)}</span>
-          <span>{formatSourceWidth(SLIDERS.sourceWidthM.max)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={sourceSliderId}
+        label="Allika laius"
+        value={sourceWidthM}
+        min={SLIDERS.sourceWidthM.min}
+        max={SLIDERS.sourceWidthM.max}
+        step={SLIDERS.sourceWidthM.step}
+        onChange={(event) =>
+          setSourceWidthM(clampSlider(event.target.value, SLIDERS.sourceWidthM, DEFAULT_SOURCE_M))
+        }
+        // Nulli juures ei ole „0 cm" veel kogu jutt: just seal muutub allikas
+        // punktvalgusallikaks ja poolvari kaob – seepärast käib sõna arvuga kaasas.
+        valueText={`${formatSourceWidth(sourceWidthM)}${
+          sourceWidthM === 0 ? " (punktvalgusallikas)" : ""
+        }`}
+        ariaValueText={
+          sourceWidthM === 0
+            ? "0 sentimeetrit, punktvalgusallikas"
+            : `${formatNumber(metersToCm(sourceWidthM), 0)} sentimeetrit`
+        }
+        minLabel={formatSourceWidth(SLIDERS.sourceWidthM.min)}
+        maxLabel={formatSourceWidth(SLIDERS.sourceWidthM.max)}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={screenSliderId} className="text-base font-medium text-ink">
-          Allikas → ekraan: {formatDistance(screenDistanceM)}
-        </label>
-        <input
-          id={screenSliderId}
-          type="range"
-          min={SLIDERS.screenDistanceM.min}
-          max={SLIDERS.screenDistanceM.max}
-          step={SLIDERS.screenDistanceM.step}
-          value={screenDistanceM}
-          onChange={(event) =>
-            setScreenDistanceM(
-              clampSlider(event.target.value, SLIDERS.screenDistanceM, DEFAULT_SCREEN_M),
-            )
-          }
-          aria-valuetext={`${formatNumber(screenDistanceM, 1)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatDistance(SLIDERS.screenDistanceM.min)}</span>
-          <span>{formatDistance(SLIDERS.screenDistanceM.max)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={screenSliderId}
+        label="Allikas → ekraan"
+        value={screenDistanceM}
+        min={SLIDERS.screenDistanceM.min}
+        max={SLIDERS.screenDistanceM.max}
+        step={SLIDERS.screenDistanceM.step}
+        onChange={(event) =>
+          setScreenDistanceM(
+            clampSlider(event.target.value, SLIDERS.screenDistanceM, DEFAULT_SCREEN_M),
+          )
+        }
+        valueText={formatDistance(screenDistanceM)}
+        ariaValueText={`${formatNumber(screenDistanceM, 1)} meetrit`}
+        minLabel={formatDistance(SLIDERS.screenDistanceM.min)}
+        maxLabel={formatDistance(SLIDERS.screenDistanceM.max)}
+      />
 
       {/* Palli kauguse liugur avaneb pärast ülesannet 2 – enne seda on nähtaval
           kaks muudetavat suurust, nii nagu moodulileping nõuab. Liuguri suurim
           väärtus (1 m) on väiksem kui ekraani liuguri vähim (1,2 m), seega ei
           saa pall sattuda ekraani taha ükskõik millise seisu juures. */}
       {ballDistanceAvailable ? (
-        <div className="flex flex-col gap-2">
-          <label htmlFor={ballSliderId} className="text-base font-medium text-ink">
-            Allikas → pall: {formatDistance(objectDistanceM)}
-          </label>
-          <input
-            id={ballSliderId}
-            type="range"
-            min={SLIDERS.objectDistanceM.min}
-            max={SLIDERS.objectDistanceM.max}
-            step={SLIDERS.objectDistanceM.step}
-            value={objectDistanceM}
-            onChange={(event) =>
-              setObjectDistanceM(
-                clampSlider(event.target.value, SLIDERS.objectDistanceM, DEFAULT_BALL_M),
-              )
-            }
-            aria-valuetext={`${formatNumber(objectDistanceM, 1)} meetrit`}
-            className="h-11 w-full accent-brand"
-          />
-          <div className="flex justify-between text-sm text-ink-soft">
-            <span>{formatDistance(SLIDERS.objectDistanceM.min)}</span>
-            <span>{formatDistance(SLIDERS.objectDistanceM.max)}</span>
-          </div>
-        </div>
+        <SliderField
+          id={ballSliderId}
+          label="Allikas → pall"
+          value={objectDistanceM}
+          min={SLIDERS.objectDistanceM.min}
+          max={SLIDERS.objectDistanceM.max}
+          step={SLIDERS.objectDistanceM.step}
+          onChange={(event) =>
+            setObjectDistanceM(
+              clampSlider(event.target.value, SLIDERS.objectDistanceM, DEFAULT_BALL_M),
+            )
+          }
+          valueText={formatDistance(objectDistanceM)}
+          ariaValueText={`${formatNumber(objectDistanceM, 1)} meetrit`}
+          minLabel={formatDistance(SLIDERS.objectDistanceM.min)}
+          maxLabel={formatDistance(SLIDERS.objectDistanceM.max)}
+        />
       ) : null}
 
       <div className="flex justify-center">

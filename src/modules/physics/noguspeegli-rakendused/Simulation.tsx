@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   MIRROR_DIAMETER_CM,
@@ -632,54 +633,38 @@ export function Simulation(_props: Partial<SimulationProps> = {}) {
         Pirn on alati fookuses.
       </p>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={radiusSliderId} className="text-base font-medium text-ink">
-          Peegli kõverusraadius R
-        </label>
-        <input
-          id={radiusSliderId}
-          type="range"
-          min={SLIDERS.radiusCm.min}
-          max={SLIDERS.radiusCm.max}
-          step={SLIDERS.radiusCm.step}
-          value={radiusCm}
-          onChange={(event) =>
-            setRadiusCm(clamp(event.target.value, SLIDERS.radiusCm, DEFAULT_RADIUS_CM))
-          }
-          // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
-          aria-valuetext={`${radiusCm} sentimeetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{SLIDERS.radiusCm.min} cm (sügavam)</span>
-          <span>{SLIDERS.radiusCm.max} cm (lamedam)</span>
-        </div>
-      </div>
+      <SliderField
+        id={radiusSliderId}
+        label="Peegli kõverusraadius R"
+        value={radiusCm}
+        min={SLIDERS.radiusCm.min}
+        max={SLIDERS.radiusCm.max}
+        step={SLIDERS.radiusCm.step}
+        onChange={(event) =>
+          setRadiusCm(clamp(event.target.value, SLIDERS.radiusCm, DEFAULT_RADIUS_CM))
+        }
+        valueText={`${radiusCm} cm`}
+        // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
+        ariaValueText={`${radiusCm} sentimeetrit`}
+        minLabel={`${SLIDERS.radiusCm.min} cm (sügavam)`}
+        maxLabel={`${SLIDERS.radiusCm.max} cm (lamedam)`}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={sourceSliderId} className="text-base font-medium text-ink">
-          Pirni suurus s
-        </label>
-        <input
-          id={sourceSliderId}
-          type="range"
-          min={SLIDERS.sourceSizeMm.min}
-          max={SLIDERS.sourceSizeMm.max}
-          step={SLIDERS.sourceSizeMm.step}
-          value={sourceSizeMm}
-          onChange={(event) =>
-            setSourceSizeMm(
-              clamp(event.target.value, SLIDERS.sourceSizeMm, DEFAULT_SOURCE_MM),
-            )
-          }
-          aria-valuetext={`${sourceSizeMm} millimeetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{SLIDERS.sourceSizeMm.min} mm (LED-kiip)</span>
-          <span>{SLIDERS.sourceSizeMm.max} mm (suur hõõgniit)</span>
-        </div>
-      </div>
+      <SliderField
+        id={sourceSliderId}
+        label="Pirni suurus s"
+        value={sourceSizeMm}
+        min={SLIDERS.sourceSizeMm.min}
+        max={SLIDERS.sourceSizeMm.max}
+        step={SLIDERS.sourceSizeMm.step}
+        onChange={(event) =>
+          setSourceSizeMm(clamp(event.target.value, SLIDERS.sourceSizeMm, DEFAULT_SOURCE_MM))
+        }
+        valueText={`${sourceSizeMm} mm`}
+        ariaValueText={`${sourceSizeMm} millimeetrit`}
+        minLabel={`${SLIDERS.sourceSizeMm.min} mm (LED-kiip)`}
+        maxLabel={`${SLIDERS.sourceSizeMm.max} mm (suur hõõgniit)`}
+      />
 
       <div className="flex justify-center">
         <Button variant="ghost" onClick={reset}>

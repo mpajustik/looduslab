@@ -141,6 +141,13 @@ export function reflectionAngle(incidenceAngleDeg: number): number {
 - Loogika tuleb model.ts-ist; komponent ainult renderdab SVG ja liugurid
 - Alguses nähtaval max 2 muudetavat suurust; „Alusta uuesti" nupp alati olemas
 - Töötab puutetundlikul ekraanil (liugurid, mitte ainult lohistamine)
+- **Iga liugur on `ui/SliderField`, mitte oma `<input type="range">`.**
+  Väärtus peab olema NÄHTAV liuguri enda juures (sildi real paremal), sest
+  suuruse muutmine on simulatsiooni põhitegevus – telefonis ei tohi õpilane
+  pidada kerima, et näha, mille peale ta sättis. `Readout`-riba jääb
+  TULEMUSTE jaoks (mida mudel välja arvutab), liuguri väärtus on SISEND.
+  Seda valvab test `tests/sliderField.test.ts` – toores `<input
+  type="range">` moodulis kukutab `npm run test` läbi.
 
 ## activities.ts – sammude tüübid
 

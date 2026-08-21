@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   SLIDERS,
@@ -525,56 +526,38 @@ export function Simulation(_props: Partial<SimulationProps> = {}) {
         auto poole risti – kumbki liuguriga ei muutu.
       </p>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={spreadSliderId} className="text-base font-medium text-ink">
-          Hajuvusnurk ω (koonuse pool-avanurk)
-        </label>
-        <input
-          id={spreadSliderId}
-          type="range"
-          min={SLIDERS.spreadDeg.min}
-          max={SLIDERS.spreadDeg.max}
-          step={SLIDERS.spreadDeg.step}
-          value={spreadDeg}
-          onChange={(event) =>
-            setSpreadDeg(
-              clamp(event.target.value, SLIDERS.spreadDeg, DEFAULT_SPREAD_DEG),
-            )
-          }
-          // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
-          aria-valuetext={`${metres(spreadDeg)} kraadi`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{metres(SLIDERS.spreadDeg.min)}° (peaaegu täpne)</span>
-          <span>{metres(SLIDERS.spreadDeg.max)}° (lai koonus)</span>
-        </div>
-      </div>
+      <SliderField
+        id={spreadSliderId}
+        label="Hajuvusnurk ω (koonuse pool-avanurk)"
+        value={spreadDeg}
+        min={SLIDERS.spreadDeg.min}
+        max={SLIDERS.spreadDeg.max}
+        step={SLIDERS.spreadDeg.step}
+        onChange={(event) =>
+          setSpreadDeg(clamp(event.target.value, SLIDERS.spreadDeg, DEFAULT_SPREAD_DEG))
+        }
+        valueText={`${metres(spreadDeg)}°`}
+        // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
+        ariaValueText={`${metres(spreadDeg)} kraadi`}
+        minLabel={`${metres(SLIDERS.spreadDeg.min)}° (peaaegu täpne)`}
+        maxLabel={`${metres(SLIDERS.spreadDeg.max)}° (lai koonus)`}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={distanceSliderId} className="text-base font-medium text-ink">
-          Kaugus auto ja helkuri vahel L
-        </label>
-        <input
-          id={distanceSliderId}
-          type="range"
-          min={SLIDERS.distanceM.min}
-          max={SLIDERS.distanceM.max}
-          step={SLIDERS.distanceM.step}
-          value={distanceM}
-          onChange={(event) =>
-            setDistanceM(
-              clamp(event.target.value, SLIDERS.distanceM, DEFAULT_DISTANCE_M),
-            )
-          }
-          aria-valuetext={`${formatNumber(distanceM)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatNumber(SLIDERS.distanceM.min)} m (lähedal)</span>
-          <span>{formatNumber(SLIDERS.distanceM.max)} m (kaugel)</span>
-        </div>
-      </div>
+      <SliderField
+        id={distanceSliderId}
+        label="Kaugus auto ja helkuri vahel L"
+        value={distanceM}
+        min={SLIDERS.distanceM.min}
+        max={SLIDERS.distanceM.max}
+        step={SLIDERS.distanceM.step}
+        onChange={(event) =>
+          setDistanceM(clamp(event.target.value, SLIDERS.distanceM, DEFAULT_DISTANCE_M))
+        }
+        valueText={`${formatNumber(distanceM)} m`}
+        ariaValueText={`${formatNumber(distanceM)} meetrit`}
+        minLabel={`${formatNumber(SLIDERS.distanceM.min)} m (lähedal)`}
+        maxLabel={`${formatNumber(SLIDERS.distanceM.max)} m (kaugel)`}
+      />
 
       <div className="flex justify-center">
         <Button variant="ghost" onClick={reset}>

@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   MIRROR_HALF_HEIGHT_CM,
@@ -517,50 +518,38 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={radiusSliderId} className="text-base font-medium text-ink">
-          Kera raadius R
-        </label>
-        <input
-          id={radiusSliderId}
-          type="range"
-          min={SLIDERS.radiusCm.min}
-          max={SLIDERS.radiusCm.max}
-          step={SLIDERS.radiusCm.step}
-          value={radiusCm}
-          onChange={(event) => setRadiusCm(clamp(event.target.value, SLIDERS.radiusCm, DEFAULT_RADIUS_CM))}
-          // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
-          aria-valuetext={`${radiusCm} sentimeetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{SLIDERS.radiusCm.min} cm</span>
-          <span>{SLIDERS.radiusCm.max} cm</span>
-        </div>
-      </div>
+      <SliderField
+        id={radiusSliderId}
+        label="Kera raadius R"
+        value={radiusCm}
+        min={SLIDERS.radiusCm.min}
+        max={SLIDERS.radiusCm.max}
+        step={SLIDERS.radiusCm.step}
+        onChange={(event) =>
+          setRadiusCm(clamp(event.target.value, SLIDERS.radiusCm, DEFAULT_RADIUS_CM))
+        }
+        valueText={`${radiusCm} cm`}
+        // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
+        ariaValueText={`${radiusCm} sentimeetrit`}
+        minLabel={`${SLIDERS.radiusCm.min} cm`}
+        maxLabel={`${SLIDERS.radiusCm.max} cm`}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={heightSliderId} className="text-base font-medium text-ink">
-          Valitud kiire kõrgus h
-        </label>
-        <input
-          id={heightSliderId}
-          type="range"
-          min={SLIDERS.rayHeightCm.min}
-          max={SLIDERS.rayHeightCm.max}
-          step={SLIDERS.rayHeightCm.step}
-          value={heightCm}
-          onChange={(event) =>
-            setHeightCm(clamp(event.target.value, SLIDERS.rayHeightCm, DEFAULT_HEIGHT_CM))
-          }
-          aria-valuetext={`${heightCm} sentimeetrit peateljest`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{SLIDERS.rayHeightCm.min} cm</span>
-          <span>{SLIDERS.rayHeightCm.max} cm</span>
-        </div>
-      </div>
+      <SliderField
+        id={heightSliderId}
+        label="Valitud kiire kõrgus h"
+        value={heightCm}
+        min={SLIDERS.rayHeightCm.min}
+        max={SLIDERS.rayHeightCm.max}
+        step={SLIDERS.rayHeightCm.step}
+        onChange={(event) =>
+          setHeightCm(clamp(event.target.value, SLIDERS.rayHeightCm, DEFAULT_HEIGHT_CM))
+        }
+        valueText={`${heightCm} cm`}
+        ariaValueText={`${heightCm} sentimeetrit peateljest`}
+        minLabel={`${SLIDERS.rayHeightCm.min} cm`}
+        maxLabel={`${SLIDERS.rayHeightCm.max} cm`}
+      />
 
       {directionAvailable ? (
         <div className="flex flex-col gap-2 border-t border-line pt-4">

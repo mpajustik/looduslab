@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import {
   angleFromSurface,
   diffuseDirections,
@@ -392,27 +393,20 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={sliderId} className="text-base font-medium text-ink">
-          Langemisnurk (ristsirge suhtes)
-        </label>
-        <input
-          id={sliderId}
-          type="range"
-          min={MIN_ANGLE_DEG}
-          max={MAX_ANGLE_DEG}
-          step={1}
-          value={angleDeg}
-          onChange={(event) => setAngleDeg(clampAngle(event.target.value))}
-          // Ekraanilugeja ütleks muidu „30" – kraadid on siin kogu jutt.
-          aria-valuetext={`${angleDeg} kraadi`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{MIN_ANGLE_DEG}°</span>
-          <span>{MAX_ANGLE_DEG}°</span>
-        </div>
-      </div>
+      <SliderField
+        id={sliderId}
+        label="Langemisnurk (ristsirge suhtes)"
+        value={angleDeg}
+        min={MIN_ANGLE_DEG}
+        max={MAX_ANGLE_DEG}
+        step={1}
+        onChange={(event) => setAngleDeg(clampAngle(event.target.value))}
+        valueText={`${angleDeg}°`}
+        // Ekraanilugeja ütleks muidu „30" – kraadid on siin kogu jutt.
+        ariaValueText={`${angleDeg} kraadi`}
+        minLabel={`${MIN_ANGLE_DEG}°`}
+        maxLabel={`${MAX_ANGLE_DEG}°`}
+      />
 
       {/* Lisavõimalused: väiksemad märkeruudud, mitte peanupud – need on
           vaate valikud, mitte füüsikaline suurus (DISAINIJUHIS „max 2

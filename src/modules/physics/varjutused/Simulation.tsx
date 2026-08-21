@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   EARTH_DIAMETER_KM,
@@ -405,29 +406,22 @@ export function Simulation(_props: Partial<SimulationProps> = {}) {
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={distanceSliderId} className="text-base font-medium text-ink">
-          Kuu kaugus Maa keskpunktist: {km(moonDistanceKm)}
-        </label>
-        <input
-          id={distanceSliderId}
-          type="range"
-          min={SLIDERS.moonDistanceKm.min}
-          max={SLIDERS.moonDistanceKm.max}
-          step={SLIDERS.moonDistanceKm.step}
-          value={moonDistanceKm}
-          onChange={(event) =>
-            setMoonDistanceKm(clampSlider(event.target.value, SLIDERS.moonDistanceKm, MOON_MEAN_KM))
-          }
-          aria-valuetext={`${formatNumber(moonDistanceKm, 0)} kilomeetrit`}
-          aria-describedby={distanceHintId}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{km(SLIDERS.moonDistanceKm.min)}</span>
-          <span>{km(SLIDERS.moonDistanceKm.max)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={distanceSliderId}
+        label="Kuu kaugus Maa keskpunktist"
+        value={moonDistanceKm}
+        min={SLIDERS.moonDistanceKm.min}
+        max={SLIDERS.moonDistanceKm.max}
+        step={SLIDERS.moonDistanceKm.step}
+        onChange={(event) =>
+          setMoonDistanceKm(clampSlider(event.target.value, SLIDERS.moonDistanceKm, MOON_MEAN_KM))
+        }
+        valueText={km(moonDistanceKm)}
+        ariaValueText={`${formatNumber(moonDistanceKm, 0)} kilomeetrit`}
+        minLabel={km(SLIDERS.moonDistanceKm.min)}
+        maxLabel={km(SLIDERS.moonDistanceKm.max)}
+        describedBy={distanceHintId}
+      />
 
       <div className="flex justify-center">
         <Button variant="ghost" onClick={reset}>

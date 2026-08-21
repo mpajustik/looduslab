@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import { traceCornerRay, type Vector2 } from "./model";
 
@@ -655,49 +656,39 @@ export function Simulation({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={mirrorSliderId} className="text-base font-medium text-ink">
-          Peeglite nurk θ
-        </label>
-        <input
-          id={mirrorSliderId}
-          type="range"
-          min={MIN_MIRROR_DEG}
-          max={MAX_MIRROR_DEG}
-          step={ANGLE_STEP_DEG}
-          value={mirrorAngleDeg}
-          onChange={(event) => {
-            const next = clampAngle(
-              event.target.value,
-              MIN_MIRROR_DEG,
-              MAX_MIRROR_DEG,
-              DEFAULT_MIRROR_DEG,
-            );
-            setMirrorAngleDeg(next);
-            // Kitsam kiil jätab langemisnurgale vähem ruumi – liuguri ülemine
-            // ots liigub kaasa, seega peab ka väärtus kaasa tulema.
-            setIncidenceDeg((current) => Math.min(current, maxIncidenceDeg(next)));
-          }}
-          aria-valuetext={`${mirrorAngleDeg} kraadi`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{MIN_MIRROR_DEG}°</span>
-          <span>{MAX_MIRROR_DEG}°</span>
-        </div>
-      </div>
+      <SliderField
+        id={mirrorSliderId}
+        label="Peeglite nurk θ"
+        value={mirrorAngleDeg}
+        min={MIN_MIRROR_DEG}
+        max={MAX_MIRROR_DEG}
+        step={ANGLE_STEP_DEG}
+        onChange={(event) => {
+          const next = clampAngle(
+            event.target.value,
+            MIN_MIRROR_DEG,
+            MAX_MIRROR_DEG,
+            DEFAULT_MIRROR_DEG,
+          );
+          setMirrorAngleDeg(next);
+          // Kitsam kiil jätab langemisnurgale vähem ruumi – liuguri ülemine
+          // ots liigub kaasa, seega peab ka väärtus kaasa tulema.
+          setIncidenceDeg((current) => Math.min(current, maxIncidenceDeg(next)));
+        }}
+        valueText={`${mirrorAngleDeg}°`}
+        ariaValueText={`${mirrorAngleDeg} kraadi`}
+        minLabel={`${MIN_MIRROR_DEG}°`}
+        maxLabel={`${MAX_MIRROR_DEG}°`}
+      />
 
       <div className="flex flex-col gap-2">
-        <label htmlFor={incidenceSliderId} className="text-base font-medium text-ink">
-          Langemisnurk esimesel peeglil α
-        </label>
-        <input
+        <SliderField
           id={incidenceSliderId}
-          type="range"
+          label="Langemisnurk esimesel peeglil α"
+          value={incidence}
           min={MIN_INCIDENCE_DEG}
           max={maxIncidence}
           step={ANGLE_STEP_DEG}
-          value={incidence}
           onChange={(event) =>
             setIncidenceDeg(
               clampAngle(
@@ -708,13 +699,11 @@ export function Simulation({
               ),
             )
           }
-          aria-valuetext={`${incidence} kraadi`}
-          className="h-11 w-full accent-brand"
+          valueText={`${incidence}°`}
+          ariaValueText={`${incidence} kraadi`}
+          minLabel={`${MIN_INCIDENCE_DEG}°`}
+          maxLabel={`${deg(maxIncidence)}°`}
         />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{MIN_INCIDENCE_DEG}°</span>
-          <span>{deg(maxIncidence)}°</span>
-        </div>
         <p className="text-base leading-relaxed text-ink-soft">
           Kui langemisnurk läheb liiga suureks, ei jõua kiir kahe peegeldusega
           välja – ta põrkaks peeglite vahel edasi. Seepärast liugur nii kaugele

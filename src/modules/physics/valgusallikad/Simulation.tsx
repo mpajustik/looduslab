@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   EXAMPLE_SOURCES,
@@ -390,52 +391,43 @@ export function Simulation({ unlockedFeatures = new Set() }: Partial<SimulationP
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={sizeSliderId} className="text-base font-medium text-ink">
-          Allika mõõde: {cosmicActive ? formatKilometres(EXAMPLE_SOURCES.paike.sizeM) : formatSize(sizeM)}
-        </label>
-        <input
-          id={sizeSliderId}
-          type="range"
-          min={0}
-          max={SIZE_SLIDER_STEPS}
-          step={1}
-          value={sliderFromSize(sizeM)}
-          disabled={cosmicActive}
-          onChange={(event) => setSizeM(sizeFromSlider(clampSliderIndex(event.target.value)))}
-          // Ekraanilugeja ütleks muidu liuguri sammu numbri („137"), mis ei
-          // tähenda midagi – mõõt meetrites on see, mida õpilane muudab.
-          aria-valuetext={formatSize(sizeM)}
-          className="h-11 w-full accent-brand disabled:opacity-40"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatSize(MIN_SIZE_M)}</span>
-          <span>{formatSize(MAX_SIZE_M)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={sizeSliderId}
+        label="Allika mõõde"
+        value={sliderFromSize(sizeM)}
+        min={0}
+        max={SIZE_SLIDER_STEPS}
+        step={1}
+        disabled={cosmicActive}
+        onChange={(event) => setSizeM(sizeFromSlider(clampSliderIndex(event.target.value)))}
+        valueText={
+          cosmicActive ? formatKilometres(EXAMPLE_SOURCES.paike.sizeM) : formatSize(sizeM)
+        }
+        // Ekraanilugeja ütleks muidu liuguri sammu numbri („137"), mis ei
+        // tähenda midagi – mõõt meetrites on see, mida õpilane muudab.
+        ariaValueText={formatSize(sizeM)}
+        minLabel={formatSize(MIN_SIZE_M)}
+        maxLabel={formatSize(MAX_SIZE_M)}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={distanceSliderId} className="text-base font-medium text-ink">
-          Kaugus vaatluskohast:{" "}
-          {cosmicActive ? formatKilometres(EXAMPLE_SOURCES.paike.distanceM) : formatDistance(distanceM)}
-        </label>
-        <input
-          id={distanceSliderId}
-          type="range"
-          min={MIN_DISTANCE_M}
-          max={MAX_DISTANCE_M}
-          step={DISTANCE_STEP_M}
-          value={distanceM}
-          disabled={cosmicActive}
-          onChange={(event) => setDistanceM(clampDistance(event.target.value))}
-          aria-valuetext={`${formatNumber(distanceM, 1)} meetrit`}
-          className="h-11 w-full accent-brand disabled:opacity-40"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{formatDistance(MIN_DISTANCE_M)}</span>
-          <span>{formatDistance(MAX_DISTANCE_M)}</span>
-        </div>
-      </div>
+      <SliderField
+        id={distanceSliderId}
+        label="Kaugus vaatluskohast"
+        value={distanceM}
+        min={MIN_DISTANCE_M}
+        max={MAX_DISTANCE_M}
+        step={DISTANCE_STEP_M}
+        disabled={cosmicActive}
+        onChange={(event) => setDistanceM(clampDistance(event.target.value))}
+        valueText={
+          cosmicActive
+            ? formatKilometres(EXAMPLE_SOURCES.paike.distanceM)
+            : formatDistance(distanceM)
+        }
+        ariaValueText={`${formatNumber(distanceM, 1)} meetrit`}
+        minLabel={formatDistance(MIN_DISTANCE_M)}
+        maxLabel={formatDistance(MAX_DISTANCE_M)}
+      />
 
       {/* Näited: kiirvalik, mis paneb paika needsamad kaks liugurit. Päikese
           nupp lülitab kosmoseskaalale ja ilmub alles pärast ülesannet 2. */}

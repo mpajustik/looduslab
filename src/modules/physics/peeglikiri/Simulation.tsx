@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import { START_DEPTH_M, WORDS } from "./activities";
 import {
@@ -295,31 +296,22 @@ export function Simulation(
         onSelect={setWord}
       />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={depthSliderId} className="text-base font-medium text-ink">
-          Paberi kaugus peeglist
-        </label>
-        <input
-          id={depthSliderId}
-          type="range"
-          min={SLIDERS.objectDepthM.min}
-          max={SLIDERS.objectDepthM.max}
-          step={SLIDERS.objectDepthM.step}
-          value={depthM}
-          onChange={(event) =>
-            setDepthM(
-              clamp(event.target.value, SLIDERS.objectDepthM, START_DEPTH_M),
-            )
-          }
-          // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
-          aria-valuetext={`${metres(depthM)} meetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{metres(SLIDERS.objectDepthM.min)} m (peegli lähedal)</span>
-          <span>{metres(SLIDERS.objectDepthM.max)} m (käeulatusest kaugemal)</span>
-        </div>
-      </div>
+      <SliderField
+        id={depthSliderId}
+        label="Paberi kaugus peeglist"
+        value={depthM}
+        min={SLIDERS.objectDepthM.min}
+        max={SLIDERS.objectDepthM.max}
+        step={SLIDERS.objectDepthM.step}
+        onChange={(event) =>
+          setDepthM(clamp(event.target.value, SLIDERS.objectDepthM, START_DEPTH_M))
+        }
+        valueText={`${metres(depthM)} m`}
+        // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
+        ariaValueText={`${metres(depthM)} meetrit`}
+        minLabel={`${metres(SLIDERS.objectDepthM.min)} m (peegli lähedal)`}
+        maxLabel={`${metres(SLIDERS.objectDepthM.max)} m (käeulatusest kaugemal)`}
+      />
 
       <div className="flex justify-center">
         <Button variant="ghost" onClick={reset}>

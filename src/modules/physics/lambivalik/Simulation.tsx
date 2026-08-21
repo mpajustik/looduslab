@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   LED_EFFICACY,
@@ -317,54 +318,38 @@ export function Simulation(
         onSelect={setRoomName}
       />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={lumensSliderId} className="text-base font-medium text-ink">
-          Valgusvoog Φ (kui palju valgust lamp annab)
-        </label>
-        <input
-          id={lumensSliderId}
-          type="range"
-          min={SLIDERS.lumensLm.min}
-          max={SLIDERS.lumensLm.max}
-          step={SLIDERS.lumensLm.step}
-          value={lumensLm}
-          onChange={(event) =>
-            setLumensLm(clamp(event.target.value, SLIDERS.lumensLm, START_LUMENS))
-          }
-          // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
-          aria-valuetext={`${lumens(lumensLm)} luumenit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{lumens(SLIDERS.lumensLm.min)} lm (öölamp)</span>
-          <span>{lumens(SLIDERS.lumensLm.max)} lm (väga hele)</span>
-        </div>
-      </div>
+      <SliderField
+        id={lumensSliderId}
+        label="Valgusvoog Φ (kui palju valgust lamp annab)"
+        value={lumensLm}
+        min={SLIDERS.lumensLm.min}
+        max={SLIDERS.lumensLm.max}
+        step={SLIDERS.lumensLm.step}
+        onChange={(event) =>
+          setLumensLm(clamp(event.target.value, SLIDERS.lumensLm, START_LUMENS))
+        }
+        valueText={`${lumens(lumensLm)} lm`}
+        // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
+        ariaValueText={`${lumens(lumensLm)} luumenit`}
+        minLabel={`${lumens(SLIDERS.lumensLm.min)} lm (öölamp)`}
+        maxLabel={`${lumens(SLIDERS.lumensLm.max)} lm (väga hele)`}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={kelvinSliderId} className="text-base font-medium text-ink">
-          Värvustemperatuur T (mis värvi valgus on)
-        </label>
-        <input
-          id={kelvinSliderId}
-          type="range"
-          min={SLIDERS.kelvin.min}
-          max={SLIDERS.kelvin.max}
-          step={SLIDERS.kelvin.step}
-          value={kelvin}
-          onChange={(event) =>
-            setKelvin(clamp(event.target.value, SLIDERS.kelvin, START_KELVIN))
-          }
-          aria-valuetext={`${formatNumber(kelvin)} kelvinit, ${colourLabel}`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          {/* Sildid ütlevad välja selle, mis on kogu liuguri konks: nimi ja arv
-              käivad vastupidi – soe valgus on VÄIKE arv. */}
-          <span>{formatNumber(SLIDERS.kelvin.min)} K (soe, kollakas)</span>
-          <span>{formatNumber(SLIDERS.kelvin.max)} K (külm, sinakas)</span>
-        </div>
-      </div>
+      {/* Otspunktide sildid ütlevad välja selle, mis on kogu liuguri konks:
+          nimi ja arv käivad vastupidi – soe valgus on VÄIKE arv. */}
+      <SliderField
+        id={kelvinSliderId}
+        label="Värvustemperatuur T (mis värvi valgus on)"
+        value={kelvin}
+        min={SLIDERS.kelvin.min}
+        max={SLIDERS.kelvin.max}
+        step={SLIDERS.kelvin.step}
+        onChange={(event) => setKelvin(clamp(event.target.value, SLIDERS.kelvin, START_KELVIN))}
+        valueText={`${formatNumber(kelvin)} K`}
+        ariaValueText={`${formatNumber(kelvin)} kelvinit, ${colourLabel}`}
+        minLabel={`${formatNumber(SLIDERS.kelvin.min)} K (soe, kollakas)`}
+        maxLabel={`${formatNumber(SLIDERS.kelvin.max)} K (külm, sinakas)`}
+      />
 
       <div className="flex justify-center">
         <Button variant="ghost" onClick={reset}>

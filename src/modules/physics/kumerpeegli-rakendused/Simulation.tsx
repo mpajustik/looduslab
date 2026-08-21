@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SimulationProps } from "../../../engine/simulationFeatures";
 import { Button } from "../../../ui/Button";
+import { SliderField } from "../../../ui/SliderField";
 import { formatNumber } from "../../../lib/format";
 import {
   AISLE_DISTANCE_CM,
@@ -460,54 +461,38 @@ export function Simulation(_props: Partial<SimulationProps> = {}) {
         vahekäik {formatNumber(AISLE_M)} m kaugusel – kumbki liuguriga ei muutu.
       </p>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={radiusSliderId} className="text-base font-medium text-ink">
-          Peegli kõverusraadius R
-        </label>
-        <input
-          id={radiusSliderId}
-          type="range"
-          min={SLIDERS.radiusCm.min}
-          max={SLIDERS.radiusCm.max}
-          step={SLIDERS.radiusCm.step}
-          value={radiusCm}
-          onChange={(event) =>
-            setRadiusCm(clamp(event.target.value, SLIDERS.radiusCm, DEFAULT_RADIUS_CM))
-          }
-          // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
-          aria-valuetext={`${radiusCm} sentimeetrit`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{SLIDERS.radiusCm.min} cm (kumeram)</span>
-          <span>{SLIDERS.radiusCm.max} cm (lamedam)</span>
-        </div>
-      </div>
+      <SliderField
+        id={radiusSliderId}
+        label="Peegli kõverusraadius R"
+        value={radiusCm}
+        min={SLIDERS.radiusCm.min}
+        max={SLIDERS.radiusCm.max}
+        step={SLIDERS.radiusCm.step}
+        onChange={(event) =>
+          setRadiusCm(clamp(event.target.value, SLIDERS.radiusCm, DEFAULT_RADIUS_CM))
+        }
+        valueText={`${radiusCm} cm`}
+        // Ekraanilugeja ütleks muidu paljast arvu – ühik on siin kogu jutt.
+        ariaValueText={`${radiusCm} sentimeetrit`}
+        minLabel={`${SLIDERS.radiusCm.min} cm (kumeram)`}
+        maxLabel={`${SLIDERS.radiusCm.max} cm (lamedam)`}
+      />
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={eyeSliderId} className="text-base font-medium text-ink">
-          Müüja kaugus peeglist d
-        </label>
-        <input
-          id={eyeSliderId}
-          type="range"
-          min={SLIDERS.eyeDistanceCm.min}
-          max={SLIDERS.eyeDistanceCm.max}
-          step={SLIDERS.eyeDistanceCm.step}
-          value={eyeDistanceCm}
-          onChange={(event) =>
-            setEyeDistanceCm(
-              clamp(event.target.value, SLIDERS.eyeDistanceCm, DEFAULT_EYE_CM),
-            )
-          }
-          aria-valuetext={`${eyeDistanceCm} sentimeetrit peeglist`}
-          className="h-11 w-full accent-brand"
-        />
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>{SLIDERS.eyeDistanceCm.min} cm</span>
-          <span>{SLIDERS.eyeDistanceCm.max} cm</span>
-        </div>
-      </div>
+      <SliderField
+        id={eyeSliderId}
+        label="Müüja kaugus peeglist d"
+        value={eyeDistanceCm}
+        min={SLIDERS.eyeDistanceCm.min}
+        max={SLIDERS.eyeDistanceCm.max}
+        step={SLIDERS.eyeDistanceCm.step}
+        onChange={(event) =>
+          setEyeDistanceCm(clamp(event.target.value, SLIDERS.eyeDistanceCm, DEFAULT_EYE_CM))
+        }
+        valueText={`${eyeDistanceCm} cm`}
+        ariaValueText={`${eyeDistanceCm} sentimeetrit peeglist`}
+        minLabel={`${SLIDERS.eyeDistanceCm.min} cm`}
+        maxLabel={`${SLIDERS.eyeDistanceCm.max} cm`}
+      />
 
       <div className="flex justify-center">
         <Button variant="ghost" onClick={reset}>
