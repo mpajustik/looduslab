@@ -1,0 +1,264 @@
+import { formatNumber } from "../../../lib/format";
+import { LAMPS } from "./activities";
+import { colorTemperatureLabel, lightTint } from "./display";
+import { classifyColorTemperature } from "./model";
+
+/**
+ * Mooduli joonised (src/engine/figures.ts, sisu/MOODUL-lambivalik.md
+ * „Sammud").
+ *
+ * Nagu Simulation.tsx, on ka need VAATED: füüsikat siin ei arvutata. Millisesse
+ * vahemikku värvustemperatuur langeb, ütleb MUDEL (`classifyColorTemperature`);
+ * eestikeelne silt ja toon tulevad `display.ts`-ist. Nii ei saa teooria joonis
+ * ja simulatsiooni kastike kunagi eri silti näidata.
+ *
+ * Pakendite arvud tulevad `activities.ts`-i lambitabelist – samast, millest
+ * teooria tabel. Kaks tabelit läheksid ühel päeval lahku.
+ *
+ * **Hooki joonis ei tohi vastust ette öelda.** `lv-poeriiul` näitab AINULT
+ * karpidel seisvaid arve – ühtki jagatist, silti ega järeldust seal ei ole.
+ * Teooria joonis `lv-kolm-varvust` TOHIB kõik välja öelda, sest seal on see
+ * juba õpitav sisu.
+ *
+ * **Värv ei ole ainus info kandja** (docs/DISAINIJUHIS.md): kolme toa pildil on
+ * iga tooni all nii SILT kui ka kelvinite arv, ja kogu joonise sisu on
+ * `aria-label`-is lausetena kirjas. Just see moodul oleks muidu värvipimeda
+ * õpilase jaoks läbimatu.
+ */
+
+const OUTLINE_COLOUR = "#94a3b8";
+
+// ---------------------------------------------------------------------------
+// lv-poeriiul – hook
+// ---------------------------------------------------------------------------
+
+const SHELF_VIEW = { width: 380, height: 210 };
+
+/** Üks lambikarp riiulil: nimi peal, kolm arvu all. */
+function LampBox({
+  x,
+  y,
+  width,
+  height,
+  lamp,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  lamp: (typeof LAMPS)[number];
+}) {
+  const centreX = x + width / 2;
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={6}
+        fill="#f8fafc"
+        stroke={OUTLINE_COLOUR}
+        strokeWidth={1.5}
+      />
+      {/* Pirni siluett karbi peal – karp on lambikarp, mitte lihtsalt kast. */}
+      <circle cx={centreX} cy={y + 26} r={11} fill="#fefce8" stroke={OUTLINE_COLOUR} />
+      <rect
+        x={centreX - 5}
+        y={y + 36}
+        width={10}
+        height={8}
+        rx={2}
+        fill="#e2e8f0"
+        stroke={OUTLINE_COLOUR}
+      />
+      <text x={centreX} y={y + 62} textAnchor="middle" className="fill-ink" fontSize={12} fontWeight={600}>
+        {formatNumber(lamp.powerW)} W
+      </text>
+      <text x={centreX} y={y + 78} textAnchor="middle" className="fill-ink" fontSize={12} fontWeight={600}>
+        {formatNumber(lamp.lumensLm)} lm
+      </text>
+      <text x={centreX} y={y + 94} textAnchor="middle" className="fill-ink" fontSize={12} fontWeight={600}>
+        {formatNumber(lamp.kelvin)} K
+      </text>
+    </g>
+  );
+}
+
+export function ShelfFigure() {
+  const boxWidth = 82;
+  const boxHeight = 110;
+  const gap = (SHELF_VIEW.width - LAMPS.length * boxWidth) / (LAMPS.length + 1);
+  const boxY = 34;
+  const shelfY = boxY + boxHeight;
+  /** Kleeps käib LED-karbi peale – tema on see, kelle arvud üksteisele vastu räägivad. */
+  const stickerIndex = LAMPS.length - 1;
+  const incandescent = LAMPS[0];
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${SHELF_VIEW.width} ${SHELF_VIEW.height}`}
+        role="img"
+        aria-label={`Joonis: poeriiul, sellel neli lambikarpi kõrvuti. Karpidel on kirjas ${LAMPS.map(
+          (lamp) =>
+            `${formatNumber(lamp.powerW)} vatti, ${formatNumber(
+              lamp.lumensLm,
+            )} luumenit ja ${formatNumber(lamp.kelvin)} kelvinit`,
+        ).join("; ")}. Kõige parempoolsema karbi peal on veel kleeps „vastab ${formatNumber(
+          incandescent.powerW,
+        )} W lambile".`}
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        {LAMPS.map((lamp, index) => {
+          const x = gap + index * (boxWidth + gap);
+          return (
+            <g key={lamp.name}>
+              <LampBox x={x} y={boxY} width={boxWidth} height={boxHeight} lamp={lamp} />
+              {index === stickerIndex && (
+                <g>
+                  <rect
+                    x={x - 6}
+                    y={boxY - 22}
+                    width={boxWidth + 12}
+                    height={26}
+                    rx={4}
+                    className="fill-teacher-soft stroke-teacher"
+                    strokeWidth={1.5}
+                  />
+                  <text
+                    x={x + boxWidth / 2}
+                    y={boxY - 5}
+                    textAnchor="middle"
+                    className="fill-ink"
+                    fontSize={10}
+                    fontWeight={600}
+                  >
+                    vastab {formatNumber(incandescent.powerW)} W lambile
+                  </text>
+                </g>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Riiuliplaat karpide all. */}
+        <rect x={8} y={shelfY} width={SHELF_VIEW.width - 16} height={8} rx={3} fill="#cbd5e1" />
+        <text
+          x={SHELF_VIEW.width / 2}
+          y={shelfY + 32}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={12}
+        >
+          Neli lampi, igal kolm arvu
+        </text>
+      </svg>
+    </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// lv-kolm-varvust – teooria
+// ---------------------------------------------------------------------------
+
+const ROOMS_VIEW = { width: 380, height: 200 };
+
+/** Kolm värvustemperatuuri, mille vahel õpilane poes päriselt valib. */
+const SHOWN_KELVINS = [2700, 4000, 6500] as const;
+
+/** Üks tuba: sein, laevalgusti, laud – kõigil kolmel täpselt sama kuju. */
+function RoomPanel({
+  x,
+  y,
+  width,
+  height,
+  tint,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  tint: string;
+}) {
+  const floorY = y + height - 22;
+  return (
+    <g>
+      <rect x={x} y={y} width={width} height={height} rx={6} fill={tint} stroke={OUTLINE_COLOUR} strokeWidth={1.5} />
+      {/* Põrand */}
+      <line x1={x} y1={floorY} x2={x + width} y2={floorY} stroke={OUTLINE_COLOUR} strokeWidth={1.5} />
+      {/* Laevalgusti: juhe ja varjund */}
+      <line x1={x + width / 2} y1={y} x2={x + width / 2} y2={y + 16} stroke={OUTLINE_COLOUR} strokeWidth={1.5} />
+      <path
+        d={`M ${x + width / 2 - 14} ${y + 30} L ${x + width / 2 - 7} ${y + 16} L ${
+          x + width / 2 + 7
+        } ${y + 16} L ${x + width / 2 + 14} ${y + 30} Z`}
+        fill="#e2e8f0"
+        stroke={OUTLINE_COLOUR}
+      />
+      {/* Laud põrandal */}
+      <rect x={x + width / 2 - 22} y={floorY - 16} width={44} height={4} fill="#cbd5e1" />
+      <rect x={x + width / 2 - 20} y={floorY - 12} width={3} height={12} fill="#cbd5e1" />
+      <rect x={x + width / 2 + 17} y={floorY - 12} width={3} height={12} fill="#cbd5e1" />
+    </g>
+  );
+}
+
+export function ThreeColoursFigure() {
+  const panelWidth = 108;
+  const panelHeight = 108;
+  const gap = (ROOMS_VIEW.width - SHOWN_KELVINS.length * panelWidth) / (SHOWN_KELVINS.length + 1);
+  const panelY = 16;
+  const rooms = SHOWN_KELVINS.map((kelvin) => {
+    // Liigituse teeb MUDEL, sildi ja tooni display.ts – joonis ei tea ühtki
+    // piiri peast (CLAUDE.md reegel 1).
+    const kind = classifyColorTemperature(kelvin);
+    return { kelvin, kind, label: colorTemperatureLabel(kind), tint: lightTint(kind) };
+  });
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${ROOMS_VIEW.width} ${ROOMS_VIEW.height}`}
+        role="img"
+        aria-label={`Joonis: sama tuba kolm korda kõrvuti, igas laevalgusti ja laud. ${rooms
+          .map(
+            (room) =>
+              `${formatNumber(room.kelvin)} kelvinit on ${room.label}${
+                room.kind === "soe" ? " ehk kollakas" : ""
+              }`,
+          )
+          .join("; ")}. Iga pildi all on nii silt kui ka kelvinite arv.`}
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        {rooms.map((room, index) => {
+          const x = gap + index * (panelWidth + gap);
+          return (
+            <g key={room.kelvin}>
+              <RoomPanel x={x} y={panelY} width={panelWidth} height={panelHeight} tint={room.tint} />
+              <text
+                x={x + panelWidth / 2}
+                y={panelY + panelHeight + 22}
+                textAnchor="middle"
+                className="fill-ink"
+                fontSize={12}
+                fontWeight={600}
+              >
+                {room.label}
+              </text>
+              <text
+                x={x + panelWidth / 2}
+                y={panelY + panelHeight + 40}
+                textAnchor="middle"
+                className="fill-ink-soft"
+                fontSize={12}
+              >
+                {formatNumber(room.kelvin)} K
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </figure>
+  );
+}

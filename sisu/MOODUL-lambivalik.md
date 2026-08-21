@@ -437,8 +437,14 @@ LUGEMISTOLERANTSID, mitte mõõtemääramatus.
    kollakas valgus on mõnus, aga uniseks tegev. Magamistuppa sobib just
    see soe valgus.
 4. „Jäta õppelaud ja sea valgusvoog soovitusega võrdseks. Mitu vatti
-   kulub, kui kasutad LED-lampi?" (10 W; tolerants 2; ühik W; vihje:
+   kulub, kui kasutad LED-lampi?" (10 W; tolerants **1**; ühik W; vihje:
    „soovitus on 1000 lm ja LED annab 100 lm ühest vatist")
+   Lõks **8 W** saab sildi `uks-lamp-piisab`: see on algseisu (800 lm ehk
+   ühe tavalise LED-lambi) võimsus, mille kirjutab maha see, kes liugurit
+   ei liiguta. Tolerants on just seepärast 1, mitte 2: ±2 W juures mahuks
+   8 õige vastuse sisse ja ülesanne kaotaks oma mõtte (CodeRabbiti leid,
+   samm 4.1ooo). Skeem ei lubaks siis ka lõksu – lõks, mis mahub
+   tolerantsi sisse, ei jõuaks checkerini kunagi.
    Selgitus: sama 1000 lm hõõglambiga oleks 83 W – kaheksa korda rohkem
    elektrit sama valguse eest.
 
@@ -509,7 +515,7 @@ LUGEMISTOLERANTSID, mitte mõõtemääramatus.
 | `kelvin-on-lambi-temperatuur` | 6500 K lamp läheb 6500 kraadi kuumaks | teooria + practice-4 + exit-3: kelvin kirjeldab valguse värvi, LED ise on leige |
 | `kelvin-on-heledus` | suurem kelvin tähendab heledamat lampi | practice-4: kelvin on värv, heledus on luumenites |
 | `soe-tahendab-suurt-arvu` | „külm valge" peaks olema väiksem arv kui „soe valge" | teooria: nimi ja arv käivad vastupidi (soe 2700 K, külm 6500 K) |
-| `uks-lamp-piisab` | üks lamp valgustab iga toa ära | explore-2: elutuppa on vaja umbes 2700 lm ehk kolme lambi jagu |
+| `uks-lamp-piisab` | üks tavaline lamp valgustab iga toa või tööpinna ära | explore-2: elutuppa on vaja umbes 2700 lm ehk kolme lambi jagu; explore-4 lõks 8 W: üks tavaline LED-lamp jääb ka õppelauale väheks |
 | `rohkem-on-alati-parem` | mida rohkem luumeneid, seda parem | practice-5 + explore: magamistuppa 3000 lm on liig; loeb ruumi tegevus |
 | `iga-valgus-sobib-igale-poole` | valguse värv on maitseasi, füüsikaga seost pole | explore-3 + practice-5: sama tuba kolme värvustemperatuuriga; magamistuppa soe, töölauale neutraalne |
 | `paljas-pirn-sobib` | varjund on ainult ilu pärast | teooria + practice-5: paljas pirn on väike allikas – pimestab ja annab teravad varjud (moodul `valgusallikad`) |

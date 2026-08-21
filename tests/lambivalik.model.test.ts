@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { stepQuestions } from "../src/engine/contract";
+import { activitiesSchema } from "../src/engine/contractSchema";
+import { activities } from "../src/modules/physics/lambivalik/activities";
+import { manifest } from "../src/modules/physics/lambivalik/manifest";
+import { teacher } from "../src/modules/physics/lambivalik/teacher";
 import {
   AREA_MAX_M2,
   AREA_MIN_M2,
@@ -427,6 +432,352 @@ describe("simulatsiooni liugurivõre", () => {
       // Soovitus peab olema liuguriga TÄPSELT tabatav – explore-ülesanne 4
       // palub seada valgusvoo soovitusega võrdseks.
       expect(soovitus % SLIDERS.lumensLm.step).toBe(0);
+    }
+  });
+});
+
+/* --------------------------------------------------------------------------
+ * Mooduli sisu: sammud, ülesanded ja õpetajajuhend (samm 4.1ooo)
+ * ----------------------------------------------------------------------- */
+
+/** Kogu tekst, mida ÕPILANE selles moodulis näeb – ühes hunnikus. */
+function studentTexts(): string[] {
+  const texts: string[] = [];
+  for (const step of activities.steps) {
+    texts.push(step.title);
+    if ("body" in step && step.body) texts.push(...step.body);
+    if (step.type === "practice" && step.worked) {
+      texts.push(step.worked.prompt, ...step.worked.solution, step.worked.answer);
+    }
+    for (const question of stepQuestions(step)) {
+      texts.push(question.prompt, ...(question.hints ?? []));
+      if (question.kind === "choice") {
+        texts.push(...question.options.map((option) => option.text));
+      }
+      if (question.kind === "numeric") {
+        texts.push(...(question.traps ?? []).map((trap) => trap.feedback));
+      }
+    }
+  }
+  for (const card of activities.reviewCards) {
+    texts.push(card.question, card.answer);
+  }
+  return texts;
+}
+
+/** Ülesanne id järgi – veateade nimetab puuduja, mitte ei viska undefined-it. */
+function numericQuestion(questionId: string) {
+  for (const step of activities.steps) {
+    for (const question of stepQuestions(step)) {
+      if (question.id === questionId && question.kind === "numeric") {
+        expect(question.variants, questionId).toBeUndefined();
+        expect(question.answer, questionId).toBeDefined();
+        return question;
+      }
+    }
+  }
+  throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+}
+
+function choiceQuestion(questionId: string) {
+  for (const step of activities.steps) {
+    for (const question of stepQuestions(step)) {
+      if (question.id === questionId && question.kind === "choice") return question;
+    }
+  }
+  throw new Error(`Valikküsimust "${questionId}" ei ole moodulis`);
+}
+
+describe("manifest", () => {
+  it("ei võta endale teiste moodulite ainekava mõisteid", () => {
+    // Katvusraport võrdleb mõisteid NIME järgi: „punktvalgusallikas" kuulub
+    // moodulile `valgusallikad` ja „valguse spekter" moodulile
+    // `liitvalgus-ja-spekter`. Siin paistaks üks põhimõiste kaetuna kahest
+    // kohast (sisu/MOODUL-lambivalik.md „Ainekava seos").
+    expect(manifest.concepts).toEqual([
+      "valgusvoog",
+      "valgusviljakus",
+      "värvustemperatuur",
+    ]);
+    expect(manifest.practicalWork).toEqual([]);
+    expect(manifest.outcomes).toEqual(["P1-T1"]);
+  });
+});
+
+describe("activities", () => {
+  it("vastab moodulilepingu skeemile", () => {
+    expect(() => activitiesSchema.parse(activities)).not.toThrow();
+  });
+
+  it("on väike moodul: kuus sammu, üks ekraan korraga", () => {
+    // Suurusreegel (sisu/MALL-moodul.md): 3–6 sammu, üks õpieesmärk.
+    expect(activities.steps.map((step) => step.type)).toEqual([
+      "hook",
+      "theory",
+      "predict",
+      "explore",
+      "practice",
+      "exit",
+    ]);
+  });
+
+  it("spetsifikatsiooni kaks joonist on õigetes kohtades", () => {
+    // Sildid peavad klappima registriga (moduleFigures) – seda valvab
+    // tests/registry.test.ts alles siis, kui moodul on registris.
+    const figures: (string | undefined)[] = [];
+    for (const step of activities.steps) {
+      if (step.type === "hook" || step.type === "theory") figures.push(step.figure);
+      for (const question of stepQuestions(step)) {
+        if (question.figure) figures.push(question.figure);
+      }
+    }
+    expect(figures).toEqual(["lv-poeriiul", "lv-kolm-varvust"]);
+  });
+
+  it("explore't ei lukusta ükski lisavõimalus", () => {
+    // Liugureid on täpselt kaks (moodulileping: korraga max 2 muudetavat
+    // suurust) ja ruumivalik on nupurida – midagi ei ole hiljem avada.
+    const explore = activities.steps.find((step) => step.type === "explore");
+    expect(explore?.type).toBe("explore");
+    if (explore?.type !== "explore") return;
+    expect(explore.simulation).toBeUndefined();
+  });
+
+  it("õpilase pool ei ületa mooduli piire", () => {
+    // sisu/MOODUL-lambivalik.md „Piirid": elektriarve ja kilovatt-tund on
+    // ploki P6 oma, fotomeetria ühikud ja värvusesitusindeks jäävad välja,
+    // punkt- ja laiendatud allika ARVUTUS kuulub moodulile `valgusallikad`.
+    // Kõik need on õpetajajuhendis olemas, aga õpilase ekraanile nad ei jõua.
+    const all = studentTexts().join(" ").toLowerCase();
+    for (const forbidden of [
+      "kilovatt",
+      "elektriarve",
+      "euro",
+      "senti",
+      "kandela",
+      "steradiaan",
+      "luks",
+      "värvusesitus",
+      "punktvalgusallikas",
+    ]) {
+      expect(all, forbidden).not.toContain(forbidden);
+    }
+  });
+
+  it("iga arvküsimus kannab õiget ühikut ja lugemistolerantsi", () => {
+    // Luumenid, vatid ja lm/W – täpselt nii, nagu nad pakendil seisavad.
+    // Ühikuteisendusi selles moodulis ei ole (sisu/MOODUL-lambivalik.md).
+    const expected: Record<string, { unit: string; tolerance: number }> = {
+      "explore-1": { unit: "lm", tolerance: 50 },
+      "explore-4": { unit: "W", tolerance: 1 },
+      "practice-1": { unit: "lm/W", tolerance: 2 },
+      "practice-2": { unit: "W", tolerance: 3 },
+      "exit-2": { unit: "lm", tolerance: 50 },
+    };
+    const seen: string[] = [];
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind !== "numeric") continue;
+        seen.push(question.id);
+        const rule = expected[question.id];
+        expect(rule, question.id).toBeDefined();
+        expect(question.unit, question.id).toBe(rule.unit);
+        expect(question.tolerance, question.id).toEqual({
+          mode: "absolute",
+          value: rule.tolerance,
+        });
+      }
+    }
+    expect(seen).toEqual(Object.keys(expected));
+  });
+});
+
+/**
+ * Ülesannete vastused vs. mudel.
+ *
+ * `activities.ts` võtab iga luumenite arvu, vati ja viljakuse MUDELIST
+ * (CLAUDE.md reegel 1), seega näpuviga arvutuses siin välja ei paistaks – küll
+ * aga paistab välja vale ruum, vale lambitüüp või vale tolerants. Seepärast on
+ * ootus kirjutatud SPETSIFIKATSIOONI järgi (sisu/MOODUL-lambivalik.md
+ * „Sammud"), mitte activities.ts-ist tagurpidi tuletatud.
+ */
+describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
+  it("explore-1: elutuppa (18 m², 150 lm/m²) soovitatakse 2700 lm", () => {
+    expect(numericQuestion("explore-1").answer).toBe(requiredLumens(18, 150));
+    expect(numericQuestion("explore-1").answer).toBe(2700);
+  });
+
+  it("explore-4: õppelaua 1000 lm tuleb LED-iga 10 vatiga", () => {
+    expect(requiredLumens(2, 500)).toBe(1000);
+    expect(numericQuestion("explore-4").answer).toBe(powerForLumens(1000, 100));
+    expect(numericQuestion("explore-4").answer).toBe(10);
+  });
+
+  it("explore-4 ei loe õigeks liigutamata liuguri näitu 8 W", () => {
+    // Algseisus (800 lm) seisab kastikeses „8 W". Kes liugurit EI liiguta ja
+    // kirjutab selle arvu maha, ei tohi saada „Õige!" – ülesanne palub seada
+    // valgusvoo soovitusega (1000 lm) võrdseks (CodeRabbiti leid, samm 4.1ooo).
+    const question = numericQuestion("explore-4");
+    const answer = question.answer ?? Number.NaN;
+    const startWatts = powerForLumens(800, 100);
+    expect(startWatts).toBe(8);
+    expect(Math.abs(answer - startWatts)).toBeGreaterThan(question.tolerance.value);
+
+    // Ja ta saab selle asemel suunatud tagasiside, mitte üldise „vale".
+    const trap = question.traps?.[0];
+    expect(trap?.answer).toBe(startWatts);
+    expect(trap?.misconception).toBe("uks-lamp-piisab");
+  });
+
+  it("practice-1: säästulambi viljakus on 54 lm/W", () => {
+    expect(numericQuestion("practice-1").answer).toBe(luminousEfficacy(810, 15));
+    expect(numericQuestion("practice-1").answer).toBe(54);
+  });
+
+  it("practice-2: elutoa 2700 lm tuleb LED-idega 27 vatiga", () => {
+    expect(numericQuestion("practice-2").answer).toBe(powerForLumens(2700, 100));
+    expect(numericQuestion("practice-2").answer).toBe(27);
+    // Sama valgus hõõglambiga nõuab kaheksa korda rohkem vatte – see arv on
+    // teoorias väljas, aga ühtki ülesannet ta ei moodusta.
+    expect(powerForLumens(2700, 12)).toBe(225);
+  });
+
+  it("exit-2: köögi tööpinnale (4 m², 300 lm/m²) on vaja 1200 lm", () => {
+    expect(numericQuestion("exit-2").answer).toBe(requiredLumens(4, 300));
+    expect(numericQuestion("exit-2").answer).toBe(1200);
+  });
+
+  it("predict-1 õige vastus on LED ja mõlemad valed on nimetatud", () => {
+    const question = choiceQuestion("predict-1");
+    const correct = question.options.filter((option) => option.correct);
+    expect(correct).toHaveLength(1);
+    expect(correct[0].id).toBe("led");
+    expect(
+      question.options
+        .filter((option) => !option.correct)
+        .map((option) => option.misconception),
+    ).toEqual(["vatt-on-heledus", "vastab-on-tapne"]);
+  });
+
+  it("explore-3 õige vastus kannab mõlemat silti display.ts-ist", () => {
+    // Sildid EI tohi olla siia käsitsi kirjutatud: nad tulevad mudeli
+    // liigitusest läbi display.ts-i.
+    const correct = choiceQuestion("explore-3").options.find(
+      (option) => option.correct,
+    );
+    expect(correct?.text).toContain("soe valge");
+    expect(correct?.text).toContain("neutraalne valge");
+    expect(classifyColorTemperature(2700)).toBe("soe");
+    expect(classifyColorTemperature(4000)).toBe("neutraalne");
+  });
+
+  it("practice-4 ülekandeülesandel on kolm õiget ja kolm valet valikut", () => {
+    const question = choiceQuestion("practice-4");
+    expect(question.multiple).toBe(true);
+    expect(question.shuffle).toBe(true);
+    expect(question.options.filter((option) => option.correct)).toHaveLength(3);
+    const wrong = Object.fromEntries(
+      question.options
+        .filter((option) => !option.correct)
+        .map((option) => [option.id, option.misconception]),
+    );
+    expect(wrong).toEqual({
+      "kulm-valgus": "iga-valgus-sobib-igale-poole",
+      "paljas-pirn": "paljas-pirn-sobib",
+      "3000-lm": "rohkem-on-alati-parem",
+    });
+  });
+
+  it("explore-2 vale variant „liiga hele” on meelega sildita", () => {
+    // Kastikeste vale lugemine ei ole ükski mooduli väärarusaamadest – vale
+    // sildi all jõuaks õpetaja koondvaatesse väärarusaam, mida õpilasel ei
+    // olnud.
+    const option = choiceQuestion("explore-2").options.find(
+      (item) => item.id === "liiga-hele",
+    );
+    expect(option?.correct).toBe(false);
+    expect(option?.misconception).toBeUndefined();
+  });
+});
+
+describe("õpetajajuhend katab mooduli väärarusaamad ja ohutuse", () => {
+  const known = new Set(teacher.misconceptions.map((item) => item.id));
+
+  it("iga activities.ts silt on õpetajajuhendis lahti seletatud", () => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.kind === "choice") {
+          for (const option of question.options) {
+            if (option.misconception) {
+              expect(known, `${question.id}/${option.id}`).toContain(
+                option.misconception,
+              );
+            }
+          }
+        }
+        if (question.kind === "numeric") {
+          for (const trap of question.traps ?? []) {
+            expect(known, question.id).toContain(trap.misconception);
+          }
+        }
+      }
+    }
+  });
+
+  it("spetsifikatsiooni kümme väärarusaama on kõik olemas", () => {
+    for (const id of [
+      "vatt-on-heledus",
+      "vastab-on-tapne",
+      "kelvin-on-lambi-temperatuur",
+      "kelvin-on-heledus",
+      "soe-tahendab-suurt-arvu",
+      "uks-lamp-piisab",
+      "rohkem-on-alati-parem",
+      "iga-valgus-sobib-igale-poole",
+      "paljas-pirn-sobib",
+      "led-on-noruk",
+    ]) {
+      expect(known, id).toContain(id);
+    }
+  });
+
+  it("ohutus räägib kuumast lambist ja katkise säästulambi elavhõbedast", () => {
+    expect(teacher.safety).toContain("jahtunud");
+    expect(teacher.safety).toContain("elavhõbedat");
+    expect(teacher.safety).toContain("tolmuimejaga");
+  });
+
+  it("elektriarve jääb selgelt plokki P6", () => {
+    // Kui see moodul teeks elektriarve ära, jääks P6 moodul tühjaks ja õpilane
+    // saaks sama asja kaks korda (sisu/MOODUL-lambivalik.md „Piirid").
+    expect(teacher.notInThisModule).toContain("P6");
+    expect(teacher.notInThisModule).toContain("kilovatt-tund");
+  });
+
+  it("õpetaja saab teada, miks päris tuba mudelist erineb", () => {
+    // model.ts idealiseeringud 1, 2, 5 ja 6 – UI ei tohi neid päris füüsikana
+    // esitada.
+    expect(teacher.whyRealDiffers).toContain("kasutustegur");
+    expect(teacher.whyRealDiffers).toContain("SUURUSJÄRK");
+  });
+
+  it("kodulampide võrdlus nõuab põhjenduses vähemalt kahte arvu", () => {
+    // Ainekava õpilase tegevus on „valib kodulambid + PÕHJENDAB" – üks arv
+    // üksi ei ole lambivaliku põhjendus.
+    const homework = teacher.homeLampComparison.join(" ");
+    expect(homework).toContain("KAKS arvu");
+    expect(homework.toLowerCase()).toContain("lm / w");
+  });
+
+  it("tunniplaani minutid annavad kokku manifesti tunnipikkuse", () => {
+    const total = teacher.lessonPlan.reduce((sum, item) => sum + item.minutes, 0);
+    expect(total).toBe(manifest.minutes.lesson);
+  });
+
+  it("iga tunniplaani rida vastab päris sammule", () => {
+    const types = new Set(activities.steps.map((step) => step.type));
+    for (const item of teacher.lessonPlan) {
+      expect(types, item.step).toContain(item.step);
     }
   });
 });
