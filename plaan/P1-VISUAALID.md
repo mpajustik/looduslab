@@ -33,9 +33,10 @@ Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 
 ### 2. valguse-sirgjooneline-levimine – teooriasammul pole ühtegi joonist
 
-- [ ] **Kolm vihutüüpi kõrvuti** – hajuv / paralleelne / koonduv, kolm
+- [x] **Kolm vihutüüpi kõrvuti** – hajuv / paralleelne / koonduv, kolm
       noolekimpu. Odavaim võit kogu plokis; mõiste kordub hiljem nõgus- ja
-      kumerpeegli juures. **Alusta siit.**
+      kumerpeegli juures. (Tehtud: `ThreeBeamTypesFigure`, võti
+      `oo-vihutuubid`, theory-1 küljes.)
 - [ ] **Vihk vs kiir** – vasakul päris valgusjuga koonusena, paremal mudel
       ühe noolega joonena. Tekst ütleb „päris elus ühte üksikut kiirt ei ole" –
       see mudeli-ja-tegelikkuse vahe on täpselt see, mida hiljem segi aetakse.

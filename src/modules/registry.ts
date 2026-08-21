@@ -288,6 +288,11 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.SunSpotsUnderTreeFigure,
       })),
     ),
+    "oo-vihutuubid": lazy(() =>
+      import("./physics/valguse-sirgjooneline-levimine/figures").then((module) => ({
+        default: module.ThreeBeamTypesFigure,
+      })),
+    ),
   },
   "physics.vari-ja-poolvari": {
     "vp-oma-vari": lazy(() =>
