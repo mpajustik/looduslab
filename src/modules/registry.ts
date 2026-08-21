@@ -97,6 +97,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/lambivalik/manifest")).manifest,
     activities: (await import("./physics/lambivalik/activities")).activities,
   }),
+  "physics.peeglikiri": async () => ({
+    manifest: (await import("./physics/peeglikiri/manifest")).manifest,
+    activities: (await import("./physics/peeglikiri/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -207,6 +211,11 @@ export const moduleSimulations: Record<
   ),
   "physics.lambivalik": lazy(() =>
     import("./physics/lambivalik/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.peeglikiri": lazy(() =>
+    import("./physics/peeglikiri/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -492,6 +501,18 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "lv-kolm-varvust": lazy(() =>
       import("./physics/lambivalik/figures").then((module) => ({
         default: module.ThreeColoursFigure,
+      })),
+    ),
+  },
+  "physics.peeglikiri": {
+    "pk-kiirabiauto": lazy(() =>
+      import("./physics/peeglikiri/figures").then((module) => ({
+        default: module.AmbulanceFigure,
+      })),
+    ),
+    "pk-tahtede-summeetria": lazy(() =>
+      import("./physics/peeglikiri/figures").then((module) => ({
+        default: module.LetterSymmetryFigure,
       })),
     ),
   },

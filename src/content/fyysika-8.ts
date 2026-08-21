@@ -60,6 +60,14 @@ export const course = defineCourse({
         // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
         // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.
         "physics.tasapeegli-kujutis",
+        // Peeglikiri on tasapeegli kujutise rakendusmoodul ja käib oma
+        // mikromooduli JÄREL, nagu `lambivalik`, `helkur` ja peeglite
+        // rakendused. Uut peegeldumisfakti siin ei tule: teooria algab
+        // meeldetuletusega („kujutis on peeglist sama kaugel ja päripidine") ja
+        // kannab selle üle tähtedele – seega EELDAB ta moodulit
+        // `tasapeegli-kujutis` otsesõnu. Jaotuskava P1 tabelis
+        // (sisu/JAOTUS-fyysika-8.md) on ta samuti kohe tema järel.
+        "physics.peeglikiri",
         // Nurkpeegel on peegeldumisseaduse teine rakendus: sama seadus, aga
         // KAKS tasast peeglit järjest. Ta eeldab ainult `peegeldumisseadus`t
         // (langemisnurk = peegeldumisnurk mõlemal peeglil) ja on siin
