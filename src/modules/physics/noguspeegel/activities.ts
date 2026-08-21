@@ -230,6 +230,9 @@ const steps: Step[] = [
         // ühe nurga ja vastusevariandist teise (CodeRabbiti leid sammust
         // 4.1nn, kus sama viga parandati moodulis kumerpeegel).
         prompt: `Sea raadiuseks ${cm(START_RADIUS_CM)} cm tagasi ja kiire kõrguseks ${cm(RAY_HEIGHT_CM)} cm, siis loe langemisnurk. Kui suur on peegeldumisnurk?`,
+        hints: [
+          "Kõveral pinnal kehtib täpselt sama peegeldumisseadus mis tasapeeglil – ainult nurgad mõõdetakse kera keskpunktist tuleva ristsirge suhtes.",
+        ],
         options: [
           {
             id: "null",
@@ -347,6 +350,9 @@ const steps: Step[] = [
         id: "practice-4",
         prompt:
           "Auto esitules on pirni taga läikiv nõgus peegeldi. Millised väited on õiged?",
+        hints: [
+          "Pirn fookuses tähendab, et sealt lähtuv valgus tuleb peegeldilt tagasi paralleelse kimbuna – sama, mida nägid ülesandes explore-4.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -389,6 +395,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Mis on nõguspeegli fookus?",
+        hints: ["Mõtle tagasi ülesandele explore-4: kuhu koondusid peeglile langevad paralleelsed kiired?"],
         options: [
           {
             id: "sugavaim-koht",

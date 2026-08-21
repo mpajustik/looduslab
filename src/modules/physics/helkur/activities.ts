@@ -319,6 +319,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-2",
         prompt: "Miks ei paista helkur pimedas toas, kus ühtki valgusallikat ei ole?",
+        hints: ["Helkur ise ei sära – mõtle, mida ta täpselt teeb valgusega, mis talle langeb."],
         options: [
           {
             id: "soojus",
@@ -345,6 +346,9 @@ const steps: Step[] = [
         id: "practice-3",
         prompt:
           "Sina seisad tee ÄÄRES ja vaatad jalakäijat, keda mööduva auto tuled valgustavad. Miks ei paista tema helkur sulle nii eredalt kui autojuhile?",
+        hints: [
+          "Helkur saadab valguse kitsa koonusena tagasi TÄPSELT sinna, kust see tuli – kas sina oled selles koonuses?",
+        ],
         options: [
           {
             id: "kaugemal",
@@ -371,6 +375,9 @@ const steps: Step[] = [
         id: "practice-4",
         prompt:
           "Kus kasutatakse sama põhimõtet, mis helkuris (valgus tagasi sinna, kust ta tuli)?",
+        hints: [
+          "Otsi asju, mida nähakse just autotuledes helendamas – tavaline peegel ei tee seda, sest tema peegeldab vastavalt nurgale, mitte alati tagasi allikale.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -410,6 +417,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Miks saadab helkur valguse tagasi just auto poole?",
+        hints: [
+          "Läikiv on ka tavaline peegel, aga tema ei saada valgust tagasi sinna, kust see tuli – helkuril on selleks eriline sisemine ehitus.",
+        ],
         options: [
           {
             // Sildita vale variant: „tugevalt läikiv" ei ole ükski mooduli

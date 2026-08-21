@@ -342,6 +342,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: `Periskoobis on kaks peeglit teineteisega paralleelselt (peeglite nurk ${deg(PARALLEL_MIRROR_DEG)}°), mõlemad 45° kaldu toru suhtes. Millised väited on õiged?`,
+        hints: [
+          "Iga peegel pöörab kiirt oma 90° eraldi, aga kaks 45°-kaldu peeglit paralleelselt tähendab, et lõppsuund jääb samaks – ainult koht muutub.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -401,6 +404,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-2",
         prompt: `Mis on täisnurkse (${deg(RIGHT_MIRROR_DEG)}°) nurkpeegli juures erilist?`,
+        hints: ["Kaks korda peeglite nurk (90°) annab kokku 180° – kuhupoole see kiire pöörab?"],
         options: [
           {
             // Sildita vale variant: „jääb kinni" ei ole ükski mooduli
