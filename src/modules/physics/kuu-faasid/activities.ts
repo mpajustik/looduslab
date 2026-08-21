@@ -156,6 +156,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "explore-3",
         prompt: "Lülita sisse Maa vari ja keri kogu orbiit läbi. Kus on Maa vari Kuu lähedal?",
+        hints: [
+          "Vari ulatub orbiidile ainult seal, kus Kuu on Päikesest kõige kaugemal – kell see on?",
+        ],
         options: [
           {
             id: "kogu-pool",
@@ -270,6 +273,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Millised väited on õiged?",
+        hints: [
+          "Faasi tekitab vaatenurk valgustatud poolkerale, mitte Maa vari – vari puutub orbiiti ainult ühes kohas.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -313,6 +319,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Miks me kuuloomise ajal Kuud ei näe?",
+        hints: ["Kuuloomisel on Kuu Maa ja Päikese vahel – kumb pool Kuust on siis meie poole?"],
         options: [
           {
             id: "maa-vari",

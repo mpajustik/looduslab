@@ -185,6 +185,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "explore-4",
         prompt: "Vaheta kuuvarjutusele. Kumb väide on õige?",
+        hints: [
+          "Kuu kaugus Maast on tunduvalt väiksem kui varju enda pikkus – vaata liuguril, kui laiaks vari selle vahemaa peal jõuab kasvada.",
+        ],
         options: [
           {
             id: "sama",
@@ -283,6 +286,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Millised väited on õiged?",
+        hints: [
+          "Kes kelle vahel seisab, otsustab, kumb varjutus on tegu – ja täisvarju laius otsustab, kui suur ala seda korraga näeb.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -326,6 +332,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Päikesevarjutuse ajal langeb…",
+        hints: ["Kes on siin keskel, Maa ja Päikese vahel?"],
         options: [
           {
             id: "maa-kuule",

@@ -285,6 +285,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "explore-4",
         prompt: `Jäta allikas ${comma(metersToCm(WIDE_LAMP_M), 0)} cm laiaks ja ekraan ${comma(SCREEN_FAR_M, 0)} m peale. Too nüüd pall allikale lähemale (${comma(BALL_NEAR_M, 1)} m). Mis juhtub?`,
+        hints: [
+          "Täisvari kadus juba eelmises ülesandes lai allika tõttu – palli kaugus üksi seda tagasi ei too.",
+        ],
         options: [
           {
             id: "tagasi",
@@ -350,6 +353,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-2",
         prompt: "Miks on jalgade vari asfaldil terav ja pea vari hägune?",
+        hints: [
+          "Poolvarju riba laius sõltub sellest, kui kaugel keha ekraanist (siin: maapinnast) on – mitte keha kujust.",
+        ],
         options: [
           {
             id: "kaugus",
@@ -390,6 +396,9 @@ const steps: Step[] = [
         id: "practice-4",
         prompt:
           "Millistel juhtudel on varju serv PEAAEGU terav ehk poolvari väga kitsas?",
+        hints: [
+          "Kitsas poolvari tuleb VÄIKESEST allikast, mitte hägusest valgusest – mõtle, kui lai on iga näite valgusallikas.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -425,6 +434,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Poolvari on koht, kus…",
+        hints: ["Mõtle, mida see koht KEHA taga näeks, kui ta suudaks ringi vaadata."],
         options: [
           {
             id: "pool-valgust",
@@ -449,6 +459,9 @@ const steps: Step[] = [
         kind: "numeric",
         id: "exit-2",
         prompt: `Punktvalgusallikas, keha läbimõõt ${comma(metersToCm(EXIT_OBJECT_M), 0)} cm, keha ${comma(EXIT_BALL_DISTANCE_M, 1)} m kaugusel allikast, ekraan ${comma(EXIT_SCREEN_M, 0)} m kaugusel allikast. Kui lai on täisvari?`,
+        hints: [
+          "Punktallikas tähendab, et poolvarju ei ole: sama valem mis näidises – ekraani kaugus jagatud keha kaugusega korda keha läbimõõt.",
+        ],
         unit: "m",
         tolerance: { mode: "percent", value: 5 },
         answer: EXIT_UMBRA_M,
