@@ -48,7 +48,7 @@ labor · harjutusmoodul · teooriakonspekt
 | valgusfiltrid | virtuaalne labor | P1-T3 (osa: valgusfilter); P1-PT2 (sim + päris katse juhend) | – | ehitatud |
 | peegeldumisseadus | juhitud tund (piloot) | P1-T2 (osa: peegeldumisseadus, joonised, katse); P1-PT3 | valguskiir, tasapeegel, mattpind, langemisnurk, peegeldumisnurk, pinna ristsirge | ehitatud |
 | tasapeegli-kujutis | virtuaalne labor | P1-T2 (osa: näiline kujutis, sümmeetria); P1-PT4 (sim + päris katse juhend) | – | ehitatud |
-| peeglikiri | rakendusmoodul | P1-T2 (osa: tasapeegli kujutise ülekanne) | – | plaanis |
+| peeglikiri | rakendusmoodul | P1-T2 (osa: tasapeegli kujutise ülekanne) | – | spetsitud |
 | nurkpeegel | mikromoodul | P1-T2 (osa: kiirte käik kahe peegli vahel, periskoop) | – | ehitatud |
 | helkur | rakendusmoodul | P1-T2 (osa: nurkpeegli ülekanne) | – | ehitatud |
 | kumerpeegel | mikromoodul | P1-T2 (osa: kumerpeegli kiirte käik) | kumerpeegel | ehitatud |
