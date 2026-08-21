@@ -280,6 +280,9 @@ const steps: Step[] = [
         // muuta – õpilane peab teadma, kust kuhu (sama õppetund mis moodulis
         // kumerpeegel, samm 4.1pp).
         prompt: `Lohista raadius ${formatNumber(START_RADIUS_CM)} cm pealt ${formatNumber(FLATTER_RADIUS_CM)} cm peale – peegel läheb lamedamaks. Mis juhtub kumerpeegli vaateväljaga?`,
+        hints: [
+          "Mida kumeram peegel, seda lähemal on tema näiline fookus ja seda enam ta valgust hajutab – kõige lamedam peegel ongi tasapeegel.",
+        ],
         options: [
           {
             id: "laiemaks",
@@ -345,6 +348,9 @@ const steps: Step[] = [
         id: "practice-2",
         prompt:
           "Auto külgpeeglis paistab tagant tulev jalgrattur väiksem, kui ta päriselt on. Miks teeb see kauguse hindamise petlikuks?",
+        hints: [
+          "Peegel ise ei liiguta jalgratturit kuhugi – ta ainult näitab teda VÄIKSEMANA. Mida aju harjumuspäraselt väiksusest järeldab?",
+        ],
         options: [
           {
             id: "viib-kaugemale",
@@ -400,6 +406,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Kuhu sobib KUMER peegel?",
+        hints: [
+          "Kumer peegel hajutab valgust ja annab LAIA vaatevälja, aga väiksemana – see sobib sinna, kus tahetakse näha PALJU, mitte suurendada.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -443,6 +452,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Miks pannakse poe koridori nurka kumer, mitte tasane peegel?",
+        hints: ["Sama suur tasapeegel näitaks ainult ühte kitsast lõiku – mida teeb kumerus vaatevälja mõõtmega?"],
         options: [
           {
             id: "odavam",

@@ -236,6 +236,9 @@ const steps: Step[] = [
         // START_RADIUS_CM juures. Ilma selle lauseta näeks õpilane ekraanil
         // 3,6° ja loeks vastusevariandist 5,7° (CodeRabbiti leid, samm 4.1nn).
         prompt: `Sea raadiuseks ${cm(START_RADIUS_CM)} cm tagasi ja kiire kõrguseks ${cm(RAY_HEIGHT_CM)} cm, siis loe langemisnurk. Kui suur on peegeldumisnurk?`,
+        hints: [
+          "Kumeral pinnal kehtib sama peegeldumisseadus mis tasapeeglil – ainult ristsirge tuleb kera keskpunktist, mis on siin peegli taga.",
+        ],
         options: [
           {
             id: "null",
@@ -366,6 +369,9 @@ const steps: Step[] = [
         id: "practice-4",
         prompt:
           "Poe laes on ümar kumerpeegel. Millised väited on õiged?",
+        hints: [
+          "Kumerpeegel hajutab kiiri – see on põhjus, miks temasse mahub rohkem korraga, aga fookus jääb NÄILISEKS, mitte päris kokkusaamiskohaks.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -409,6 +415,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Mis on kumerpeegel?",
+        hints: ["Mõtle kera pinnale – kumb pool sellest on läikiv peeglina, väljast- või seestpoolt vaadatuna?"],
         options: [
           {
             id: "seest",

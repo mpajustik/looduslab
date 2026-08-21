@@ -317,6 +317,9 @@ const steps: Step[] = [
         // välja öeldud – õpilane peab teadma, kust kuhu (sama õppetund mis
         // moodulites kumerpeegel ja noguspeegel, sammud 4.1pp ja 4.1tt).
         prompt: `Sea pirn ${formatNumber(START_SOURCE_MM)} mm peale tagasi ja lohista raadius ${formatNumber(START_RADIUS_CM)} cm pealt ${formatNumber(FLATTER_RADIUS_CM)} cm peale – peegel läheb lamedamaks ja fookus kaugemale. Mis juhtub valgusringiga?`,
+        hints: [
+          "Mida kaugemal on fookus, seda väiksema nurga alt sama suur pirn peeglilt paistab.",
+        ],
         options: [
           {
             id: "laiemaks",
@@ -380,6 +383,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-2",
         prompt: `Kaks päikeseahju: ühe peegel on ${formatNumber(OVEN_DIAMETER_M)} m lai ja fookuskaugus ${formatNumber(OVEN_FOCAL_M)} m, teise peegel ${formatNumber(SMALL_OVEN_DIAMETER_M * 100)} cm lai ja fookuskaugus ${formatNumber(SMALL_OVEN_FOCAL_M * 100)} cm. Kummas koondub valgus TIHEDAMAKS?`,
+        hints: [
+          "Koondumistegur sõltub SUHTEST läbimõõt : fookuskaugus, mitte peegli päris suurusest – arvuta see suhe mõlemale.",
+        ],
         options: [
           {
             id: "suures",
@@ -406,6 +412,9 @@ const steps: Step[] = [
         id: "practice-3",
         prompt:
           "Miks ei ole ühegi taskulambi kiir päriselt paralleelne, isegi kui pirn on täpselt fookuses?",
+        hints: [
+          "Peegeldumisseadus kehtib IGA kiire jaoks eraldi – aga fookuses olev punkt annab paralleelse kimbu ainult siis, kui allikas ise on täpselt üks punkt.",
+        ],
         options: [
           {
             id: "must-peegel",
@@ -430,6 +439,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Kuhu sobib NÕGUS peegel?",
+        hints: [
+          "Nõguspeegel KOONDAB valgust ühte kohta (või teeb allikast paralleelse kimbu) – otsi seadmeid, kus tahetakse valgust või soojust ühte punkti kokku suruda.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -473,6 +485,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Miks on taskulambis nõgus peegel?",
+        hints: ["Pirn on peegli fookuses – mis kimp sealt lähtuvast valgusest peeglilt väljub?"],
         options: [
           {
             id: "kaitse",
