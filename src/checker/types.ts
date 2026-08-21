@@ -19,6 +19,23 @@ export type CheckResult = {
   /** Lause õpilasele – valmis kujul, vaade ei pane teda kokku. */
   feedback: string;
   /**
+   * Õige vastus õpilase keeles, VALMIS LAUSENA („Õige vastus: 42°").
+   *
+   * Ainult vale vastuse juures: vastust ei saa pärast esitamist muuta
+   * (ChoiceInput ja NumericInput lukustuvad), seega ei ole siin midagi ette
+   * ära anda – aga ilma selleta jääks õpilane teadmata, mis õige oli, ja
+   * järgmine kord ta ikka ei oska.
+   *
+   * Puudub seal, kus „õiget vastust" ei ole olemas või kus ta ette öeldes
+   * lõhuks ülesande: vabatekst, hindamata vastus ja mõõtetabel (seal on töö
+   * ise mõõtmine, vt src/checker/table.ts).
+   *
+   * Terve lause, mitte ainult väärtus, sest ühel küsimusel on üks õige vastus
+   * ja teisel mitu – vaade ei tohi neist kahest valida (sama põhimõte mis
+   * `feedback`-il).
+   */
+  expected?: string;
+  /**
    * Väärarusaama silt (nt `nurk-pinna-suhtes`), kui vale vastus tabas
    * teadaolevat lõksu. See on ID õpetaja jaoks, MITTE tekst õpilasele –
    * õpilasele mõeldud lause on `feedback`.

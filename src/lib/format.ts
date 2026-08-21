@@ -1,5 +1,5 @@
 /** Sisemine tühik (U+00A0) – hoiab arvu ja ühiku ühel real. */
-const NBSP = " ";
+export const NBSP = " ";
 
 /**
  * Vormindab arvu eesti keele reeglite järgi: koma kümnendkoha eraldajana ja

@@ -21,6 +21,11 @@ export function Feedback({ result, hints }: { result: CheckResult; hints?: strin
   // müra ja hindamata vastuse juures oleks vihje eksitav (seal ei ole „õiget").
   const showHints = result.correct === false && hints && hints.length > 0;
 
+  // Õige vastus tuleb vihjete ETTE: vastust muuta enam ei saa, seega on vihje
+  // siin mõtlemise tugi („miks see nii on"), mitte uus katse – ja tähtsaim
+  // asi ekraanil peab olema esimene.
+  const showExpected = result.correct === false && result.expected !== undefined;
+
   return (
     <div role="status" className={cn("flex flex-col gap-2 rounded-lg border p-4", state.box)}>
       <p className="flex items-start gap-3 text-lg leading-relaxed">
@@ -30,6 +35,10 @@ export function Feedback({ result, hints }: { result: CheckResult; hints?: strin
           {result.feedback}
         </span>
       </p>
+
+      {showExpected ? (
+        <p className="pl-8 text-lg font-medium leading-relaxed text-ink">{result.expected}</p>
+      ) : null}
 
       {showHints ? (
         <div className="pl-8">

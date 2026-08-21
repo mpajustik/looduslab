@@ -9,6 +9,8 @@
  * kirjutas. Otsuse teeb kutsuv checker (CLAUDE.md reegel 3).
  */
 
+import { NBSP, formatNumber } from "../lib/format";
+
 /** Lubatud viga: kas protsent oodatud vastusest või absoluutne samas ühikus. */
 export type Tolerance = { mode: "percent" | "absolute"; value: number };
 
@@ -77,6 +79,61 @@ export function readNumber(raw: string, expectedUnit: string): number | undefine
   const parsed = parseRaw(raw);
   if (!parsed) return undefined;
   return convert(parsed.value, resolveGivenUnit(parsed.unit, expectedUnit), expectedUnit);
+}
+
+/**
+ * Ühikud, mis kirjutatakse arvu külge kinni: „30°", „40 %" oleks vale, aga
+ * „12 cm" on õige. Sama kokkulepe kehtib liuguritel (src/ui/SliderField.tsx).
+ */
+const TIGHT_UNITS = new Set(["°", "%"]);
+
+/**
+ * Kümnendkohtade ülempiir. `toFixed` lubaks sada, aga nii pika arvu taga ei
+ * ole enam ühtegi päris füüsikaülesannet – see on kaitseklapp, mitte valik.
+ */
+const MAX_DECIMALS = 20;
+
+/**
+ * Mitu kümnendkohta näidata, et NÄIDATUD arv oleks checkeri enda mõõdupuu
+ * järgi õige vastus.
+ *
+ * Mõõdupuu on küsimuse tolerants, mitte kokkulepitud „kaks kohta": kui õpilane
+ * kirjutab järgmine kord täpselt selle, mis ekraanil seisab, PEAB checker
+ * ütlema „Õige!". Kolme koha peale ümardamine seda ei taganud – vastus 1,23456
+ * tolerantsiga 0,00001 jõudis ekraanile kujul „1,235", mille checker ise oleks
+ * lugenud valeks, ja 0,0000005 kujul „0" (CodeRabbiti ja Codexi ühine leid
+ * 2026-08-22). Ekraanilt maha kirjutatud vale vastus on hullem kui nähtav
+ * krahh, sest keegi ei märka teda.
+ *
+ * `toPrecision(12)` lõikab enne ära ujukoma müra (0,1 + 0,2 =
+ * 0,30000000000000004), mis muidu nõuaks kõiki 17 kohta.
+ */
+function decimalsFor(value: number, tolerance: Tolerance): number {
+  const plain = Number(value.toPrecision(12));
+  const delta = maxDelta(plain, tolerance);
+  for (let decimals = 0; decimals < MAX_DECIMALS; decimals += 1) {
+    const shown = Number(plain.toFixed(decimals));
+    // Kaks nõuet korraga: näidatud arv mahub tolerantsi sisse JA nullist
+    // erinevast vastusest ei ole saanud nulli (nulltolerants ei luba viimast
+    // niikuinii, aga protsenttolerants lubaks).
+    if (withinTolerance(shown, plain, delta) && (shown !== 0 || plain === 0)) {
+      return decimals;
+    }
+  }
+  return MAX_DECIMALS;
+}
+
+/**
+ * Arv + ühik õpilase keeles: „42°", „2,5 kPa", „19 600 Pa".
+ *
+ * Vormindamine, mitte otsustamine – siin ei öelda, kas vastus on õige. Elab
+ * siin, sest siin on juba kogu ühikutarkus (vt faili päist). Tolerants on
+ * kaasas, sest tema otsustab, mitu kohta on vaja (vt `decimalsFor`).
+ */
+export function formatValue(value: number, unit: string, tolerance: Tolerance): string {
+  const text = formatNumber(value, decimalsFor(value, tolerance));
+  if (unit === "") return text;
+  return TIGHT_UNITS.has(unit) ? `${text}${unit}` : `${text}${NBSP}${unit}`;
 }
 
 /** Lubatud hälve absoluutarvuna – protsent arvutatakse oodatud vastusest. */

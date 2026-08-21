@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { checkNumericAnswer } from "../src/checker/numeric";
 import type { NumericQuestion } from "../src/engine/contract";
 
+/** Sisemine tühik arvu ja ühiku vahel – sama, mida checker vastusesse paneb. */
+const NBSP = " ";
+
 /**
  * Checker peab lugema koma JA punkti, teisendama mm/cm/m ja Pa/kPa ning
  * tundma ära lõksuvastused (CLAUDE.md reegel 3 – vaade ei otsusta ise).
@@ -223,5 +226,82 @@ describe("valimata variant", () => {
     // kedagi, kelle küsimus jäi meie käe läbi valimata.
     expect(checkNumericAnswer(unresolved, "55").correct).toBeNull();
     expect(checkNumericAnswer(unresolved, "70").correct).toBeNull();
+  });
+});
+
+describe("checkNumericAnswer – õige vastus öeldakse vale vastuse juures välja", () => {
+  it("kraad kirjutatakse arvu külge kinni", () => {
+    expect(checkNumericAnswer(trapQuestion, "30").expected).toBe("Õige vastus: 70°.");
+  });
+
+  it("ühik tuleb arvust sisemise tühikuga lahku ja koma on eesti kombe järgi", () => {
+    expect(checkNumericAnswer(lengthQuestion, "0,5 m").expected).toBe(`Õige vastus: 0,25${NBSP}m.`);
+  });
+
+  it("täisarvule ei teki tühje kümnendkohti", () => {
+    expect(checkNumericAnswer(unitlessQuestion, "5").expected).toBe("Õige vastus: 3.");
+  });
+
+  it("lõksuvastus saab nii oma tagasiside kui ka õige vastuse", () => {
+    const result = checkNumericAnswer(trapQuestion, "20");
+    expect(result.misconception).toBe("nurk-pinna-suhtes");
+    expect(result.expected).toBe("Õige vastus: 70°.");
+  });
+
+  it("vale ühik ei jäta õpilast õige vastuseta", () => {
+    const result = checkNumericAnswer(pressureQuestion, "250 m");
+    expect(result.correct).toBe(false);
+    expect(result.expected).toBe(`Õige vastus: 250${NBSP}kPa.`);
+  });
+
+  it("arvuks mitteloetav vastus ei jäta õpilast õige vastuseta", () => {
+    expect(checkNumericAnswer(unitlessQuestion, "ei tea").expected).toBe("Õige vastus: 3.");
+  });
+
+  it("õige vastuse juures õiget vastust üle ei korrata", () => {
+    expect(checkNumericAnswer(unitlessQuestion, "3").expected).toBeUndefined();
+  });
+});
+
+describe("checkNumericAnswer – õige vastus peab ka ise õige olema", () => {
+  /**
+   * Ekraanile jõudev arv on see, mille õpilane järgmine kord kirjutab. Kui
+   * vormindus ümardab ta tolerantsist välja, õpetab rakendus vale vastust –
+   * CodeRabbiti ja Codexi ühine leid 2026-08-22.
+   */
+  const preciseQuestion: NumericQuestion = {
+    kind: "numeric",
+    id: "practice-5",
+    prompt: "Täpne vastus tiheda tolerantsiga",
+    answer: 1.23456,
+    tolerance: { mode: "absolute", value: 0.00001 },
+  };
+
+  const tinyQuestion: NumericQuestion = {
+    kind: "numeric",
+    id: "practice-6",
+    prompt: "Väga väike vastus",
+    answer: 5e-7,
+    unit: "m",
+    tolerance: { mode: "absolute", value: 1e-8 },
+  };
+
+  it("tihe tolerants ei lubanud vastust lühemaks ümardada", () => {
+    expect(checkNumericAnswer(preciseQuestion, "1").expected).toBe("Õige vastus: 1,23456.");
+  });
+
+  it("nullist erinev vastus ei kuva kunagi nullina", () => {
+    expect(checkNumericAnswer(tinyQuestion, "1").expected).toBe(
+      `Õige vastus: 0,0000005${NBSP}m.`,
+    );
+  });
+
+  it("ekraanilt maha kirjutatud vastuse loeb checker õigeks", () => {
+    for (const question of [preciseQuestion, tinyQuestion, lengthQuestion, pressureQuestion, trapQuestion]) {
+      const shown = checkNumericAnswer(question, "-1").expected ?? "";
+      // "Õige vastus: 0,25 m." → "0,25 m"
+      const raw = shown.replace("Õige vastus: ", "").replace(/\.$/, "");
+      expect(checkNumericAnswer(question, raw).correct, `${question.id}: ${raw}`).toBe(true);
+    }
   });
 });

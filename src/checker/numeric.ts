@@ -1,5 +1,5 @@
 import type { NumericQuestion } from "../engine/contract";
-import { maxDelta, parseRaw, readNumber, withinTolerance } from "./number";
+import { formatValue, maxDelta, parseRaw, readNumber, withinTolerance } from "./number";
 import { NOT_CHECKABLE, type CheckResult } from "./types";
 
 /**
@@ -24,10 +24,21 @@ export function checkNumericAnswer(question: NumericQuestion, raw: string): Chec
 
   const expectedUnit = question.unit ?? "";
 
+  /**
+   * Õige vastus käib KAASA iga vale vastusega, ka siis, kui viga oli ühikus
+   * või kirjaviisis: vastust muuta ei saa, seega on see õpilase ainus võimalus
+   * teada saada, mis õige oli.
+   */
+  const expected = `Õige vastus: ${formatValue(question.answer, expectedUnit, question.tolerance)}.`;
+
   // Kaks eri viga, kaks eri lauset: „ei ole arv" ja „vale ühik". Ühine
   // `readNumber` annab mõlemal juhul `undefined`, seega eristame siin.
   if (!parseRaw(raw)) {
-    return { correct: false, feedback: 'Seda vastust ei tundnud arvuna ära – oodatud on arv, nt „2,5".' };
+    return {
+      correct: false,
+      feedback: 'Seda vastust ei tundnud arvuna ära – oodatud on arv, nt „2,5".',
+      expected,
+    };
   }
 
   const converted = readNumber(raw, expectedUnit);
@@ -37,6 +48,7 @@ export function checkNumericAnswer(question: NumericQuestion, raw: string): Chec
       feedback: expectedUnit
         ? `See ühik ei sobi – oodatud ühik on ${expectedUnit}.`
         : "See küsimus ei vaja ühikut.",
+      expected,
     };
   }
 
@@ -49,11 +61,16 @@ export function checkNumericAnswer(question: NumericQuestion, raw: string): Chec
     withinTolerance(converted, candidate.answer, delta),
   );
   if (trap) {
-    return { correct: false, feedback: trap.feedback, misconception: trap.misconception };
+    return {
+      correct: false,
+      feedback: trap.feedback,
+      misconception: trap.misconception,
+      expected,
+    };
   }
 
   // Lause EI kutsu uuesti proovima: esitatud vastust ei saa praegu muuta
   // („Muuda vastust" tuleb hiljem). Käsk, mida ekraanil täita ei saa,
   // paneb õpilase arvama, et rakendus on katki. Sama sõnastus valikvastusel.
-  return { correct: false, feedback: "See ei ole õige vastus." };
+  return { correct: false, feedback: "See ei ole õige vastus.", expected };
 }

@@ -17,6 +17,13 @@ export function checkChoiceAnswer(
   // Hulk, mitte loend: sama variant kaks korda ei ole kaks valikut.
   const chosen = new Set(optionIds);
 
+  /**
+   * Õige variant (või variandid) sõnadega. Käib kaasa iga vale vastusega:
+   * valikut ei saa pärast esitamist muuta, seega ei anna see midagi ette –
+   * aga ilma selleta lahkub õpilane ekraanilt teadmata, kumb oli õige.
+   */
+  const expected = expectedText(question);
+
   // Tundmatu id tähendab, et vastus ja küsimus ei käi kokku (moodul muutus
   // vahepeal). Teadmata variandi vaikne kõrvale jätmine oleks ohtlik: siis
   // võiks „õige + prügi" muutuda õigeks vastuseks.
@@ -24,12 +31,16 @@ export function checkChoiceAnswer(
   if ([...chosen].some((id) => !known.has(id))) return NOT_CHECKABLE;
 
   if (chosen.size === 0) {
-    return { correct: false, feedback: "Ühtegi vastust ei olnud valitud." };
+    return { correct: false, feedback: "Ühtegi vastust ei olnud valitud.", expected };
   }
 
   const multiple = question.multiple === true;
   if (!multiple && chosen.size > 1) {
-    return { correct: false, feedback: "Sellel küsimusel on ainult üks õige vastus." };
+    return {
+      correct: false,
+      feedback: "Sellel küsimusel on ainult üks õige vastus.",
+      expected,
+    };
   }
 
   const missing = question.options.filter((option) => option.correct && !chosen.has(option.id));
@@ -47,13 +58,26 @@ export function checkChoiceAnswer(
     // Esimene sildiga vale valik küsimuse enda järjekorras – nii annab sama
     // valik alati sama sildi, olenemata klõpsamise järjekorrast.
     misconception: wrongChosen.find((option) => option.misconception)?.misconception,
+    expected,
   };
 }
 
 /**
+ * „Õige vastus: „Normaali suhtes"." – üks või mitu varianti sõnadega.
+ *
+ * Mitmuse otsuse teeb checker, mitte vaade: vaade ei tea, mitu õiget varianti
+ * küsimusel on, ja lause peab jõudma ekraanile valmis kujul (vt CheckResult).
+ */
+function expectedText(question: ChoiceQuestion): string {
+  const correct = question.options.filter((option) => option.correct);
+  const list = correct.map((option) => `„${option.text}"`).join(" ja ");
+  return correct.length > 1 ? `Õiged vastused: ${list}.` : `Õige vastus: ${list}.`;
+}
+
+/**
  * Mitme õige vastuse korral ütleme, MIS suunas vastus vale on – „vale" üksi
- * ei anna 8. klassi õpilasele midagi, mille kallal edasi mõelda. Õigeid
- * variante siin ette ei öelda.
+ * ei anna 8. klassi õpilasele midagi, mille kallal edasi mõelda. Õiged
+ * variandid ise tulevad kõrvale `expected` reana.
  */
 function multipleFeedback(missingCount: number, wrongCount: number): string {
   if (wrongCount === 0) return "Kõiki õigeid variante ei ole veel valitud.";

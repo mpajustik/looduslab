@@ -99,3 +99,31 @@ describe("checkChoiceAnswer – katkised sisendid", () => {
     expect(checkChoiceAnswer(singleQuestion, ["puudub"]).correct).toBeNull();
   });
 });
+
+describe("checkChoiceAnswer – õige vastus öeldakse vale vastuse juures välja", () => {
+  it("üks õige variant tuleb ainsuses ja sõnadega", () => {
+    const result = checkChoiceAnswer(singleQuestion, ["kiir"]);
+    expect(result.expected).toBe('Õige vastus: „Normaali suhtes".');
+  });
+
+  it("mitu õiget varianti tulevad mitmuses ja mõlemad kirjas", () => {
+    const result = checkChoiceAnswer(multipleQuestion, ["ainult-peegel"]);
+    expect(result.expected).toBe(
+      'Õiged vastused: „Sile pind peegeldab korrapäraselt" ja „Kare pind hajutab kiired".',
+    );
+  });
+
+  it("ka tühi valik saab õige vastuse teada", () => {
+    expect(checkChoiceAnswer(singleQuestion, []).expected).toContain("Normaali suhtes");
+  });
+
+  it("õige vastuse juures õiget vastust üle ei korrata", () => {
+    expect(checkChoiceAnswer(singleQuestion, ["normaal"]).expected).toBeUndefined();
+  });
+
+  it("hindamata vastus ei anna õiget vastust välja", () => {
+    // Tundmatu variant = katkine moodul, mitte õpilase viga: otsust ei tehtud,
+    // seega ei ole ka „õiget vastust" välja öelda.
+    expect(checkChoiceAnswer(singleQuestion, ["puudub"]).expected).toBeUndefined();
+  });
+});
