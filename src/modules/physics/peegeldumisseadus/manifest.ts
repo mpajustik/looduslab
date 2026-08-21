@@ -40,7 +40,10 @@ export const manifest = defineModule({
   // 2.0.0: neljal arvküsimusel (precheck-2, practice-1, practice-2, exit-2) on
   //        nüüd arvuvariandid. Õige vastus sõltub loositud variandist, seega
   //        vana `is_correct` EI ole uuega võrreldav – MAJOR.
+  // 2.0.1: üheksale küsimusele lisati vihje, mis seni puudus (precheck-3,
+  //        explore-1..4, collect-1, practice-1, exit-1, exit-2) – sõnastus,
+  //        mitte õige vastus, seega patch.
   // Reeglid: docs/MOODULILEPING.md „Versioonimine".
-  version: "2.0.0",
+  version: "2.0.1",
   status: "active",
 });

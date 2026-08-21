@@ -172,6 +172,7 @@ const steps: Step[] = [
         id: "explore-2",
         prompt:
           "Vaheta pesas 1 punane filter kollase vastu. Mis värvi on ekraan?",
+        hints: ["Vaata, mitu noolt (mitu värvi) filter läbi laseb – kollane laseb rohkem kui üks."],
         options: [
           {
             id: "valge",
@@ -218,6 +219,9 @@ const steps: Step[] = [
         id: "explore-4",
         prompt:
           "Vaheta filtrid pesades ära: pessa 1 sinine, pessa 2 kollane. Mis muutub?",
+        hints: [
+          "Kumb filter jäi mõlemal juhul ilma läbilaskva värvita järele – kas järjekord seda muudab?",
+        ],
         options: [
           {
             id: "sinine",
@@ -348,6 +352,9 @@ const steps: Step[] = [
         id: "practice-4",
         prompt:
           "3D-prillidel on üks klaas punane ja teine sinine. Valgele paberile on sama pilt joonistatud kaks korda: üks kord punase, teine kord sinise pliiatsiga. Millised väited on õiged?",
+        hints: [
+          "Punane filter laseb läbi punase, aga neelab sinise – mõtle iga joonise kohta eraldi, mida punase klaasi taga näed.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -391,6 +398,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Mis juhtub värvidega, mida filter läbi ei lase?",
+        hints: ["Filter kuumeneb kasutades – kuhu see energia jääb?"],
         options: [
           {
             id: "tagasi",

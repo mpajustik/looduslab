@@ -165,6 +165,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "precheck-3",
         prompt: "Millised väited peegeldumise kohta on õiged? Õigeid vastuseid on mitu.",
+        hints: ["Peegeldumine ei ole ainult siledate pindade oma – mida teeb valgusega kare pind?"],
         multiple: true,
         options: [
           { id: "sile", text: "Siledalt pinnalt peegelduvad kõrvuti kiired korrapäraselt", correct: true },
@@ -216,6 +217,7 @@ const steps: Step[] = [
         kind: "numeric",
         id: "explore-1",
         prompt: "Sea langemisnurk 30°. Mis on peegeldumisnurk?",
+        hints: ["Loe väärtus otse ekraanilt – liuguriga sea langemisnurk täpselt 30° peale."],
         answer: 30,
         unit: "°",
         tolerance: { mode: "absolute", value: 1 },
@@ -224,6 +226,7 @@ const steps: Step[] = [
         kind: "numeric",
         id: "explore-2",
         prompt: "Leia nurk, mille korral kiir peegeldub otse tagasi.",
+        hints: ["Proovi liuguriga väikseid nurki – mis juhtub, kui kiir langeb otse pinnale risti?"],
         answer: 0,
         unit: "°",
         tolerance: { mode: "absolute", value: 1 },
@@ -233,6 +236,7 @@ const steps: Step[] = [
         id: "explore-3",
         prompt:
           "Lülita sisse „Näita nurka pinna suhtes“. Sea langemisnurk ristsirge suhtes 60°. Mitu kraadi on see pinna suhtes?",
+        hints: ["Ristsirge ja pinna vahel on alati 90° – vaata, kumb näit ekraanil muutus."],
         answer: 30,
         unit: "°",
         tolerance: { mode: "absolute", value: 1 },
@@ -244,6 +248,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "explore-4",
         prompt: "Lülita sisse „Mattpind“ sama nurga juures. Mis kiirtega juhtub?",
+        hints: [
+          "Vaata iga üksikut kiirt eraldi – kas TEMA jaoks kehtib ikka α = β, isegi kui teised kiired lähevad mujale?",
+        ],
         options: [
           {
             id: "hajub-seaduse-jargi",
@@ -282,6 +289,9 @@ const steps: Step[] = [
         kind: "table",
         id: "collect-1",
         prompt: "Kolm mõõtmist simulatsioonist",
+        hints: [
+          "Vali kolm ERINEVAT langemisnurka ja loe mõlemad näidud (langemis- ja peegeldumisnurk) samalt kuvalt.",
+        ],
         // `min`/`max` on SIMULATSIOONI liuguri piirid: ilma nendeta läbiks
         // kontrolli iga kaks võrdset arvu, ka „10000 ja 10000", mida ekraanil
         // kunagi ei olnud (Codexi ülevaatuse leid 2026-08-03).
@@ -347,6 +357,7 @@ const steps: Step[] = [
         id: "practice-1",
         prompt:
           "Nüüd sina: valguskiir langeb peeglile {nurk}° nurga all pinna ristsirge suhtes. Kui suur on peegeldumisnurk?",
+        hints: ["Peegeldumisseadus: peegeldumisnurk võrdub langemisnurgaga."],
         unit: "°",
         // Sama kokkulepe mis mujal: tolerants peab olema positiivne, seega
         // 0,5° tähendab siin „täpne vastus" (vt plaani samm 1.4).
@@ -474,6 +485,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Peegeldumisnurka mõõdetakse …",
+        hints: ["Ristsirge on see joon, mis on pinnaga täpselt 90° all."],
         options: [
           {
             id: "pind",
@@ -495,6 +507,7 @@ const steps: Step[] = [
         id: "exit-2",
         prompt:
           "Langemisnurk on {nurk}° pinna ristsirge suhtes. Kui suur on peegeldumisnurk?",
+        hints: ["Peegeldumisseadus: peegeldumisnurk võrdub langemisnurgaga."],
         unit: "°",
         tolerance: { mode: "absolute", value: 0.5 },
         // Teised arvud kui practice-1-l: väljumispilet küsib sama oskust, aga
