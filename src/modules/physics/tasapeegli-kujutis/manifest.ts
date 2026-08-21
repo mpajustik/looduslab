@@ -31,6 +31,10 @@ export const manifest = defineModule({
   practicalWork: ["P1-PT4"],
   minutes: { demo: 6, lesson: 20, homework: 15 },
   // Reeglid: docs/MOODULILEPING.md „Versioonimine".
-  version: "1.0.0",
+  //
+  // 1.0.1: viiele küsimusele lisati vihje, mis seni puudus (explore-4,
+  // practice-2, practice-4, exit-1, exit-2) – sõnastus, mitte õige vastus,
+  // seega patch.
+  version: "1.0.1",
   status: "active",
 });

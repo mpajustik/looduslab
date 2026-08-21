@@ -393,6 +393,9 @@ const steps: Step[] = [
         id: "practice-3",
         prompt:
           "Millised neist tähtedest on peegli-sümmeetrilised (näevad peeglis välja täpselt samasugused)?",
+        hints: [
+          "Kujuta ette peeglit tähe vertikaalsel keskjoonel – kas vasak ja parem pool kattuvad?",
+        ],
         multiple: true,
         shuffle: true,
         // Õigsust EI otsusta see fail: iga variant küsib mudelilt.
@@ -414,6 +417,9 @@ const steps: Step[] = [
         id: "practice-4",
         prompt:
           "Miks kirjutatakse teleprompteri (souflööri) tekst ekraanil peegelkirjas?",
+        hints: [
+          "Tekst käib teel lugejani läbi klaasi, kust ta peegeldub – peegeldumine pöörab kirja teist korda.",
+        ],
         options: [
           {
             // Sildita vale variant: „et keegi maha ei kirjutaks" ei ole ükski
@@ -446,6 +452,9 @@ const steps: Step[] = [
         id: "exit-1",
         prompt:
           "Seisad peegli ees ja tõstad parema käe. Kummal pool tuba on kujutise tõstetud käsi?",
+        hints: [
+          "Peegel ei vaheta vasakut ja paremat ära – proovi ise peegli ees, kummal pool käsi tõuseb.",
+        ],
         options: [
           {
             id: "kujutise-vasakul",

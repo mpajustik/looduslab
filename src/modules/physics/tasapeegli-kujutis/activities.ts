@@ -225,6 +225,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "explore-4",
         prompt: `Jäta peegel ${m(DEFAULT_MIRROR_M)} kõrguseks ja astu ${m(EXPLORE_FARTHEST_M)} kaugusele. Mis juhtub sellega, kui suur osa sinust paistab?`,
+        hints: [
+          "Proovi liuguriga eri kaugusi ja jälgi näitu „paistab“ – kas peegli SUURUS muutus vahepeal?",
+        ],
         options: [
           {
             id: "rohkem",
@@ -291,6 +294,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-2",
         prompt: "Miks ei näe sa end kaugemale astudes peeglis rohkem?",
+        hints: [
+          "Mõtle pealae ja jalgade kiirtele eraldi – kui kaugus muutub, kas nende kaks kiirt kalduvad erinevalt?",
+        ],
         options: [
           {
             id: "kiired-kalduvad",
@@ -326,6 +332,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Millised väited tasapeegli kujutise kohta on õiged?",
+        hints: [
+          "Kujutis tekib kiirte PIKENDUSTE lõikepunktis peegli TAGA, mitte peegli pinnal ega paberil kinni püütuna.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -369,6 +378,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Sõna „näiline\" tähendab kujutise puhul, et…",
+        hints: ["Peegli TAHA me ei näe – mida seal siis PÄRISELT on?"],
         options: [
           {
             id: "udune",
@@ -393,6 +403,7 @@ const steps: Step[] = [
         kind: "numeric",
         id: "exit-2",
         prompt: `Seisad ${m(EXIT_DISTANCE_M)} kaugusel tasapeeglist. Kui suur on vahemaa sinu ja su kujutise vahel?`,
+        hints: ["Kujutis on peegli taga sama kaugel, kui sina oled peegli ees – liida need kaks vahemaad."],
         unit: "m",
         tolerance: DISTANCE_TOLERANCE,
         answer: EXIT_SEPARATION_M,
