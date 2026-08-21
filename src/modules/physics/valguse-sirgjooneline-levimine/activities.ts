@@ -125,10 +125,11 @@ const steps: Step[] = [
   {
     type: "theory",
     id: "theory-1",
-    // Joonis katab teksti teise lõigu: kolm vihutüüpi on sõnadena („laienev",
-    // „koonduv") raskesti tabatavad, kujuna hetkega selged. Mõiste kordub
-    // hiljem nõgus- ja kumerpeegli juures.
-    figure: "oo-vihutuubid",
+    // Joonis katab teksti kaks kõige abstraktsemat kohta korraga: mudeli ja
+    // tegelikkuse vahe (vihk vs kiir) ning kolm vihutüüpi. Mõlemad on
+    // sõnadena raskesti tabatavad, kujuna hetkega selged; vihutüübi mõiste
+    // kordub hiljem nõgus- ja kumerpeegli juures.
+    figure: "oo-vihk-ja-tuubid",
     title: "Vihk, kiir ja optiline keskkond",
     body: [
       "Valgusvihk on valguse joa see osa, mis kuhugi levib: taskulambi koonus udus, päikesekiirte kimp pilvede vahelt. Valguskiir on selle joonise MUDEL – joon, mille sihis valgus levib. Päris elus ühte üksikut kiirt ei ole, ta on meie abijoon.",

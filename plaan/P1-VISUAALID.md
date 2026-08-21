@@ -35,11 +35,14 @@ Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 
 - [x] **Kolm vihutüüpi kõrvuti** – hajuv / paralleelne / koonduv, kolm
       noolekimpu. Odavaim võit kogu plokis; mõiste kordub hiljem nõgus- ja
-      kumerpeegli juures. (Tehtud: `ThreeBeamTypesFigure`, võti
-      `oo-vihutuubid`, theory-1 küljes.)
-- [ ] **Vihk vs kiir** – vasakul päris valgusjuga koonusena, paremal mudel
+      kumerpeegli juures. (Tehtud: `ThreeBeamTypesFigure`, nüüd osana
+      võtmest `oo-vihk-ja-tuubid`, theory-1 küljes.)
+- [x] **Vihk vs kiir** – vasakul päris valgusjuga koonusena, paremal mudel
       ühe noolega joonena. Tekst ütleb „päris elus ühte üksikut kiirt ei ole" –
       see mudeli-ja-tegelikkuse vahe on täpselt see, mida hiljem segi aetakse.
+      (Tehtud: `RayVsBeamFigure` + `RayAndBeamTypesFigure`, mis paneb selle
+      kokku `ThreeBeamTypesFigure`'iga üheks joonisristikuks – moodul jääb
+      6 sammu juurde, teist theory-sammu ei lisatud.)
 
 ### 3. peeglikiri – puudu on mehhanism, mitte tulemus
 
@@ -125,5 +128,8 @@ osa, mis praegu jääb sõnadeks.
 `noguspeegel`, `noguspeegli-rakendused` – kõigil on teooriasammul joonis
 olemas; ülal loetletu on täiendus, mitte parandus.
 
-Joonist EI OLE üldse: `valgusallikad`, `valguse-sirgjooneline-levimine`,
-`peegeldumisseadus/theory-1`.
+Joonist EI OLE üldse: `valgusallikad`, `peegeldumisseadus/theory-1`.
+
+`valguse-sirgjooneline-levimine` on nüüd teooriasammul kaetud:
+`RayVsBeamFigure` (vihk vs kiir) ja `ThreeBeamTypesFigure` (kolm vihutüüpi)
+koos ühe joonisena `RayAndBeamTypesFigure` kaudu.

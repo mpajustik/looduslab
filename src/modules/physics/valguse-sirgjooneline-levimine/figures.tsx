@@ -324,3 +324,162 @@ export function ThreeBeamTypesFigure() {
     </figure>
   );
 }
+
+// ---------------------------------------------------------------------------
+// oo-vihk-vs-kiir – teooria (theory-1)
+// ---------------------------------------------------------------------------
+
+/**
+ * Vihk vs kiir kõrvuti: vasakul päris valgusjuga (koonusena laienev udu
+ * sees), paremal sama asi mudelina – üks nooleline joon.
+ *
+ * Tekst ütleb „päris elus ühte üksikut kiirt ei ole, ta on meie abijoon" –
+ * see on täpselt see mudeli-ja-tegelikkuse vahe, mis hiljem väljumispiletil
+ * (exit-1 „kiir on abijoon, mitte asi") uuesti küsitakse. Vasak paneel
+ * näitab udust valgusjuga (palju hägusaid kihte), parem paneel üht selget
+ * noolt – kontrast peab olema silmaga hetkega loetav, mitte ainult
+ * pealkirjast.
+ */
+
+const RAY_VIEW = { width: 320, height: 190 };
+const RAY_PANEL = { width: 130, gap: 30, top: 30, height: 110 };
+
+function rayPanelLeft(index: number): number {
+  const total = 2 * RAY_PANEL.width + RAY_PANEL.gap;
+  return (RAY_VIEW.width - total) / 2 + index * (RAY_PANEL.width + RAY_PANEL.gap);
+}
+
+export function RayVsBeamFigure() {
+  const left0 = rayPanelLeft(0);
+  const left1 = rayPanelLeft(1);
+  const midY = RAY_PANEL.top + RAY_PANEL.height / 2;
+  const rayArrowId = "oo-arrow-ray";
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${RAY_VIEW.width} ${RAY_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: kaks paneeli kõrvuti. Vasakul on päris valgusjuga – taskulambist laieneb koonusena udune valgusvihk. Paremal on sama asi mudelina: üks sirge joon noolega, mis näitab ainult levimise sihti."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <defs>
+          <marker
+            id={rayArrowId}
+            viewBox="0 0 10 10"
+            refX="5"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" className="fill-brand" />
+          </marker>
+        </defs>
+
+        {/* Vasak paneel: päris vihk, udune koonus mitmest kihist. */}
+        <rect
+          x={left0}
+          y={RAY_PANEL.top}
+          width={RAY_PANEL.width}
+          height={RAY_PANEL.height}
+          rx={10}
+          className="fill-white stroke-line"
+          strokeWidth={1.5}
+        />
+        <g className="fill-teacher opacity-30">
+          <polygon
+            points={`${left0 + 14},${midY} ${left0 + RAY_PANEL.width - 10},${midY - 34} ${left0 + RAY_PANEL.width - 10},${midY + 34}`}
+          />
+        </g>
+        <g className="fill-teacher opacity-50">
+          <polygon
+            points={`${left0 + 14},${midY} ${left0 + RAY_PANEL.width - 10},${midY - 20} ${left0 + RAY_PANEL.width - 10},${midY + 20}`}
+          />
+        </g>
+        <g className="fill-teacher">
+          <polygon
+            points={`${left0 + 14},${midY} ${left0 + RAY_PANEL.width - 10},${midY - 8} ${left0 + RAY_PANEL.width - 10},${midY + 8}`}
+          />
+        </g>
+        <circle cx={left0 + 14} cy={midY} r={5} className="fill-ink" />
+        <text
+          x={left0 + RAY_PANEL.width / 2}
+          y={RAY_PANEL.top - 10}
+          textAnchor="middle"
+          className="fill-ink"
+          fontSize={13}
+          fontWeight={600}
+        >
+          vihk
+        </text>
+        <text
+          x={left0 + RAY_PANEL.width / 2}
+          y={RAY_PANEL.top + RAY_PANEL.height + 18}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={12}
+        >
+          päris valgusjuga
+        </text>
+
+        {/* Parem paneel: mudel, üks selge nooleline joon. */}
+        <rect
+          x={left1}
+          y={RAY_PANEL.top}
+          width={RAY_PANEL.width}
+          height={RAY_PANEL.height}
+          rx={10}
+          className="fill-white stroke-line"
+          strokeWidth={1.5}
+        />
+        <path
+          d={`M ${left1 + 14} ${midY} L ${left1 + RAY_PANEL.width / 2} ${midY} L ${left1 + RAY_PANEL.width - 14} ${midY}`}
+          className="fill-none stroke-brand"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          markerMid={`url(#${rayArrowId})`}
+        />
+        <circle cx={left1 + 14} cy={midY} r={4} className="fill-ink" />
+        <text
+          x={left1 + RAY_PANEL.width / 2}
+          y={RAY_PANEL.top - 10}
+          textAnchor="middle"
+          className="fill-ink"
+          fontSize={13}
+          fontWeight={600}
+        >
+          kiir
+        </text>
+        <text
+          x={left1 + RAY_PANEL.width / 2}
+          y={RAY_PANEL.top + RAY_PANEL.height + 18}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={12}
+        >
+          mudel: üks joon
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Valgusvihk on päris valgusjuga. Valguskiir on selle mudel – üks joon,
+        mis näitab ainult levimise sihti. Päris elus ühte üksikut kiirt ei
+        ole.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: kaks joonist üksteise all, sest tekst kannab korraga kahte
+ * abstraktset ideed (mudel vs tegelikkus, kolm vihutüüpi) ja moodul jääb
+ * väikeseks (3–6 sammu, sisu/MALL-moodul.md) – teist theory-sammu ei lisata.
+ */
+export function RayAndBeamTypesFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <RayVsBeamFigure />
+      <ThreeBeamTypesFigure />
+    </div>
+  );
+}

@@ -288,9 +288,9 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.SunSpotsUnderTreeFigure,
       })),
     ),
-    "oo-vihutuubid": lazy(() =>
+    "oo-vihk-ja-tuubid": lazy(() =>
       import("./physics/valguse-sirgjooneline-levimine/figures").then((module) => ({
-        default: module.ThreeBeamTypesFigure,
+        default: module.RayAndBeamTypesFigure,
       })),
     ),
   },
