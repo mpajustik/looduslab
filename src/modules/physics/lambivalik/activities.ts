@@ -501,6 +501,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-3",
         prompt: `Pakendil on kirjas ${formatNumber(DAYLIGHT_KELVIN)} K. Mida see tähendab?`,
+        hints: [
+          "Kelvin ei mõõda, KUI PALJU valgust lamp annab (see on luumenite töö) ega tema pinna temperatuuri – ta ütleb, milline VÄRV valgusel on.",
+        ],
         options: [
           {
             id: "lamp-lahebki-kuumaks",
@@ -528,6 +531,9 @@ const steps: Step[] = [
         prompt: `Mis sobib ${formatNumber(
           BEDROOM.areaM2,
         )} m² magamistoa laevalgustiks?`,
+        hints: [
+          "Magamistuba on puhkamise koht: sobib soe, hajutatud valgus õiges koguses – mitte kõige heledam ega kõige sinakam variant.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -578,6 +584,7 @@ const steps: Step[] = [
         id: "exit-1",
         prompt:
           "Millist arvu vaatad pakendil, kui tahad teada, kui palju valgust lamp annab?",
+        hints: ["Vatt näitab kulu, kelvin näitab värvi – kumbki neist ei ole valguse KOGUS."],
         options: [
           {
             id: "vatid",

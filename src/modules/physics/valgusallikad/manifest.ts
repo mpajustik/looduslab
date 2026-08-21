@@ -35,6 +35,9 @@ export const manifest = defineModule({
   // arvküsimuse õige vastus ja ühik muutusid (question_id-d jäid samaks,
   // CLAUDE.md reegel 11) – see on lepingu järgi major, sest vana `is_correct`
   // ei ole uuega võrreldav. Klassides moodulit veel kasutatud ei olnud.
-  version: "2.0.0",
+  //
+  // 2.0.1: neljale küsimusele lisati vihje, mis seni puudus (explore-1,
+  // practice-2, exit-1, exit-2) – sõnastus, mitte õige vastus, seega patch.
+  version: "2.0.1",
   status: "active",
 });

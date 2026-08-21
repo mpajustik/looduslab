@@ -159,6 +159,9 @@ const steps: Step[] = [
         id: "explore-1",
         prompt:
           "Pane päevavalgustoru (1,2 m) 2 m kaugusele. Kas ta on punktvalgusallikas?",
+        hints: [
+          `Jaga kaugus toru mõõtmega: 2 / 1,2. Kas tulemus on vähemalt ${POINT_SOURCE_MIN_RATIO}?`,
+        ],
         options: [
           {
             id: "ei",
@@ -274,6 +277,10 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-2",
         prompt: "Millised neist on külmad valgusallikad?",
+        hints: [
+          "„Külm“ ei tähenda tuhmi valgust – see ütleb, KUIDAS valgus tekib: kas keha peab kuumaks minema (soojuslik) või mitte (külm).",
+          "Kas kirjas olevad allikad hõõguvad kuumusest (nagu leek või hõõgniit) või kiirgavad valgust ilma selleta?",
+        ],
         multiple: true,
         options: [
           { id: "led", text: "LED-lamp", correct: true },
@@ -357,6 +364,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Punktvalgusallikas on allikas, mis…",
+        hints: ["Liik ei sõltu allika päris suurusest, vaid suhtest kaugusega."],
         options: [
           {
             id: "nurk",
@@ -382,6 +390,7 @@ const steps: Step[] = [
         id: "exit-2",
         prompt:
           "Tänavalambi pirni läbimõõt on 0,06 m ja lamp ripub 12 m kõrgusel. Mitu korda on kaugus suurem kui pirn?",
+        hints: ["Jaga kaugus läbimõõduga: 12 / 0,06."],
         unit: "korda",
         tolerance: { mode: "percent", value: 5 },
         answer: EXIT_LAMP_RATIO,

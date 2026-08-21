@@ -213,6 +213,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "explore-3",
         prompt: `Jäta kamber ${comma(TREE_WANTED_DEPTH_M, 1)} m peale ja keera augu läbimõõt ${comma(SLIDERS.holeMm.min, 1)} mm-lt ${comma(SLIDERS.holeMm.max, 0)} mm-ni. Mis kujutisega juhtub?`,
+        hints: [
+          "Suurem auk laseb läbi rohkem valguskiiri korraga – proovi ja vaata, kas kujutise SUURUS sellest muutub.",
+        ],
         options: [
           {
             id: "suurem",
@@ -268,6 +271,9 @@ const steps: Step[] = [
         id: "practice-2",
         prompt:
           "Miks on puu all päikeselaigud ümmargused, kuigi lehtede vahed on sakilised?",
+        hints: [
+          "Iga väike vahe lehtede vahel toimib nagu nõelauk – ja nõelaugu kujutis kannab ALLIKA kuju, mitte augu oma.",
+        ],
         options: [
           {
             id: "kujutis",
@@ -307,6 +313,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Millistel juhtudel EI levi valgus sirgjooneliselt?",
+        hints: [
+          "Sirge tee eeldab, et keskkond on kogu tee ühtlane – otsi kohti, kus tihedus (õhu kuumus, vee soolsus) järsku muutub.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -347,6 +356,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Valguskiir on…",
+        hints: ["Kiirt ei saa ette näidata ega kätte võtta – ta on joonisel, mitte päriselt."],
         options: [
           {
             id: "abijoon",
@@ -371,6 +381,7 @@ const steps: Step[] = [
         kind: "numeric",
         id: "exit-2",
         prompt: `${comma(HOUSE.heightM, 0)} m kõrge maja on ${comma(HOUSE.distanceM, 0)} m kaugusel, kamber on ${comma(HOUSE_DEPTH_M, 2)} m sügav. Kui kõrge on kujutis?`,
+        hints: ["Korruta eseme kõrgus kambri sügavusega ja jaga kaugusega."],
         unit: "m",
         tolerance: { mode: "percent", value: 5 },
         answer: HOUSE_IMAGE_M,
