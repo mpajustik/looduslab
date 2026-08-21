@@ -89,6 +89,10 @@ export const moduleRegistry: Record<string, ModuleLoader> = {
     manifest: (await import("./physics/helkur/manifest")).manifest,
     activities: (await import("./physics/helkur/activities")).activities,
   }),
+  "physics.kuu-faasid": async () => ({
+    manifest: (await import("./physics/kuu-faasid/manifest")).manifest,
+    activities: (await import("./physics/kuu-faasid/activities")).activities,
+  }),
   // `import()` peab olema kirjas TÄISTEENA – muutujaga tee (`./physics/${slug}/…`)
   // jätaks Vite'ile arvamise, mida bundle'isse panna.
 };
@@ -189,6 +193,11 @@ export const moduleSimulations: Record<
   ),
   "physics.helkur": lazy(() =>
     import("./physics/helkur/Simulation").then((module) => ({
+      default: module.Simulation,
+    })),
+  ),
+  "physics.kuu-faasid": lazy(() =>
+    import("./physics/kuu-faasid/Simulation").then((module) => ({
       default: module.Simulation,
     })),
   ),
@@ -445,6 +454,23 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     "hl-kolm-pinda": lazy(() =>
       import("./physics/helkur/figures").then((module) => ({
         default: module.ThreeSurfacesFigure,
+      })),
+    ),
+  },
+  "physics.kuu-faasid": {
+    "kf-kolm-ohtut": lazy(() =>
+      import("./physics/kuu-faasid/figures").then((module) => ({
+        default: module.ThreeEveningsFigure,
+      })),
+    ),
+    "kf-valgustatud-pool": lazy(() =>
+      import("./physics/kuu-faasid/figures").then((module) => ({
+        default: module.LitHalfFigure,
+      })),
+    ),
+    "kf-kaks-sirpi": lazy(() =>
+      import("./physics/kuu-faasid/figures").then((module) => ({
+        default: module.TwoCrescentsFigure,
       })),
     ),
   },

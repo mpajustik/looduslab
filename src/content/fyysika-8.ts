@@ -31,6 +31,10 @@ export const course = defineCourse({
         "physics.valguse-sirgjooneline-levimine",
         "physics.vari-ja-poolvari",
         "physics.varjutused",
+        // Kuu faasid tuleb PÄRAST varjutusi (teacher.ts „whenInLesson"):
+        // faasi ja varjutuse eristamine on lihtsam, kui varjutus on äsja
+        // läbi võetud – siis on „Maa vari" konkreetne asi, millele osutada.
+        "physics.kuu-faasid",
         // Liitvalgus ja spekter on valgusallikate TEINE pool (P1-T1: liigitus
         // spektraalse koostise järgi) ja eeldus moodulile `esemete-varvus`.
         // Peegeldumist ta ei vaja, seega on ta jaotuskava järjekorras enne
