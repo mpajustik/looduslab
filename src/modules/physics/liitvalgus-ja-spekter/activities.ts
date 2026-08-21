@@ -203,6 +203,7 @@ const steps: Step[] = [
         id: "explore-3",
         prompt:
           "Vali valge LED-lamp. Ta paistab valge, aga vaata spektrit hoolega. Milline värv on peaaegu puudu?",
+        hints: ["Spekter näitab, milliseid laineid on VÄHE, mitte milliseid silm segunemisel näeb."],
         options: [
           { id: "sinine", text: "Sinine", correct: false },
           { id: "roheline", text: "Roheline", correct: false },
@@ -213,6 +214,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "explore-4",
         prompt: "Vali naatriumlamp. Kumb väide on õige?",
+        hints: ["Vaata spektrit: mitu riba seal on – üks kitsas triip või palju erinevaid?"],
         options: [
           {
             id: "liitvalgus",
@@ -309,6 +311,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Millised väited on õiged?",
+        hints: [
+          "Lihtvalgusel on spektris üks kitsas riba, liitvalgusel mitu – ereduse ega prismaga see ei muutu.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -348,6 +353,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Valge valgus on…",
+        hints: ["Mis juhtub, kui valge valgus läbib prismat – tuleb sealt üks värv välja või palju?"],
         options: [
           {
             id: "varvitu",

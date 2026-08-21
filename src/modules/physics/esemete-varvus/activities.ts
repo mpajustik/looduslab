@@ -158,6 +158,9 @@ const steps: Step[] = [
         id: "explore-2",
         prompt:
           "Jäta punane õun ja vaheta lamp roheliseks. Mis värvi õun nüüd paistab?",
+        hints: [
+          "Õun peegeldab tagasi ainult punast valgust – aga rohelisest lambist punast ei tule.",
+        ],
         options: [
           {
             id: "punane",
@@ -198,6 +201,9 @@ const steps: Step[] = [
         id: "explore-4",
         prompt:
           "Proovi valget paberit kõigi viie lambiga läbi. Mille järgi paberi värv käib?",
+        hints: [
+          "Valge pind peegeldab tagasi KÕIK värvid, mis peale langevad – ka siis, kui neid on ainult üks.",
+        ],
         options: [
           {
             id: "alati-valge",
@@ -292,6 +298,9 @@ const steps: Step[] = [
         kind: "choice",
         id: "practice-4",
         prompt: "Millised väited on õiged?",
+        hints: [
+          "Ese ei kiirga ise midagi – värv, mida me näeme, on see, mis ese tagasi peegeldab.",
+        ],
         multiple: true,
         shuffle: true,
         options: [
@@ -335,6 +344,7 @@ const steps: Step[] = [
         kind: "choice",
         id: "exit-1",
         prompt: "Miks paistab must särk must?",
+        hints: ["Mis juhtub valgusega, mis musta pinnale langeb – kas ta tuleb tagasi?"],
         options: [
           {
             id: "kiirgab-musta",
