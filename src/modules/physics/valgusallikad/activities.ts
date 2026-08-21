@@ -102,6 +102,7 @@ const steps: Step[] = [
     type: "theory",
     id: "theory-1",
     title: "Kaks viisi valgusallikaid liigitada",
+    figure: "va-liigid",
     body: [
       "Valgusallikas on keha, mis ise kiirgab valgust. Kuu, helkur ja peegel EI ole valgusallikad – nad peegeldavad Päikese või lambi valgust.",
       "Spektraalse koostise järgi: soojuslikud allikad kiirgavad valgust sellepärast, et nad on kuumad (üle umbes 600 °C) – Päike, tähed, küünlaleek, hõõglamp, tuli. Mida kuumem on keha, seda sinakam on tema valgus. Külmad allikad kiirgavad ilma hõõguma minemata: LED, päevavalguslamp, telefoniekraan, jaaniuss. „Külm“ ei tähenda siin valguse värvust ega seda, et lamp üldse ei soojene – see ütleb, KUIDAS valgus tekib.",

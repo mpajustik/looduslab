@@ -281,6 +281,11 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.NightStreetFigure,
       })),
     ),
+    "va-liigid": lazy(() =>
+      import("./physics/valgusallikad/figures").then((module) => ({
+        default: module.SourceKindsFigure,
+      })),
+    ),
   },
   "physics.valguse-sirgjooneline-levimine": {
     "oo-puulaigud": lazy(() =>

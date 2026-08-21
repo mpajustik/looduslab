@@ -23,13 +23,14 @@ Kontrolli iga joonist 360 px laiuses ja projektorivaates (reegel 10).
 
 Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 
-- [ ] **Liigitusskeem** – 2×4 ikooniruudustik: soojuslikud (Päike, küünal,
+- [x] **Liigitusskeem** – 2×4 ikooniruudustik: soojuslikud (Päike, küünal,
       hõõglamp, tuli) vs külmad (LED, päevavalguslamp, ekraan, jaaniuss).
-      Praegu peab õpilane 8 näidet peast kahte kasti sorteerima.
-- [ ] **Punkt- vs laiendatud allikas** – sama lamp kaugelt ja lähedalt,
+      (Tehtud: `SourceClassificationFigure`.)
+- [x] **Punkt- vs laiendatud allikas** – sama lamp kaugelt ja lähedalt,
       suhtarv `kaugus ÷ mõõde` peale kirjutatud, piir `POINT_SOURCE_MIN_RATIO`
-      juures. Kõige abstraktsem mõiste plokis (liik sõltub vaatajast, mitte
-      lambist) ja tekstina peaaegu tabamatu.
+      juures. (Tehtud: `PointVsExtendedFigure`, mõlemad koos
+      `SourceKindsFigure` all, võti `va-liigid`, theory-1 küljes – moodul
+      jääb 6 sammu juurde, teist theory-sammu ei lisatud.)
 
 ### 2. valguse-sirgjooneline-levimine – teooriasammul pole ühtegi joonist
 
@@ -128,7 +129,11 @@ osa, mis praegu jääb sõnadeks.
 `noguspeegel`, `noguspeegli-rakendused` – kõigil on teooriasammul joonis
 olemas; ülal loetletu on täiendus, mitte parandus.
 
-Joonist EI OLE üldse: `valgusallikad`, `peegeldumisseadus/theory-1`.
+Joonist EI OLE üldse: `peegeldumisseadus/theory-1`.
+
+`valgusallikad` on nüüd teooriasammul kaetud: `SourceClassificationFigure`
+(liigitusskeem) ja `PointVsExtendedFigure` (punkt vs laiendatud) koos ühe
+joonisena `SourceKindsFigure` kaudu.
 
 `valguse-sirgjooneline-levimine` on nüüd teooriasammul kaetud:
 `RayVsBeamFigure` (vihk vs kiir) ja `ThreeBeamTypesFigure` (kolm vihutüüpi)
