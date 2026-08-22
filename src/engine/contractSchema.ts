@@ -378,6 +378,126 @@ const textQuestionSchema = z.strictObject({
 });
 
 // ---------------------------------------------------------------------------
+// Märgi joonisele
+// ---------------------------------------------------------------------------
+
+/**
+ * Koha ja nime id-d on IGAVESED (CLAUDE.md reegel 11): koha id salvestub
+ * vastuse võtmena ja nime id vastuse väärtusena
+ * (`AnswerPayload.label.picks`). Ümber nimetatud id muudab vana vastuse
+ * kontrollimatuks – sama lugu mis valikvastuse variandi id-l.
+ */
+const labelIdSchema = z
+  .string()
+  .regex(
+    /^[a-z0-9]+(-[a-z0-9]+)*$/,
+    "Koha või nime id kuju on nagu langev-kiir või s1",
+  );
+
+/**
+ * Üks koht joonisel.
+ *
+ * `marker` on number, mille JOONIS ise selle koha juurde joonistab (①, ②).
+ * Rakendus koordinaate ei tea: kus number joonisel asub, teab ainult mooduli
+ * enda figures.tsx – täpselt nagu joonise sildi puhul (src/engine/figures.ts).
+ * Nii ei pea ükski koordinaat elama kahes failis ja joonis mahub 360 px
+ * ekraanile nii, nagu autor ta joonistas (kasutaja otsus 2026-08-22).
+ */
+const labelSpotSchema = z.strictObject({
+  id: labelIdSchema,
+  /** Number joonisel. Skeem nõuab, et kohti oleks 1 … n ilma aukudeta. */
+  marker: z.number().int().positive(),
+  /** Selle koha õige nimi – viide `names`-loendi kirjele. */
+  answer: labelIdSchema,
+});
+
+/**
+ * Üks nimi valikuloendis. Nimesid tohib olla kohtadest ROHKEM – üleliigne nimi
+ * on eksitaja (nt „valguse kiirus"), mis ei kuulu ühegi koha juurde.
+ */
+const labelNameSchema = z.strictObject({
+  id: labelIdSchema,
+  text: nonEmpty("Nimi"),
+});
+
+/**
+ * „Märgi joonisele": joonisel on nummerdatud kohad ja õpilane seab igale
+ * kohale õige nime (plaan/LUHITOOD.md etapp A).
+ *
+ * Miks sildistamine, mitte vabakäejoonistus: vabalt joonistatud kiire õigsust
+ * ei saa checker deterministlikult otsustada (CLAUDE.md reegel 3). Õpieesmärk
+ * – „kas ta tunneb joonise osad ära" – saab sildistamisega täidetud ja on
+ * lõpuni kontrollitav.
+ *
+ * Loosimine sellele liigile EI kehti: sama joonis, samad kohad, sama nimede
+ * järjekord ka uuel katsel (plaan/LUHITOOD.md O2). `resolve.ts` laseb tundmatu
+ * liigi muutmata läbi – see lause on siin selleks, et keegi ei läheks talle
+ * hiljem „ühtluse mõttes" segamist lisama.
+ */
+const labelQuestionSchema = z
+  .strictObject({
+    kind: z.literal("label"),
+    id: questionIdSchema,
+    prompt: nonEmpty("Küsimus"),
+    hints: hintsSchema.optional(),
+    /**
+     * Siin on joonis KOHUSTUSLIK, erinevalt teistest liikidest: ilma jooniseta
+     * ei ole numbreid, mille juurde nime panna, ja küsimus oleks mõttetu.
+     */
+    figure: figureIdSchema,
+    spots: z.array(labelSpotSchema).min(2),
+    names: z.array(labelNameSchema).min(2),
+  })
+  .superRefine((question, ctx) => {
+    for (const id of duplicates(question.spots.map((spot) => spot.id))) {
+      ctx.addIssue({ code: "custom", message: `Koha id "${id}" kordub` });
+    }
+    for (const id of duplicates(question.names.map((name) => name.id))) {
+      ctx.addIssue({ code: "custom", message: `Nime id "${id}" kordub` });
+    }
+    // Ka NÄHTAV tekst peab olema ainus omataoline. Kaks eri id-ga, aga sama
+    // tekstiga nime annaks rippmenüüsse kaks ühesugust rida, millest üks on
+    // õige ja teine vale – õpilane ei saaks neid kuidagi eristada ja
+    // brauserist see välja ei paista (CodeRabbiti ülevaatuse leid 2026-08-22).
+    for (const text of duplicates(question.names.map((name) => name.text.trim()))) {
+      ctx.addIssue({ code: "custom", message: `Nimi "${text}" kordub` });
+    }
+
+    // Numbrid peavad olema 1 … n. Auk loendis (1, 2, 4) tähendaks, et joonisel
+    // on number, mille juurde ei käi ühtegi rippmenüüd – või vastupidi. Seda
+    // ei paistaks brauserist välja enne, kui õpilane selle ees istub.
+    const markers = [...question.spots.map((spot) => spot.marker)].sort((a, b) => a - b);
+    const expected = question.spots.map((_, index) => index + 1);
+    if (markers.join(",") !== expected.join(",")) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Kohtade numbrid peavad olema 1 … ${question.spots.length} ilma aukudeta, praegu on ${markers.join(", ")}`,
+      });
+    }
+
+    const nameIds = new Set(question.names.map((name) => name.id));
+    for (const spot of question.spots) {
+      // Olematule nimele osutav koht ei oleks KUNAGI õigesti vastatav: nime ei
+      // ole loendis, seega õpilane ei saaks teda validagi.
+      if (!nameIds.has(spot.answer)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Koha "${spot.id}" õige nimi "${spot.answer}" puudub nimede loendist`,
+        });
+      }
+    }
+
+    // Üks nimi ei tohi olla õige kahes kohas: siis oleks õigeid vastuseid
+    // rohkem kui üks ja checker peaks arvama, kumba autor mõtles.
+    for (const id of duplicates(question.spots.map((spot) => spot.answer))) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Nimi "${id}" on õige vastus mitmes kohas – iga koht saab täpselt ühe oma nime`,
+      });
+    }
+  });
+
+// ---------------------------------------------------------------------------
 // Mõõtetabel
 // ---------------------------------------------------------------------------
 
@@ -624,6 +744,7 @@ export const questionSchema = z.discriminatedUnion("kind", [
   choiceQuestionSchema,
   textQuestionSchema,
   tableQuestionSchema,
+  labelQuestionSchema,
 ]);
 
 // ---------------------------------------------------------------------------

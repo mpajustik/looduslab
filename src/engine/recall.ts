@@ -64,6 +64,22 @@ export function readableAnswerText(
     // vajab ta oma kuju, mitte kokkukleebitud teksti.
     case "table":
       return undefined;
+    case "label": {
+      if (answer.kind !== "label") return undefined;
+      const nameText = new Map(question.names.map((name) => [name.id, name.text]));
+      const parts: string[] = [];
+      for (const spot of [...question.spots].sort((a, b) => a.marker - b.marker)) {
+        const picked = answer.picks[spot.id];
+        // Nimetamata koht jääb reast välja, aga TUNDMATU nimi teeb terve
+        // vastuse kokkuviimatuks – sama reegel mis valikvastusel: parem mitte
+        // midagi kui pooleldi vale meeldetuletus.
+        if (picked === undefined) continue;
+        const text = nameText.get(picked);
+        if (text === undefined) return undefined;
+        parts.push(`${spot.marker} – ${text}`);
+      }
+      return parts.length > 0 ? parts.join(", ") : undefined;
+    }
   }
 }
 

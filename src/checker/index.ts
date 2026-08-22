@@ -1,6 +1,7 @@
 import type { AnswerPayload } from "../engine/answers";
 import type { Question } from "../engine/contract";
 import { checkChoiceAnswer } from "./choice";
+import { checkLabelAnswer } from "./label";
 import { checkNumericAnswer } from "./numeric";
 import { checkTableAnswer } from "./table";
 import { NOT_CHECKABLE, type CheckResult } from "./types";
@@ -35,6 +36,7 @@ export const questionCheckers: { [K in QuestionKind]: CheckerFor<K> } = {
   // õigsuse küsimus: selle eest hoolitseb TextInput, mitte checker.
   text: () => ({ correct: null, feedback: "Vastus on salvestatud." }),
   table: (question, answer) => checkTableAnswer(question, answer.rows),
+  label: (question, answer) => checkLabelAnswer(question, answer.picks),
 };
 
 export function checkAnswer(question: Question, answer: AnswerPayload): CheckResult {

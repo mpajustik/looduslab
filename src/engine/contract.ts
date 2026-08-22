@@ -26,6 +26,7 @@ export type NumericQuestion = Extract<Question, { kind: "numeric" }>;
 export type ChoiceQuestion = Extract<Question, { kind: "choice" }>;
 export type TextQuestion = Extract<Question, { kind: "text" }>;
 export type TableQuestion = Extract<Question, { kind: "table" }>;
+export type LabelQuestion = Extract<Question, { kind: "label" }>;
 export type ReviewCard = z.infer<typeof reviewCardSchema>;
 
 /** manifest.ts sissepääs – metaandmed, mida moodul endast räägib. */

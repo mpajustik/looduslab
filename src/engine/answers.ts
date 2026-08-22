@@ -37,10 +37,22 @@ type AnswerValue =
    * Mõõtetabel: iga rida on veeru võti → õpilase tipitud TEKST. Sama põhjus
    * mis `numeric.raw`-il – „30°" ja „30" peavad jõudma checkerini muutmata.
    */
-  | { kind: "table"; rows: TableRow[] };
+  | { kind: "table"; rows: TableRow[] }
+  /**
+   * Märgi joonisele: koha id → valitud nime id. Mõlemad on IGAVESED id-d, mitte
+   * ekraanil olev tekst – nii teab õpetaja koondvaade ka hiljem, mille õpilane
+   * kuhu pani, ka siis kui nime sõnastus vahepeal muutub (CLAUDE.md reegel 11).
+   *
+   * Vastamata koht puudub kirjest (mitte tühi sõne): „ei vastanud" ja „valis
+   * tühja nime" ei tohi salvestuses ühte moodi välja näha.
+   */
+  | { kind: "label"; picks: LabelPicks };
 
 /** Üks mõõtetabeli rida: veeru võti → tipitud tekst. */
 export type TableRow = Readonly<Record<string, string>>;
+
+/** Märgi joonisele: koha id → valitud nime id. */
+export type LabelPicks = Readonly<Record<string, string | undefined>>;
 
 /**
  * question_id → esitatud vastus. Ainult ESITATUD vastused – pooleli mustand

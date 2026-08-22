@@ -442,6 +442,13 @@ function isAnswerPayload(value: unknown): value is AnswerPayload {
             isRecord(row) && Object.values(row).every((cell) => typeof cell === "string"),
         )
       );
+    case "label":
+      // Koha id → nime id, mõlemad sõned. `undefined` väärtust siit ei tule:
+      // JSON-is teda ei ole ja vastamata koht lihtsalt puudub kirjest.
+      return (
+        isRecord(value.picks) &&
+        Object.values(value.picks).every((pick) => typeof pick === "string")
+      );
     default:
       return false;
   }

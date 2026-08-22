@@ -10,6 +10,7 @@ import { Button } from "../Button";
 import { ChoiceInput } from "./ChoiceInput";
 import { Feedback } from "./Feedback";
 import { Figure } from "./Figure";
+import { LabelInput } from "./LabelInput";
 import { NumericInput } from "./NumericInput";
 import { TableInput } from "./TableInput";
 import { TextInput } from "./TextInput";
@@ -86,11 +87,16 @@ export function QuestionCard({
    * nupu peale ja klaviatuuriga (või ekraanilugejaga) liikuja peaks sisestuse
    * uuesti üles otsima. Raadionupu fookustamine EI vali teda ära, seega on see
    * ohutu ka valikvastuse juures.
+   *
+   * `select` on loendis, sest „märgi joonisele" vastatakse rippmenüüdest
+   * (LabelInput) – ilma selleta jäi fookus just seal kadunud nupu peale
+   * (Codexi ülevaatuse leid 2026-08-22). Uue sisestuskomponendi lisamisel
+   * tuleb tema element siia kaasa võtta.
    */
   const cardRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!retrying) return;
-    cardRef.current?.querySelector<HTMLElement>("input, textarea")?.focus();
+    cardRef.current?.querySelector<HTMLElement>("input, textarea, select")?.focus();
   }, [retrying]);
 
   const handleAnswer = (questionId: string, payload: AnswerPayload) => {
@@ -197,6 +203,13 @@ export function QuestionCard({
         />
       ) : question.kind === "table" ? (
         <TableInput
+          question={question}
+          answer={openAnswer}
+          onAnswer={(payload) => handleAnswer(question.id, payload)}
+          labelledBy={promptId}
+        />
+      ) : question.kind === "label" ? (
+        <LabelInput
           question={question}
           answer={openAnswer}
           onAnswer={(payload) => handleAnswer(question.id, payload)}
