@@ -167,11 +167,18 @@ osa, mis praegu jääb sõnadeks.
 
 ## Madal prioriteet (ei pruugi vajalik olla)
 
-- **nurkpeegel** – 90° ja 0° erijuhud. Periskoobi joonis on juba
-  `practice-3`-s olemas, `TwoMirrorsFigure` katab α+β=θ ja pöörde 2θ hästi.
-- **peegeldumisseadus theory-1** – „kiir = joon + nool". Sisu kordub
-  moodulist `valguse-sirgjooneline-levimine`; kui punkt 2 saab tehtud, võib
-  siin piisata tekstist. Selle mooduli theory-2 ja theory-3 on kaetud.
+- [x] **nurkpeegel** – 90° ja 0° erijuhud. (Tehtud: `SpecialCasesFigure`,
+      mis paneb selle kokku `TwoMirrorsFigure`'iga võtme `np-kaks-peeglit`
+      alla komponendina `TwoMirrorsAndSpecialCasesFigure` – kaks väikest
+      paneeli kõrvuti: θ = 90° kasutab sama `traceCornerRay` mudelit mis
+      üldjuhtki, θ = 0° (periskoop) on käsitsi geomeetria, sest mudel ei
+      arvuta paralleelsete peeglite juhtu (vt model.ts kommentaar
+      `deviationDeg` juures). Version bumbitud 1.0.2.)
+- [x] **peegeldumisseadus theory-1** – „kiir = joon + nool". (Tehtud:
+      `RayIsLineAndArrowFigure`, võti `ps-kiir-joon-nool` – sama pikkusega
+      joon kaks korda, nool eri suunas, näitamaks et joon üksi suunda ei
+      ütle. Uus samm-eelne moodul, mistõttu key on uus, mitte olemasoleva
+      kombineerimine. Version bumbitud 2.0.2.)
 
 ---
 
@@ -183,7 +190,8 @@ osa, mis praegu jääb sõnadeks.
 `noguspeegel`, `noguspeegli-rakendused` – kõigil on teooriasammul joonis
 olemas; ülal loetletu on täiendus, mitte parandus.
 
-Joonist EI OLE üldse: `peegeldumisseadus/theory-1`.
+`peegeldumisseadus/theory-1` on nüüd kaetud: `RayIsLineAndArrowFigure`
+(„kiir = joon + nool"), võti `ps-kiir-joon-nool`.
 
 `valgusallikad` on nüüd teooriasammul kaetud: `SourceClassificationFigure`
 (liigitusskeem) ja `PointVsExtendedFigure` (punkt vs laiendatud) koos ühe
