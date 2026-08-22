@@ -1,5 +1,5 @@
 import { SPECTRUM_OFF_COLOUR, SPECTRUM_STOPS, bandColour } from "./display";
-import { VISIBLE_MAX_NM, VISIBLE_MIN_NM, litSegments } from "./model";
+import { LIGHT_SOURCES, VISIBLE_MAX_NM, VISIBLE_MIN_NM, litSegments } from "./model";
 
 /**
  * Mooduli joonised (src/engine/figures.ts).
@@ -12,7 +12,8 @@ import { VISIBLE_MAX_NM, VISIBLE_MIN_NM, litSegments } from "./model";
  * **Hooki joonis ei tohi vastust ette öelda.** `ls-tanavavalgusti` näitab
  * AINULT seda, ET vana lambi all paistavad kaks eri värvi autot ühesugused –
  * miks, seda ütlevad teooria ja simulatsioon. Teooria joonis
- * `ls-spekter-riba` TOHIB kõik välja öelda, sest seal on see juba õpitav sisu.
+ * `ls-spekter-ja-liht-liit` TOHIB kõik välja öelda, sest seal on see juba
+ * õpitav sisu.
  *
  * **Värv ei ole ainus info kandja** (docs/DISAINIJUHIS.md): igal ribal on nimi
  * peal, lainepikkuse skaala all ja iga joonise sisu on `aria-label`-is sõnadega
@@ -288,7 +289,7 @@ export function StreetLampFigure() {
 }
 
 // ---------------------------------------------------------------------------
-// ls-spekter-riba – teooria
+// SpectrumStripFigure – osa joonisest ls-spekter-ja-liht-liit (teooria)
 // ---------------------------------------------------------------------------
 
 const SPECTRUM_VIEW = { width: 380, height: 168 };
@@ -376,6 +377,82 @@ export function SpectrumStripFigure() {
         Päikesevalguse spekter: kõik seitse vikerkaarevärvi järjest, 380 nm-st 760 nm-ni.
       </figcaption>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// theory-1 lisajoonis: liitvalgus vs lihtvalgus kõrvuti
+// ---------------------------------------------------------------------------
+
+/** Laseri kiirgusvahemik mudelist – mooduli ainus lihtvalguse näide. */
+const LASER_EMITTED = LIGHT_SOURCES.find((source) => source.id === "laser")!.emitted[0];
+
+const COMPARE_VIEW = { width: 380, height: 148 };
+const COMPARE_BAR_HEIGHT = 34;
+const COMPARE_ROWS = [
+  {
+    label: "LIITVALGUS (päike)",
+    y: 20,
+    lit: [{ minNm: VISIBLE_MIN_NM, maxNm: VISIBLE_MAX_NM }],
+  },
+  {
+    label: "LIHTVALGUS (laser)",
+    y: 74,
+    lit: [LASER_EMITTED],
+  },
+] as const;
+
+/**
+ * Definitsiooni joonis: sama riba kõrvutades on kohe näha, et liitvalguses on
+ * palju värve ja lihtvalguses üksainus kitsas riba – teooriateksti punkt 2,
+ * mis muidu jääb ainult sõnadeks.
+ */
+export function SimpleVsCompositeFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${COMPARE_VIEW.width} ${COMPARE_VIEW.height}`}
+        role="img"
+        aria-label="Joonis kahest spektriribast üksteise all. Ülemine riba, liitvalgus ehk päike, on värviline algusest lõpuni – kõik vikerkaarevärvid. Alumine riba, lihtvalgus ehk laser, on tume ja selles on üksainus kitsas punane riba 650 nanomeetri juures. Kõigi all on ühine lainepikkuse skaala 380 nanomeetrist 760 nanomeetrini."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        {COMPARE_ROWS.map((row) => (
+          <g key={row.label}>
+            <text
+              x={BAR_LEFT}
+              y={row.y - 6}
+              textAnchor="start"
+              className="fill-ink"
+              fontSize={11}
+              fontWeight={600}
+            >
+              {row.label}
+            </text>
+            <SpectrumBar y={row.y} height={COMPARE_BAR_HEIGHT} lit={row.lit} />
+          </g>
+        ))}
+        <WavelengthAxis y={COMPARE_ROWS[1].y + COMPARE_BAR_HEIGHT + 8} />
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Liitvalguses (päike) on korraga palju värve, lihtvalguses (laser) ainult üks kitsas riba.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: definitsiooni joonis liht- vs liitvalgusest ja selle all
+ * täispikk päikesevalguse spekter koos nähtamatute otstega – tekst kannab
+ * korraga kahte ideed (mis vahe on liht- ja liitvalgusel; mis on täpselt
+ * nähtava ala piirid) ja moodul jääb 6 sammu juurde, teist theory-sammu ei
+ * lisata (sama muster mis `valgusallikad/SourceKindsFigure`).
+ */
+export function SpectrumAndCompositeFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <SimpleVsCompositeFigure />
+      <SpectrumStripFigure />
+    </div>
   );
 }
 

@@ -42,6 +42,10 @@ export const manifest = defineModule({
   // 1.0.1: neljale küsimusele lisati vihje, mis seni puudus (explore-3,
   // explore-4, practice-4, exit-1) – sõnastus, mitte õige vastus, seega
   // patch.
-  version: "1.0.1",
+  //
+  // 1.0.2: theory-1 joonis vahetati liht- vs liitvalguse võrdlusjoonise
+  // vastu (endine päikesevalguse spekter on nüüd selle all) – visuaal,
+  // seega patch.
+  version: "1.0.2",
   status: "active",
 });

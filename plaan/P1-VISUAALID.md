@@ -99,9 +99,14 @@ Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 Igal neist on joonis juba olemas – lisatav joonis katab teooriateksti selle
 osa, mis praegu jääb sõnadeks.
 
-- [ ] **liitvalgus-ja-spekter** – liit- vs lihtvalgus kõrvuti: lai riba vs
+- [x] **liitvalgus-ja-spekter** – liit- vs lihtvalgus kõrvuti: lai riba vs
       üks kitsas joon 650 nm juures. Mooduli definitsioon ise on
       visualiseerimata (olemas: `SpectrumStripFigure`).
+      (Tehtud: `SimpleVsCompositeFigure`, mis paneb selle kokku
+      `SpectrumStripFigure`'iga võtme `ls-spekter-ja-liht-liit` alla
+      komponendina `SpectrumAndCompositeFigure` – moodul jääb 6 sammu
+      juurde, teist theory-sammu ei lisatud. Version bumbitud 1.0.2, sest
+      MOODULILEPING.md loeb visuaali muutuse patchiks.)
 - [ ] **lambivalik** – lambipakendi silt, kus kolm arvu (lm, W, K) peal
       märgitud. Kelvin on kaetud (`ThreeColoursFigure`), lumen ja vatt mitte –
       ja pakend ongi see päris asi, millest moodul räägib.

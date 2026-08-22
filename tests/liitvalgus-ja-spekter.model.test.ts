@@ -489,7 +489,7 @@ describe("activities", () => {
     }
     expect(figures).toEqual([
       "ls-tanavavalgusti",
-      "ls-spekter-riba",
+      "ls-spekter-ja-liht-liit",
       "ls-kolm-spektrit",
     ]);
   });

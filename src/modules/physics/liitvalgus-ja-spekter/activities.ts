@@ -121,7 +121,7 @@ const steps: Step[] = [
       `Lainepikkust mõõdetakse nanomeetrites (nm, miljardik meetrit). Nähtav valgus on ${VISIBLE_MIN_NM}–${VISIBLE_MAX_NM} nm; lühem on ultraviolett, pikem infrapunane – neid silm ei näe.`,
       "Värvide segamine guaššiga on hoopis teine asi. Seal segatakse värviAINEID, mis valgust ära neelavad; siin liidetakse VALGUSI. Sellepärast annab kollane + sinine värvipurgis rohelise, aga valgusvihkudena hoopis valkja tooni.",
     ],
-    figure: "ls-spekter-riba",
+    figure: "ls-spekter-ja-liht-liit",
   },
   {
     type: "predict",

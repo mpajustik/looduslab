@@ -346,9 +346,9 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.StreetLampFigure,
       })),
     ),
-    "ls-spekter-riba": lazy(() =>
+    "ls-spekter-ja-liht-liit": lazy(() =>
       import("./physics/liitvalgus-ja-spekter/figures").then((module) => ({
-        default: module.SpectrumStripFigure,
+        default: module.SpectrumAndCompositeFigure,
       })),
     ),
     "ls-kolm-spektrit": lazy(() =>
