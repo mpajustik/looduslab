@@ -40,7 +40,7 @@ const LED_1M_RATIO = distanceToSizeRatio(
  * (display.ts nihutab näidiku näitu piiri lähedal sildist eemale, aga see
  * mudel ei puuduta – siin on oht lihtsalt see, et ülesanne näeks ühel
  * variandil välja nagu piirijuht, teisel selgelt mitte). Kõik neli jäävad
- * alla 50, seega margin on lai.
+ * kuni 50-ni (10 võrra alla piiri), seega margin on lai.
  */
 const PRACTICE_1_VARIANTS = [
   { id: "d4", sizeM: 0.08, distanceM: 4 },
