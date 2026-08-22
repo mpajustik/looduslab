@@ -96,6 +96,36 @@ function along(origin: Point, direction: Point, distance: number): Point {
   };
 }
 
+/**
+ * Kui kaugele tohib `origin`-ist `direction` suunas minna, enne kui väljutakse
+ * vaateraamist (`margin` px puhvriga) – väiksem kui `desiredDistance`, kui
+ * see viiks joonise servast välja, muidu `desiredDistance` ise.
+ *
+ * Vajalik laiade kimpude jaoks (`WideBeamFigure`): äärmiste kiirte peegeldunud
+ * tee lahkub ilma selleta vaateraamist ja nooleots (`markerMid`) jääb
+ * nähtamatuks (CodeRabbiti leid).
+ */
+function clipDistance(
+  origin: Point,
+  direction: Point,
+  desiredDistance: number,
+  view: { width: number; height: number },
+  margin: number,
+): number {
+  let maxDistance = desiredDistance;
+  if (direction.x > 0) {
+    maxDistance = Math.min(maxDistance, (view.width - margin - origin.x) / direction.x);
+  } else if (direction.x < 0) {
+    maxDistance = Math.min(maxDistance, (margin - origin.x) / direction.x);
+  }
+  if (direction.y > 0) {
+    maxDistance = Math.min(maxDistance, (view.height - margin - origin.y) / direction.y);
+  } else if (direction.y < 0) {
+    maxDistance = Math.min(maxDistance, (margin - origin.y) / direction.y);
+  }
+  return Math.max(0, maxDistance);
+}
+
 /** Kahe suuna vaheline poolitaja – nurgasilt läheb kaare keskele. */
 function bisector(a: Point, b: Point): Point {
   const x = a.x + b.x;
@@ -672,6 +702,127 @@ export function NormalFigure() {
         peegeldumisnurk β.
       </figcaption>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// kp-ristsirge – teooria (terve kimp, mitte üks kiir)
+// ---------------------------------------------------------------------------
+
+const WIDE_VIEW = { width: 360, height: 210 };
+const WIDE_VERTEX_X = 236;
+const WIDE_AXIS_Y = 108;
+const WIDE_REFLECTED_LENGTH = 150;
+/** Kiirte arv üle kogu peegli laiuse – paaritu, et üks kiir jääks peateljele. */
+const WIDE_RAY_COUNT = 7;
+
+/**
+ * Kimbu kõrgused peaaegu kogu peegli poolkõrguse ulatuses (0,85 · poolkõrgus).
+ *
+ * `NormalFigure` ja `ThreeRaysFigure` hoiavad kiired teadlikult turvavööndis
+ * (`SAFE_HEIGHT_RATIO`), et pikenduste lõikepunkt näeks välja ÜKS punkt. Siin
+ * ei joonistata pikendusi ega väideta lõikumist – ainult SEDA, et kogu kimp
+ * peegeldub laiali, mitte üks kiir –, seega tohib kõrgus ulatuda üle
+ * turvavööndi, ikka mudeli enda lubatud vahemikku (`MAX_RAY_HEIGHT_RATIO`).
+ */
+const WIDE_RAY_HEIGHTS_M = Array.from({ length: WIDE_RAY_COUNT }, (_, index) => {
+  const t = index / (WIDE_RAY_COUNT - 1) - 0.5;
+  return t * 2 * MIRROR_HALF_HEIGHT_M * 0.85;
+});
+
+/**
+ * „Kogu peegel, mitte üks kiir": lai paralleelne kimp hajumas.
+ *
+ * `NormalFigure` seletab MEHHANISMI (üks kiir, α = β, näiline fookus) – aga
+ * kumerpeegli enda IDEE on, et see kehtib KOGU peegli kohta korraga ja tulemus
+ * on kimp, mis läheb laiali, mitte koondub. Ilma selle joonise TERVIKPILDITA
+ * jääb „hajutav peegel" ainult sõnaks.
+ *
+ * Pikendusi siin TEADLIKULT ei ole (erinevalt `NormalFigure`-ist ja
+ * `ThreeRaysFigure`-ist): see joonis ei väida midagi näilise fookuse kohta,
+ * ainult seda, et kiired lähevad üksteisest eemale.
+ */
+export function WideBeamFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${WIDE_VIEW.width} ${WIDE_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: kumerpeegli kaar üle kogu oma laiuse ja katkendjoonega peatelg. Seitse paralleelset kiirt tuleb paremalt üle kogu peegli kõrguse ja peegelduvad kõik laiali – iga kiir läheb pärast peegeldumist üksteisest eemale, mitte kokku."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+
+        <PrincipalAxis axisY={WIDE_AXIS_Y} left={8} right={WIDE_VIEW.width - 8} />
+        <MirrorArc vertexX={WIDE_VERTEX_X} axisY={WIDE_AXIS_Y} />
+
+        {WIDE_RAY_HEIGHTS_M.map((heightM) => {
+          const hit = mirrorPoint(WIDE_VERTEX_X, WIDE_AXIS_Y, heightM);
+          const cross = virtualCrossPoint(WIDE_VERTEX_X, WIDE_AXIS_Y, heightM);
+          const reflectedDirection = unitVector(cross, hit);
+          const reflectedEnd = along(
+            hit,
+            reflectedDirection,
+            clipDistance(hit, reflectedDirection, WIDE_REFLECTED_LENGTH, WIDE_VIEW, 8),
+          );
+          return (
+            <g key={heightM}>
+              <path
+                d={rayPath({ x: WIDE_VIEW.width - 8, y: hit.y }, hit, 0.4)}
+                className="fill-none stroke-brand"
+                strokeWidth={2}
+                markerMid={`url(#${ARROW_INCIDENT})`}
+              />
+              <path
+                d={rayPath(hit, reflectedEnd, 0.55)}
+                className="fill-none stroke-info"
+                strokeWidth={2}
+                markerMid={`url(#${ARROW_REFLECTED})`}
+              />
+            </g>
+          );
+        })}
+
+        <text
+          x={WIDE_VIEW.width - 8}
+          y={WIDE_AXIS_Y - 10}
+          textAnchor="end"
+          className="fill-ink-soft"
+          fontSize={11}
+        >
+          peatelg
+        </text>
+        <text
+          x={WIDE_VIEW.width / 2}
+          y={WIDE_VIEW.height - 8}
+          textAnchor="middle"
+          className="fill-ink"
+          fontSize={11}
+          fontWeight={600}
+        >
+          terve kimp läheb laiali – hajutav peegel
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Iga kiir peegeldub omal kohal sama seaduse järgi, aga koos moodustavad
+        nad laiali mineva kimbu – seepärast on kumerpeegel HAJUTAV peegel.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: mehhanismi joonis (`NormalFigure`, üks kiir) ja selle all
+ * tervikpilt (`WideBeamFigure`, terve kimp) – kaks eri suurusjärku samast
+ * teooriatekstist ühe joonisena, moodul jääb 6 sammu juurde, teist
+ * theory-sammu ei lisata (sama muster mis mujal P1-s).
+ */
+export function NormalAndWideBeamFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <NormalFigure />
+      <WideBeamFigure />
+    </div>
   );
 }
 

@@ -416,7 +416,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "kp-ristsirge": lazy(() =>
       import("./physics/kumerpeegel/figures").then((module) => ({
-        default: module.NormalFigure,
+        default: module.NormalAndWideBeamFigure,
       })),
     ),
     "kp-kolm-kiirt": lazy(() =>
