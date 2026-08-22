@@ -79,7 +79,7 @@ kaarditüüpi VÕI vahele jäänud tüüp on nii `graph` kui midagi lisaks, ja
 - [x] Iga mooduli juures otsusta versiooninumber (moodulileping –
       esimene kord `variants` = major); kolme mooduli `version` väli
       manifest.ts-is tõuseb vastavalt
-- [ ] Pärast kõiki kolme: `/ulevaatus` (koond, ei ole riskisamm)
+- [x] Pärast kõiki kolme: `/ulevaatus` (koond, ei ole riskisamm)
 
 ## 2. Ülejäänud 15 tavamoodulit + peegeldumisseaduse 3. küsimus — Sonnet
 
