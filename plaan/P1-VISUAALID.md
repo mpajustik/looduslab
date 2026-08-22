@@ -129,22 +129,39 @@ osa, mis praegu jääb sõnadeks.
       theory-sammu ei lisatud. Ringid `mix-blend-mode: screen` tumedal
       taustal – valguste liitumine, mitte värviainete segunemine.
       Version bumbitud 1.0.2.)
-- [ ] **valgusfiltrid** – „filter ≠ prisma" kahe paneelina: filter (valge
+- [x] **valgusfiltrid** – „filter ≠ prisma" kahe paneelina: filter (valge
       sisse → punane välja, midagi ei lahutata) vs prisma (valge sisse →
       värvilehvik). Levinud segiajamine. Olemas: `SingleFilterFigure`.
-- [ ] **tasapeegli-kujutis** – „astud sammu lähemale → vahe väheneb kaks
+      (Tehtud: `FilterVsPrismFigure` → `SingleFilterAndPrismFigure`, võti
+      `vf-uks-filter`. CodeRabbit leidis kolme kanali noolte kattumise
+      [sama y=92 rida] – parandatud, iga kanal oma real. Version 1.0.2.)
+- [x] **tasapeegli-kujutis** – „astud sammu lähemale → vahe väheneb kaks
       sammu" enne/pärast paneelina. Klassikaline eksamiküsimus, praegu
       ainult tekst. Olemas: `VirtualImageFigure`.
-- [ ] **helkur** – kuubinurk (kolm peeglit, 3D-vaade). Tekst ütleb, et päris
+      (Tehtud: `StepCloserFigure` → `VirtualImageAndStepCloserFigure`, võti
+      `tp-nailine-kujutis`. Version 1.0.2.)
+- [x] **helkur** – kuubinurk (kolm peeglit, 3D-vaade). Tekst ütleb, et päris
       helkuris on kolm peeglit, mitte kaks, aga 3D-d on raske ette kujutada.
       Olemas: `ThreeSurfacesFigure` (väga tugev, katab kolme pinna kontrasti).
-- [ ] **kumerpeegel** – terve paralleelne kimp hajumas, mitte üks kiir.
+      (Tehtud: `CubeCornerFigure` → `ThreeSurfacesAndCubeCornerFigure`, võti
+      `hl-kolm-pinda`. CodeRabbit leidis, et väljuv kiir polnud sisenevast
+      suunast tuletatud – parandatud, nüüd täpselt vastassuunaline.
+      Version 1.0.2.)
+- [x] **kumerpeegel** – terve paralleelne kimp hajumas, mitte üks kiir.
       `NormalFigure` näitab mehhanismi (α = β, näiline fookus), aga mitte
       „hajutav peegel" tervikpilti.
-- [ ] **noguspeegel** – C ja F koos peateljel, et `f = R/2` oleks nähtav.
+      (Tehtud: `WideBeamFigure` → `NormalAndWideBeamFigure`, võti
+      `kp-ristsirge`. CodeRabbit leidis, et äärmiste kiirte peegeldunud
+      tee ja noolemarker ulatusid vaateraamist väljapoole – parandatud
+      `clipDistance` abifunktsiooniga. Version 1.0.2.)
+- [x] **noguspeegel** – C ja F koos peateljel, et `f = R/2` oleks nähtav.
       Olemas: `NormalFigure` (näitab C-d, aga mitte suhet).
-- [ ] **kuu-faasid** – 29,5 vs 27,3 päeva vahe: kaks Maa asendit orbiidil,
+      (Tehtud: `FocalRadiusFigure` → `NormalAndFocalRadiusFigure`, võti
+      `np-ristsirge`. Version 1.0.2.)
+- [x] **kuu-faasid** – 29,5 vs 27,3 päeva vahe: kaks Maa asendit orbiidil,
       2-päevane järelejõudmine. Keskmine prioriteet. Olemas: `LitHalfFigure`.
+      (Tehtud: `SynodicVsSiderealFigure` → `LitHalfAndSynodicFigure`, võti
+      `kf-valgustatud-pool`. Version 1.0.2.)
 
 ---
 
