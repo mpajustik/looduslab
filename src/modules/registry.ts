@@ -237,6 +237,11 @@ export const moduleSimulations: Record<
  */
 export const moduleFigures: Record<string, ModuleFigures> = {
   "physics.peegeldumisseadus": {
+    "ps-kiir-joon-nool": lazy(() =>
+      import("./physics/peegeldumisseadus/figures").then((module) => ({
+        default: module.RayIsLineAndArrowFigure,
+      })),
+    ),
     "peegeldumise-moisted": lazy(() =>
       import("./physics/peegeldumisseadus/figures").then((module) => ({
         default: module.ReflectionConceptFigure,

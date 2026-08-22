@@ -19,6 +19,7 @@ const steps: Step[] = [
       "Ühtlases keskkonnas – õhus, vees, klaasis – liigub valgus sirget joont mööda. Just seepärast tekib eseme taha terav vari.",
       "Valguskiir on joonisel see sirge joon koos noolega. Nool näitab, kuhupoole valgus liigub.",
     ],
+    figure: "ps-kiir-joon-nool",
   },
   {
     type: "theory",

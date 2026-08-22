@@ -335,6 +335,86 @@ export function ReflectionConceptFigure() {
   );
 }
 
+// --- Joonis: kiir = joon + nool (theory-1) ---------------------------------
+
+const RAY_LABEL_VIEW = { width: 360, height: 150 };
+const RAY_LABEL_LEFT = 30;
+const RAY_LABEL_RIGHT = 330;
+const RAY_LABEL_ROW_1_Y = 42;
+const RAY_LABEL_ROW_2_Y = 108;
+
+/**
+ * Kiir = joon + nool. Sama pikkusega joon on joonisel KAKS KORDA, ainult
+ * nool on erisuunaline – see teebki nähtavaks, et joon üksi valguse suunda ei
+ * ütle: sirge joon ise on sümmeetriline, aga valgus liigub ainult ÜHTE poole.
+ *
+ * Ühtegi mudelisuurust siin ei ole (vt CLAUDE.md reegel 1): rida ei kirjelda
+ * ühtki peegeldumist ega nurka, ta on puhas kokkulepe, kuidas joonisel
+ * suunda märgitakse. Sama kokkulepe kehtib kõigi selle mooduli ja mooduli
+ * `valguse-sirgjooneline-levimine` joonistel edaspidi.
+ */
+export function RayIsLineAndArrowFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${RAY_LABEL_VIEW.width} ${RAY_LABEL_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: kaks ühepikkust sirget joont üksteise all. Ülemisel joonel on keskel paremale osutav nool, mis näitab, et valgus liigub paremale. Alumisel on täpselt sama joon, aga keskel vasakule osutav nool, mis näitab, et valgus liigub vasakule."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+
+        <path
+          d={rayPath(
+            { x: RAY_LABEL_LEFT, y: RAY_LABEL_ROW_1_Y },
+            { x: RAY_LABEL_RIGHT, y: RAY_LABEL_ROW_1_Y },
+            0.5,
+          )}
+          className="fill-none stroke-brand"
+          strokeWidth={3}
+          strokeLinecap="round"
+          markerMid={`url(#${ARROW_INCIDENT})`}
+        />
+        <text
+          x={(RAY_LABEL_LEFT + RAY_LABEL_RIGHT) / 2}
+          y={RAY_LABEL_ROW_1_Y + 26}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={13}
+        >
+          valgus liigub paremale
+        </text>
+
+        <path
+          d={rayPath(
+            { x: RAY_LABEL_RIGHT, y: RAY_LABEL_ROW_2_Y },
+            { x: RAY_LABEL_LEFT, y: RAY_LABEL_ROW_2_Y },
+            0.5,
+          )}
+          className="fill-none stroke-brand"
+          strokeWidth={3}
+          strokeLinecap="round"
+          markerMid={`url(#${ARROW_INCIDENT})`}
+        />
+        <text
+          x={(RAY_LABEL_LEFT + RAY_LABEL_RIGHT) / 2}
+          y={RAY_LABEL_ROW_2_Y + 26}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={13}
+        >
+          sama joon, aga valgus liigub vasakule
+        </text>
+      </svg>
+
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Joon üksi ei ütle, kummale poole valgus liigub – seda näitab ainult
+        nool.
+      </figcaption>
+    </figure>
+  );
+}
+
 // --- Joonis: sile pind ja mattpind -----------------------------------------
 
 /**
