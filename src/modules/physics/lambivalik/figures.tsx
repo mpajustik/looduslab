@@ -204,6 +204,133 @@ function RoomPanel({
   );
 }
 
+// ---------------------------------------------------------------------------
+// theory-1 lisajoonis: üks pakend, kolm silti selle kohta, mida arv EI ütle
+// ---------------------------------------------------------------------------
+
+const LABEL_VIEW = { width: 380, height: 210 };
+
+/** Näidispakend on LED-lamp – sama, mille kohta hook-joonisel seisab „vastab 60 W lambile". */
+const LABEL_LAMP = LAMPS[LAMPS.length - 1];
+
+/** Kolm välja tõmmatud silti: iga arv saab oma noole ja kaks lauset – mida ta ÜTLEB ja mida ta EI ÜTLE. */
+type Callout = {
+  side: "left" | "right";
+  labelX: number;
+  labelY: number;
+  packageAnchorY: number;
+  heading: string;
+  lines: [string, string];
+};
+
+/**
+ * Ühel pakendil on kolm arvu; teooriatekst käsitleb neid kolme eraldi
+ * lõiguna. Siin on kõik kolm koos, samal pakendil, kust õpilane neid poes
+ * päriselt loeb – ja kohe kõrval, mida iga arv EI tähenda.
+ */
+export function PackageLabelFigure() {
+  const packageX = 148;
+  const packageY = 44;
+  const packageWidth = 84;
+  const packageHeight = 130;
+  const lamp = LABEL_LAMP;
+
+  const callouts: Callout[] = [
+    {
+      side: "right",
+      labelX: 372,
+      labelY: 34,
+      packageAnchorY: packageY + 74,
+      heading: `${formatNumber(lamp.lumensLm)} lm`,
+      lines: ["Kui palju VALGUST annab.", "See on heledus."],
+    },
+    {
+      side: "left",
+      labelX: 8,
+      labelY: 100,
+      packageAnchorY: packageY + 90,
+      heading: `${formatNumber(lamp.powerW)} W`,
+      lines: ["Kui palju ELEKTRIT kulub.", "EI ole heledus."],
+    },
+    {
+      side: "right",
+      labelX: 372,
+      labelY: 166,
+      packageAnchorY: packageY + 106,
+      heading: `${formatNumber(lamp.kelvin)} K`,
+      lines: ["Mis VÄRVI valgus on.", "EI ole lambi temperatuur ega heledus."],
+    },
+  ];
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${LABEL_VIEW.width} ${LABEL_VIEW.height}`}
+        role="img"
+        aria-label={`Joonis: üks lambipakend keskel, kolm silti selle ümber. ${formatNumber(
+          lamp.lumensLm,
+        )} luumenit ütleb, kui palju valgust lamp annab – see on heledus. ${formatNumber(
+          lamp.powerW,
+        )} vatti ütleb, kui palju elektrit lamp kulutab – see EI ole heledus. ${formatNumber(
+          lamp.kelvin,
+        )} kelvinit ütleb, mis värvi valgus on – see EI ole lambi temperatuur ega heledus.`}
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        {callouts.map((callout) => {
+          const packageAnchorX = callout.side === "left" ? packageX : packageX + packageWidth;
+          return (
+            <path
+              key={callout.heading}
+              d={`M ${packageAnchorX} ${callout.packageAnchorY} L ${callout.labelX} ${callout.labelY - 8}`}
+              fill="none"
+              stroke={OUTLINE_COLOUR}
+              strokeWidth={1.25}
+              strokeDasharray="3 3"
+            />
+          );
+        })}
+
+        <LampBox x={packageX} y={packageY} width={packageWidth} height={packageHeight} lamp={lamp} />
+
+        {callouts.map((callout) => {
+          const textAnchor = callout.side === "left" ? "start" : "end";
+          return (
+            <g key={`text-${callout.heading}`}>
+              <text x={callout.labelX} y={callout.labelY} textAnchor={textAnchor} className="fill-ink" fontSize={13} fontWeight={700}>
+                {callout.heading}
+              </text>
+              <text x={callout.labelX} y={callout.labelY + 16} textAnchor={textAnchor} className="fill-ink-soft" fontSize={11}>
+                {callout.lines[0]}
+              </text>
+              <text x={callout.labelX} y={callout.labelY + 31} textAnchor={textAnchor} className="fill-ink-soft" fontSize={11}>
+                {callout.lines[1]}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Kolm arvu samal pakendil – ainult üks neist ütleb, kui palju valgust lamp annab.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: pakendisilt (lm ja W selgitus, mida `ThreeColoursFigure`
+ * ei kata) ja selle all kolm tuba (K selgitus) – moodul jääb 6 sammu juurde,
+ * teist theory-sammu ei lisata (sama muster mis
+ * `liitvalgus-ja-spekter/SpectrumAndCompositeFigure`).
+ */
+export function PackageLabelAndThreeColoursFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <PackageLabelFigure />
+      <ThreeColoursFigure />
+    </div>
+  );
+}
+
 export function ThreeColoursFigure() {
   const panelWidth = 108;
   const panelHeight = 108;

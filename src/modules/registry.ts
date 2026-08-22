@@ -510,7 +510,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "lv-kolm-varvust": lazy(() =>
       import("./physics/lambivalik/figures").then((module) => ({
-        default: module.ThreeColoursFigure,
+        default: module.PackageLabelAndThreeColoursFigure,
       })),
     ),
   },
