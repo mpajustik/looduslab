@@ -19,96 +19,115 @@ export const course = defineCourse({
   title: "8. klassi füüsika",
   blocks: [
     // P1. Valgus ja valguse sirgjooneline levimine. Peegeldumine ja neeldumine
+    //
+    // Alagrupid vastavad ainekava kolmele õpitulemusele (P1-T1, P1-T2,
+    // P1-T3 – sisu/AINEKAVA-fyysika-8.md). Kuna T3 moodulid (esemete-varvus,
+    // valgusfiltrid) ei vaja peegeldumisseadust, said nad varem T2 peeglite
+    // VAHEL koha – õpilase jaoks tegi see aga T1/T2/T3 alagrupid puruks.
+    // Nüüd on nad tõstetud oma T3 alagruppi lõppu: eeldused (liitvalgus enne
+    // neid) jäävad täidetuks, aga alagrupid vastavad puhtalt ainekavale.
     {
       title: "Valgus ja peegeldumine",
-      // Järjekord tuleb sisu/JAOTUS-fyysika-8.md P1 tabelist: valgusallikad
-      // enne peegeldumisseadust – enne kui valgus millegi pealt tagasi
-      // põrkab, peab olema selge, kust ta üldse tuleb. Sirgjooneline levimine
-      // on nende vahel: kust valgus tuleb → kuidas ta liigub → mis juhtub, kui
-      // ta millegi pealt tagasi põrkab.
-      modules: [
-        "physics.valgusallikad",
-        // Lambivalik on valgusallikate rakendusmoodul ja käib oma mikromooduli
-        // JÄREL, täpselt nagu `helkur`, `varjutused` ja peeglite rakendused:
-        // uut liigitust siin ei tule, vaid „soojuslik / külm" ja „punkt- /
-        // laiendatud allikas" kantakse üle poeriiulile. Jaotuskava P1 tabelis
-        // (sisu/JAOTUS-fyysika-8.md) on ta samuti kohe `valgusallikad`-e järel.
-        "physics.lambivalik",
-        "physics.valguse-sirgjooneline-levimine",
-        "physics.vari-ja-poolvari",
-        "physics.varjutused",
-        // Kuu faasid tuleb PÄRAST varjutusi (teacher.ts „whenInLesson"):
-        // faasi ja varjutuse eristamine on lihtsam, kui varjutus on äsja
-        // läbi võetud – siis on „Maa vari" konkreetne asi, millele osutada.
-        "physics.kuu-faasid",
-        // Liitvalgus ja spekter on valgusallikate TEINE pool (P1-T1: liigitus
-        // spektraalse koostise järgi) ja eeldus moodulile `esemete-varvus`.
-        // Peegeldumist ta ei vaja, seega on ta jaotuskava järjekorras enne
-        // peegeldumisseadust (sisu/JAOTUS-fyysika-8.md P1 tabel).
-        "physics.liitvalgus-ja-spekter",
-        // Esemete värvus EELDAB liitvalgust ja spektrit („valges valguses on
-        // kõik värvid koos") ja tuleb seepärast kohe tema järel. Peegeldumise
-        // SEADUST (α = β) ta ei vaja: siin on kõik pinnad matid ja küsimus on
-        // „mis tuleb tagasi", mitte „mis nurga all".
-        "physics.esemete-varvus",
-        // Valgusfiltrid on P1-T3 KOLMAS tahk: liitvalgus ütles, millest valgus
-        // koosneb, esemete värvus vaatas, mis tuleb esemelt TAGASI – siin
-        // vaadatakse, mis läheb esemest LÄBI. Ta EELDAB mõlemat eelmist
-        // (sisu/JAOTUS-fyysika-8.md P1 tabel), peegeldumise seadust aga mitte.
-        "physics.valgusfiltrid",
-        "physics.peegeldumisseadus",
-        // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu moodul on
-        // selle seaduse tagajärg tasapeeglil, seega tuleb ta kohe tema järel.
-        "physics.tasapeegli-kujutis",
-        // Peeglikiri on tasapeegli kujutise rakendusmoodul ja käib oma
-        // mikromooduli JÄREL, nagu `lambivalik`, `helkur` ja peeglite
-        // rakendused. Uut peegeldumisfakti siin ei tule: teooria algab
-        // meeldetuletusega („kujutis on peeglist sama kaugel ja päripidine") ja
-        // kannab selle üle tähtedele – seega EELDAB ta moodulit
-        // `tasapeegli-kujutis` otsesõnu. Jaotuskava P1 tabelis
-        // (sisu/JAOTUS-fyysika-8.md) on ta samuti kohe tema järel.
-        "physics.peeglikiri",
-        // Nurkpeegel on peegeldumisseaduse teine rakendus: sama seadus, aga
-        // KAKS tasast peeglit järjest. Ta eeldab ainult `peegeldumisseadus`t
-        // (langemisnurk = peegeldumisnurk mõlemal peeglil) ja on siin
-        // jaotuskava järjekorras (sisu/JAOTUS-fyysika-8.md P1 tabel: kohe
-        // tasapeegli kujutise järel). Kõveraid peegleid ta ei vaja ega maini,
-        // seega tuleb ta enne neid – valgus liigub siin ikka tasastel pindadel.
-        "physics.nurkpeegel",
-        // Helkur on nurkpeegli rakendus ja käib oma mikromooduli JÄREL, täpselt
-        // nagu kumerpeegli ja nõguspeegli rakendused: uut seadust siin ei tule,
-        // teooria algab meeldetuletusega („kaks peeglit täisnurga all pööravad
-        // kiirt 180°") ja kannab selle üle päris asjasse. Kõveraid peegleid ta
-        // ei vaja ega maini, seega tuleb ta enne neid – ja jaotuskava P1 tabelis
-        // on ta samuti kohe nurkpeegli järel.
-        "physics.helkur",
-        // Nõguspeegel on peegeldumisseaduse KOLMAS aste: seadus ise (tasane
-        // pind) → tema tagajärg tasapeeglil → sama seadus kõveral pinnal, kus
-        // ristsirge tuleb kera keskpunktist. Ta EELDAB peegeldumisseadust,
-        // seega ei saa ta tulla enne teda.
-        "physics.noguspeegel",
-        // Kumerpeegel on sama kerapinna TEINE pool: nõguspeegel näitas kera
-        // sisemist pinda ja päris fookust, siin peegeldub valgus väljastpoolt
-        // ja fookus on näiline. Jaotuskava tabelis on ta nõguspeegli ees, aga
-        // moodul ISE eeldab teda: teooria, sammud ja kordamiskaardid võrdlevad
-        // kogu aeg nõguspeegliga („eelmine moodul"). Seepärast käib ta tema
-        // järel – kursusefail otsustab järjekorra, mitte tabeli rea number
-        // (docs/SISUHALDUS.md).
-        "physics.kumerpeegel",
-        // Rakendusmoodul käib oma mikromooduli JÄREL: uut seadust ega uut
-        // joonist siin ei tule, vaid kumerpeegli kiirte käik ja näiline fookus
-        // kantakse üle kolme päris seadmesse. Teooria algab lausega
-        // „meeldetuletus eelmisest moodulist", seega ta eeldab teda otsesõnu.
-        "physics.kumerpeegli-rakendused",
-        // Nõguspeegli rakendused käivad viimasena: teooria algab lausega
-        // „meeldetuletus eelmisest moodulist" ja võtab moodulist `noguspeegel`
-        // nii fookuse kui ka kiirte käigu. Jaotuskava tabelis (P1) on ta
-        // `noguspeegel`-i järel ja seda järjekorda ta ka vajab. Kumerpeegli
-        // rakenduste JÄREL on ta seepärast, et need kaks moodulit vastavad
-        // samale küsimusele („milleks seda peeglit kasutatakse") kahe eri
-        // peegli kohta – õpilane läbib nad paarina, hajutav enne, koondav
-        // pärast (docs/SISUHALDUS.md – järjekorra otsustab kursusefail).
-        "physics.noguspeegli-rakendused",
+      parts: [
+        {
+          title: "P1-T1 Valgusallikad ja spekter",
+          modules: [
+            "physics.valgusallikad",
+            // Lambivalik on valgusallikate rakendusmoodul ja käib oma
+            // mikromooduli JÄREL, täpselt nagu `helkur`, `varjutused` ja
+            // peeglite rakendused: uut liigitust siin ei tule, vaid
+            // „soojuslik / külm" ja „punkt- / laiendatud allikas" kantakse
+            // üle poeriiulile.
+            "physics.lambivalik",
+            // Liitvalgus ja spekter on valgusallikate TEINE pool (P1-T1:
+            // liigitus spektraalse koostise järgi) ja eeldus moodulile
+            // `esemete-varvus` (T3-s allpool). Peegeldumist ta ei vaja.
+            "physics.liitvalgus-ja-spekter",
+          ],
+        },
+        {
+          title: "P1-T2 Sirgjooneline levimine ja peegeldumine",
+          modules: [
+            "physics.valguse-sirgjooneline-levimine",
+            "physics.vari-ja-poolvari",
+            "physics.varjutused",
+            // Kuu faasid tuleb PÄRAST varjutusi (teacher.ts „whenInLesson"):
+            // faasi ja varjutuse eristamine on lihtsam, kui varjutus on äsja
+            // läbi võetud – siis on „Maa vari" konkreetne asi, millele
+            // osutada.
+            "physics.kuu-faasid",
+            "physics.peegeldumisseadus",
+            // Tasapeegli kujutis EELDAB peegeldumisseadust (α = β): kogu
+            // moodul on selle seaduse tagajärg tasapeeglil, seega tuleb ta
+            // kohe tema järel.
+            "physics.tasapeegli-kujutis",
+            // Peeglikiri on tasapeegli kujutise rakendusmoodul ja käib oma
+            // mikromooduli JÄREL, nagu `lambivalik`, `helkur` ja peeglite
+            // rakendused. Uut peegeldumisfakti siin ei tule: teooria algab
+            // meeldetuletusega („kujutis on peeglist sama kaugel ja
+            // päripidine") ja kannab selle üle tähtedele – seega EELDAB ta
+            // moodulit `tasapeegli-kujutis` otsesõnu.
+            "physics.peeglikiri",
+            // Nurkpeegel on peegeldumisseaduse teine rakendus: sama seadus,
+            // aga KAKS tasast peeglit järjest. Ta eeldab ainult
+            // `peegeldumisseadus`t (langemisnurk = peegeldumisnurk mõlemal
+            // peeglil). Kõveraid peegleid ta ei vaja ega maini, seega tuleb
+            // ta enne neid – valgus liigub siin ikka tasastel pindadel.
+            "physics.nurkpeegel",
+            // Helkur on nurkpeegli rakendus ja käib oma mikromooduli JÄREL,
+            // täpselt nagu kumerpeegli ja nõguspeegli rakendused: uut seadust
+            // siin ei tule, teooria algab meeldetuletusega („kaks peeglit
+            // täisnurga all pööravad kiirt 180°") ja kannab selle üle päris
+            // asjasse. Kõveraid peegleid ta ei vaja ega maini, seega tuleb ta
+            // enne neid.
+            "physics.helkur",
+            // Nõguspeegel on peegeldumisseaduse KOLMAS aste: seadus ise
+            // (tasane pind) → tema tagajärg tasapeeglil → sama seadus kõveral
+            // pinnal, kus ristsirge tuleb kera keskpunktist. Ta EELDAB
+            // peegeldumisseadust, seega ei saa ta tulla enne teda.
+            "physics.noguspeegel",
+            // Kumerpeegel on sama kerapinna TEINE pool: nõguspeegel näitas
+            // kera sisemist pinda ja päris fookust, siin peegeldub valgus
+            // väljastpoolt ja fookus on näiline. Jaotuskava tabelis on ta
+            // nõguspeegli ees, aga moodul ISE eeldab teda: teooria, sammud ja
+            // kordamiskaardid võrdlevad kogu aeg nõguspeegliga („eelmine
+            // moodul"). Seepärast käib ta tema järel – kursusefail otsustab
+            // järjekorra, mitte tabeli rea number (docs/SISUHALDUS.md).
+            "physics.kumerpeegel",
+            // Rakendusmoodul käib oma mikromooduli JÄREL: uut seadust ega uut
+            // joonist siin ei tule, vaid kumerpeegli kiirte käik ja näiline
+            // fookus kantakse üle kolme päris seadmesse. Teooria algab
+            // lausega „meeldetuletus eelmisest moodulist", seega ta eeldab
+            // teda otsesõnu.
+            "physics.kumerpeegli-rakendused",
+            // Nõguspeegli rakendused käivad viimasena: teooria algab lausega
+            // „meeldetuletus eelmisest moodulist" ja võtab moodulist
+            // `noguspeegel` nii fookuse kui ka kiirte käigu. Kumerpeegli
+            // rakenduste JÄREL on ta seepärast, et need kaks moodulit
+            // vastavad samale küsimusele („milleks seda peeglit kasutatakse")
+            // kahe eri peegli kohta – õpilane läbib nad paarina, hajutav
+            // enne, koondav pärast (docs/SISUHALDUS.md – järjekorra otsustab
+            // kursusefail).
+            "physics.noguspeegli-rakendused",
+          ],
+        },
+        {
+          title: "P1-T3 Peegeldumine ja värvus",
+          modules: [
+            // Esemete värvus EELDAB liitvalgust ja spektrit („valges valguses
+            // on kõik värvid koos", T1-s eespool). Peegeldumise SEADUST
+            // (α = β) ta ei vaja: siin on kõik pinnad matid ja küsimus on
+            // „mis tuleb tagasi", mitte „mis nurga all" – seega ei pea ta
+            // enam ootama T2 peeglite lõppu, aga on siia T3 alagruppi
+            // koondatud, et ainekava jaotus jääks puhas (kasutaja otsus).
+            "physics.esemete-varvus",
+            // Valgusfiltrid on P1-T3 KOLMAS tahk: liitvalgus ütles, millest
+            // valgus koosneb, esemete värvus vaatas, mis tuleb esemelt
+            // TAGASI – siin vaadatakse, mis läheb esemest LÄBI. Ta EELDAB
+            // mõlemat eelmist, peegeldumise seadust aga mitte.
+            "physics.valgusfiltrid",
+          ],
+        },
       ],
     },
     // P2. Valguse murdumine
