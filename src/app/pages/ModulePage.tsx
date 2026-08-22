@@ -117,23 +117,46 @@ function ModuleEntry({
 
   return (
     <div className="flex flex-col gap-4">
-      {showGuestNotice ? (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-info-soft px-4 py-3 text-info">
-          <Info aria-hidden="true" className="size-5 shrink-0" />
-          <span>Töötad külalisena – õpetaja sinu tööd ei näe.</span>
-          <button
-            type="button"
-            onClick={() => {
-              clearGuest();
-              setMembership("unknown");
-            }}
-            className="min-h-11 font-medium text-info underline underline-offset-2 hover:no-underline"
-          >
-            Liitu klassiga
-          </button>
-        </p>
-      ) : null}
+      {showGuestNotice ? <GuestNotice onJoin={() => setMembership("unknown")} /> : null}
       <ModuleLoader id={id} mode={mode} />
+    </div>
+  );
+}
+
+/**
+ * Riba seisab kogu mooduli vältel iga sammu kohal – see oli kaebus
+ * (plaan/MOODULILEHT-UX.md p 7): pärast esimest lugemist muutub ta
+ * kokkuklapitavaks. „Liitu klassiga" jääb leitavaks MÕLEMAS olekus, ainult
+ * selgitav lause kaob kokkuklapituna – nii ei kao ainus tee klassiga
+ * liitumiseks, kui õpilane riba kogemata kokku klapib.
+ */
+function GuestNotice({ onJoin }: { onJoin: () => void }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-info-soft px-4 py-3 text-info">
+      <Info aria-hidden="true" className="size-5 shrink-0" />
+      {collapsed ? null : (
+        <span>Töötad külalisena – õpetaja sinu tööd ei näe.</span>
+      )}
+      <button
+        type="button"
+        onClick={() => {
+          clearGuest();
+          onJoin();
+        }}
+        className="min-h-11 font-medium text-info underline underline-offset-2 hover:no-underline"
+      >
+        Liitu klassiga
+      </button>
+      <button
+        type="button"
+        onClick={() => setCollapsed((value) => !value)}
+        className="ml-auto min-h-11 min-w-11 text-info"
+        aria-label={collapsed ? "Näita selgitust" : "Peida selgitus"}
+      >
+        {collapsed ? "▾" : "▴"}
+      </button>
     </div>
   );
 }
@@ -219,6 +242,28 @@ function JoinGate({ slug, onGuest }: { slug: string; onGuest: () => void }) {
   );
 }
 
+/**
+ * Laadimisootel skeleton – asendab paljast pealkirja, mis aeglase
+ * ühendusega telefonis nägi välja nagu tühi/katkine ekraan (plaan/
+ * MOODULILEHT-UX.md p 7). Kastid, mitte spinner (docs/DISAINIJUHIS.md).
+ */
+function ModuleLoadingSkeleton({
+  lead = "Laen tundi …",
+}: {
+  lead?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true">
+      <p className="text-lg text-ink-soft">{lead}</p>
+      <div className="flex flex-col gap-3">
+        <div className="h-6 w-2/3 animate-pulse rounded bg-brand-soft" />
+        <div className="h-32 w-full animate-pulse rounded-lg bg-brand-soft" />
+        <div className="h-10 w-1/3 animate-pulse rounded bg-brand-soft" />
+      </div>
+    </div>
+  );
+}
+
 function ModuleLoader({ id, mode }: { id: string; mode: ProgressMode }) {
   const [loaded, setLoaded] = useState<LoadedModule | null>(null);
   const [failed, setFailed] = useState(false);
@@ -291,8 +336,12 @@ function ModuleLoader({ id, mode }: { id: string; mode: ProgressMode }) {
 
   if (!loaded) {
     // Mooduli kood laetakse eraldi failina (samm 1.13 valmis-kontroll) –
-    // väike viivitus enne sisu ilmumist on ootuspärane, mitte viga.
-    return <PageHeader title="Laen tundi …" />;
+    // väike viivitus enne sisu ilmumist on ootuspärane, mitte viga. Paljas
+    // pealkiri nägi aeglase ühendusega telefonis välja nagu tühi ekraan
+    // (plaan/MOODULILEHT-UX.md p 7) – rahustav lause + skeleton (mitte
+    // spinner, docs/DISAINIJUHIS.md „Laadimisolekud") näitab, et midagi on
+    // tulemas.
+    return <ModuleLoadingSkeleton />;
   }
 
   const { manifest, activities } = loaded;
@@ -300,7 +349,7 @@ function ModuleLoader({ id, mode }: { id: string; mode: ProgressMode }) {
   // Laisalt laetakse nii simulatsioon kui ka joonised, seega ütleb ootelause
   // „sisu", mitte „simulatsioon" – teooriasammul oleks teine sõna vale.
   return (
-    <Suspense fallback={<PageHeader title="Laen tunni sisu …" />}>
+    <Suspense fallback={<ModuleLoadingSkeleton lead="Laen tunni sisu …" />}>
       <StepShell
         moduleId={manifest.id}
         moduleVersion={manifest.version}

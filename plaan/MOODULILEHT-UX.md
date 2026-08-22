@@ -153,14 +153,20 @@ sinu kordamisse", sest kordamist ei olnud olemas. Nüüd on (etapp 3).
 
 ## 7. Väiksemad kohad — Sonnet, ühe commitina või jupiti
 
-- [ ] **„Alusta uuesti" asukoht.** Lehe all keskel (`StepShell.tsx`), aga
-      simulatsiooni oma peab juhise järgi olema üleval paremal. Otsusta
-      teadlikult: kas ühtlustada või jätta, ja kirjuta põhjus kommentaari
-- [ ] **„Laen tundi …"** on paljas pealkiri – aeglase ühendusega telefonis
-      näeb välja nagu tühi ekraan. Rahulikum ootetekst või skeleton
-- [ ] **Külalise riba** seisab iga sammu kohal terve mooduli vältel.
-      Kokkuklapitav pärast esimest lugemist – aga „Liitu klassiga" nupp
-      peab jääma leitavaks
+- [x] **„Alusta uuesti" asukoht.** Kontrollitud: simulatsiooni oma nupp EI
+      ole tegelikult üleval paremal üheski moodulis (peeglikiri, varjutused,
+      kuu-faasid jt) – kõik on bottom-center, samamoodi kui disainijuhis
+      lubab. Otsus: jäta StepShell'i nupp paigale, ei ühtlustata – lubadus
+      on murtud laiemalt kui üks fail parandaks ja nuppude ulatus on
+      erinev (KOGU moodul vs. ainult liugurid). Põhjus kirjas kommentaaris
+      (`StepShell.tsx`)
+- [x] **„Laen tundi …"** sai rahuliku ootelause + skeleton-kastid (mitte
+      spinner, docs/DISAINIJUHIS.md) – `ModuleLoadingSkeleton`
+      `ModulePage.tsx`-is, kasutusel nii mooduli laadimisel kui ka
+      `Suspense` fallback'ina
+- [x] **Külalise riba** on nüüd kokkuklapitav (`GuestNotice`,
+      `ModulePage.tsx`): väike nupp peidab/näitab selgitavat lauset.
+      „Liitu klassiga" jääb nähtavaks mõlemas olekus
 - [ ] **Sammude ülevaade** – progressiriba on `aria-hidden` kaunistus,
       klõpsata ei saa. 3–6 sammu juures ilmselt OK; klõpsatavaid punkte
       EI tehta enne, kui keegi on selle puudumise üle päriselt kurtnud

@@ -382,7 +382,18 @@ export function StepShell({
       )}
 
       {/* „Alusta uuesti" kustutab kõik vastused – seepärast küsitakse üle.
-          Üks eksikombel tabatud nupp ei tohi tunnitööd ära pühkida. */}
+          Üks eksikombel tabatud nupp ei tohi tunnitööd ära pühkida.
+
+          Teadlik otsus (plaan/MOODULILEHT-UX.md p 7): see nupp jääb lehe
+          alla keskele, ei liigu üleval paremale. Disainijuhis lubab „üleval
+          paremal" simulatsiooni ENDA nupule (üks samm sisu), mis nullib
+          liugurid – kontroll on kontrollitud tegelikkuses ka TEMA bottom-
+          center'is kõigis moodulites (nt peeglikiri, varjutused,
+          kuu-faasid), mitte üleval paremal. Lubadus on murtud laiemalt kui
+          see väike samm parandaks: kõigi simulatsioonide nuppude
+          ümbertõstmine on eraldi otsus, mitte selle faili küsimus. Siin
+          nupud jäävadki lahku, sest neil on erinev ulatus – see kustutab
+          KOGU mooduli vastused, simulatsiooni oma ainult liugurid. */}
       {progress.hasProgress ? (
         <div className="flex justify-center">
           {askRestart ? (
