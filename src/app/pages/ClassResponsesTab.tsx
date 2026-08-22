@@ -4,11 +4,11 @@ import { Button } from "../../ui/Button";
 import { supabase } from "../../lib/supabase";
 import { moduleRegistry, type LoadedModule } from "../../modules/registry";
 import { checkAnswer } from "../../checker";
-import { parseRaw } from "../../checker/number";
 import { resolveSteps } from "../../engine/resolve";
 import { stepQuestions } from "../../engine/contract";
 import type { Question, StepType } from "../../engine/contract";
 import type { AnswerPayload } from "../../engine/answers";
+import { GRADABLE_KINDS, formatAnswer } from "./classResponses";
 
 type ResponseRow = {
   attempt_id: string;
@@ -127,24 +127,6 @@ function dedupeByStudentAndQuestion(infos: ResponseInfo[]): ResponseInfo[] {
     if (!existing || info.createdAt > existing.createdAt) latest.set(key, info);
   }
   return [...latest.values()];
-}
-
-function formatAnswer(question: Question, answer: AnswerPayload): string {
-  if (answer.kind === "numeric") {
-    const unit = question.kind === "numeric" ? question.unit : undefined;
-    // Kui õpilane tipib ühiku ise kaasa ("9,8 kPa"), ei tohi seda veel kord
-    // juurde lisada – muidu näeks õpetaja "9,8 kPa kPa" (Codexi ülevaatuse leid).
-    const hasOwnUnit = (parseRaw(answer.raw)?.unit ?? "") !== "";
-    return unit && !hasOwnUnit ? `${answer.raw} ${unit}` : answer.raw;
-  }
-  if (answer.kind === "choice") {
-    if (question.kind !== "choice") return answer.optionIds.join(", ");
-    return answer.optionIds
-      .map((id) => question.options.find((option) => option.id === id)?.text ?? id)
-      .join(", ");
-  }
-  if (answer.kind === "text") return answer.text;
-  return "(mõõtetabel)";
 }
 
 type RecallPair = {
@@ -408,11 +390,11 @@ function ExitTickets({ infos }: { infos: ResponseInfo[] }) {
 }
 
 function WrongAnswerSummary({ infos }: { infos: ResponseInfo[] }) {
-  // Väärarusaam on mõistlik ainult hinnatavatel liikidel (docs/MOODULILEPING.md) –
-  // vabatekst ja mõõtetabel ei tea misconception-silte.
-  const gradable = infos.filter(
-    (info) => info.question.kind === "numeric" || info.question.kind === "choice",
-  );
+  // Ainult hinnatavad liigid (docs/MOODULILEPING.md) – vabateksti ei hinnata
+  // ja mõõtetabelil on töö ise mõõtmine. Väärarusaama silti ei ole igal
+  // hinnataval liigil (sildistamisel näiteks mitte), aga „mitu valesti mitmest"
+  // on ka ilma sildita täpselt see, mida õpetaja siit otsib.
+  const gradable = infos.filter((info) => GRADABLE_KINDS.includes(info.question.kind));
   if (gradable.length === 0) return null;
 
   const byQuestion = new Map<string, ResponseInfo[]>();
