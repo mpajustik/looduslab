@@ -18,6 +18,7 @@ import { browserStorage } from "../../lib/storage";
 import { buttonClasses } from "../../ui/buttonStyles";
 import { Card, CardTitle } from "../../ui/Card";
 import { PageHeader } from "../../ui/PageHeader";
+import { ProgressBar } from "../../ui/ProgressBar";
 import { useModuleManifests } from "../moduleManifests";
 import {
   countableReviewItems,
@@ -290,11 +291,7 @@ function BlockRow({ block, number }: { block: BlockProgress; number: number }) {
         <p className="text-sm text-ink-soft">{blockMeta(block)}</p>
       </div>
 
-      {block.total > 0 ? (
-        <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-brand-soft">
-          <div className="h-full rounded-full bg-brand" style={{ width: `${percent}%` }} />
-        </div>
-      ) : null}
+      {block.total > 0 ? <ProgressBar percent={percent} /> : null}
     </div>
   );
 }

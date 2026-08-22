@@ -58,6 +58,29 @@ export type CourseOverview = {
   next: NextAction;
 };
 
+/**
+ * Ühe ploki seis progressist. Eraldi funktsioon, sest CoursePage (sisu +
+ * staatuse liitvaade) vajab sama loendust ilma kogu `courseOverview()`-t
+ * kutsumata (nt kordamiskaarte pole CoursePage'il vaja lugeda).
+ *
+ * Loeme ainult kursusel olevaid mooduleid: salvestuses võib olla käike, mis
+ * kursusel enam ei ole (arhiveeritud moodul jääb seadmesse alles) ja need
+ * annaksid muidu „5/3 tehtud".
+ */
+export function blockProgress(
+  block: OverviewBlock,
+  progressById: Map<string, ModuleProgress>,
+): BlockProgress {
+  let completed = 0;
+  let started = 0;
+  for (const moduleId of block.moduleIds) {
+    const status = progressById.get(moduleId)?.status;
+    if (status === "completed") completed += 1;
+    else if (status === "started") started += 1;
+  }
+  return { title: block.title, total: block.moduleIds.length, completed, started };
+}
+
 export function courseOverview(args: {
   blocks: OverviewBlock[];
   progress: ModuleProgress[];
@@ -67,19 +90,9 @@ export function courseOverview(args: {
   const now = args.now ?? new Date();
   const byId = new Map(args.progress.map((item) => [item.moduleId, item]));
 
-  // Loeme ainult kursusel olevaid mooduleid: salvestuses võib olla käike, mis
-  // kursusel enam ei ole (arhiveeritud moodul jääb seadmesse alles) ja need
-  // annaksid muidu „5/3 tehtud".
-  const blocks: BlockProgress[] = args.blocks.map((block) => {
-    let completed = 0;
-    let started = 0;
-    for (const moduleId of block.moduleIds) {
-      const status = byId.get(moduleId)?.status;
-      if (status === "completed") completed += 1;
-      else if (status === "started") started += 1;
-    }
-    return { title: block.title, total: block.moduleIds.length, completed, started };
-  });
+  const blocks: BlockProgress[] = args.blocks.map((block) =>
+    blockProgress(block, byId),
+  );
 
   // Kaardid loeme SAMA funktsiooniga, mida kordamisleht kasutab: kui
   // edenemisleht ütleks „ootel 14", aga kordamisleht annaks kümme, oleks üks
