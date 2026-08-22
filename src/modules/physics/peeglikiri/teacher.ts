@@ -133,7 +133,7 @@ export const teacher = {
       description:
         "Õpilane arvab, et kiri on peeglis samas järjekorras, mis paberil.",
       remedy:
-        "Explore-1 ja practice-1…2: „TAKSO\" on peeglis „OSKAT\". Põhjus on teoorias – iga täht on omaeti sügavusel ja sügavus pöördub, seega kaugeimast tähest saab lähim. Klassis: kirjuta sõna paberile ja hoia see peegli ette.",
+        "Explore-1 ja practice-1…2: „TAKSO\" on peeglis „OSKAT\". Põhjus on teoorias – iga täht on omaette sügavusel ja sügavus pöördub, seega kaugeimast tähest saab lähim. Klassis: kirjuta sõna paberile ja hoia see peegli ette.",
     },
     {
       id: "t-ei-ole-summeetriline",

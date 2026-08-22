@@ -1,5 +1,6 @@
 import {
   letterList,
+  letters,
   letterSymmetryColour,
   letterSymmetryLabel,
 } from "./display";
@@ -287,5 +288,232 @@ export function LetterSymmetryFigure() {
         <MirrorPair x={250} y={190} letter={changingExample} caption="teine kuju" />
       </svg>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// pk-tahtede-summeetria teooria lisand – pabeririba pealtvaade
+// ---------------------------------------------------------------------------
+
+const STRIP_VIEW = { width: 420, height: 190 };
+const STRIP_MIRROR_X = 200;
+const STRIP_ROW_Y = 70;
+const STRIP_TILE = 32;
+const STRIP_STEP = 38;
+
+/** Sõna, mille peal joonis töötab – sama sõna, mis activities.ts `WORDS[0]`-is. */
+const STRIP_WORD = "TAKSO";
+const STRIP_LETTERS = letters(STRIP_WORD);
+const STRIP_LAST_INDEX = STRIP_LETTERS.length - 1;
+
+/**
+ * Mitu „sammu" täht on peeglist kaugel: sõna ESIMENE täht (T, indeks 0) on
+ * kõige kaugemal, VIIMANE täht (O) puudutab peeglit – täpselt nii, nagu teooria
+ * tekst kirjeldab pabeririba, mille üks ots lebab peegli vastas.
+ */
+const stripDepthSteps = (index: number): number => STRIP_LAST_INDEX - index;
+
+/** Tähe koht PABERIL (peegli ees): kaugemad tähed vasakul, peegli ääres paremal. */
+function stripRealTileX(index: number): number {
+  return STRIP_MIRROR_X - STRIP_TILE / 2 - STRIP_STEP * stripDepthSteps(index);
+}
+
+/**
+ * Tähe koht KUJUTISES: sama kaugus peeglist, aga TEISEL pool – puhas
+ * peegeldus (`2 × peegli koht − paberi koht`), sama seos, mis `model.ts`
+ * funktsioonis `imageDepthM` (sügavus pöördub, asend piki peeglit mitte).
+ */
+function stripImageTileX(index: number): number {
+  return 2 * STRIP_MIRROR_X - stripRealTileX(index);
+}
+
+/** Üks tähetahvel paberiribal või kujutises. */
+function DepthTile({
+  x,
+  letter,
+  dashed,
+}: {
+  x: number;
+  letter: string;
+  dashed: boolean;
+}) {
+  const half = STRIP_TILE / 2;
+  return (
+    <g>
+      <rect
+        x={x - half}
+        y={STRIP_ROW_Y - half}
+        width={STRIP_TILE}
+        height={STRIP_TILE}
+        rx={5}
+        fill="#ffffff"
+        className={dashed ? "stroke-info" : "stroke-brand"}
+        strokeWidth={2}
+        strokeDasharray={dashed ? "5 4" : undefined}
+      />
+      <text
+        x={x}
+        y={STRIP_ROW_Y + 6}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={17}
+        fontWeight={700}
+      >
+        {letter}
+      </text>
+    </g>
+  );
+}
+
+export function MirrorDepthFigure() {
+  const realCentreX =
+    (stripRealTileX(0) + stripRealTileX(STRIP_LAST_INDEX)) / 2;
+  const imageCentreX =
+    (stripImageTileX(0) + stripImageTileX(STRIP_LAST_INDEX)) / 2;
+  const realOrder = STRIP_LETTERS.join(" → ");
+  const imageOrder = [...STRIP_LETTERS].reverse().join(" → ");
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${STRIP_VIEW.width} ${STRIP_VIEW.height}`}
+        role="img"
+        aria-label={`Joonis: pealtvaade paberiribale peegli ees. Sõna „${STRIP_WORD}" tähed lebavad eri sügavustel – esimene täht T on peeglist kõige kaugemal, viimane täht O puudutab peeglit. Peeglist paremal on katkendjoonega kujutis: iga tähe kujutis on peeglist täpselt sama kaugel, aga teisel pool. Paberil loetakse tähed järjekorras „${realOrder}", kujutises aga vastupidises järjekorras „${imageOrder}" – sest sügavus, mitte tähtede ise, on see, mis peeglis pöördub.`}
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        {/* Peegel: pidev joon, kujutise pool viirutatud (nagu tasapeegli-kujutis). */}
+        <line
+          x1={STRIP_MIRROR_X}
+          y1={16}
+          x2={STRIP_MIRROR_X}
+          y2={132}
+          className="stroke-ink"
+          strokeWidth={3}
+        />
+        <g className="stroke-ink-soft" strokeWidth={1}>
+          {[26, 42, 58, 74, 90, 106, 122].map((y) => (
+            <line
+              key={y}
+              x1={STRIP_MIRROR_X + 2}
+              y1={y}
+              x2={STRIP_MIRROR_X + 10}
+              y2={y - 8}
+            />
+          ))}
+        </g>
+        <text
+          x={STRIP_MIRROR_X}
+          y={12}
+          textAnchor="middle"
+          className="fill-ink"
+          fontSize={12}
+          fontWeight={600}
+        >
+          peegel
+        </text>
+
+        {/* Lugemisjärjekorrad rea kohal – just see on joonise mõte. */}
+        <text
+          x={realCentreX}
+          y={30}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={13}
+          fontWeight={600}
+        >
+          {realOrder}
+        </text>
+        <text
+          x={imageCentreX}
+          y={30}
+          textAnchor="middle"
+          fill="#0369a1"
+          fontSize={13}
+          fontWeight={700}
+        >
+          {imageOrder}
+        </text>
+
+        {/* Paber ja tema kujutis: iga täht omaette sügavusel. */}
+        {STRIP_LETTERS.map((letter, index) => (
+          <DepthTile
+            key={`real-${index}`}
+            x={stripRealTileX(index)}
+            letter={letter}
+            dashed={false}
+          />
+        ))}
+        {STRIP_LETTERS.map((letter, index) => (
+          <DepthTile
+            key={`image-${index}`}
+            x={stripImageTileX(index)}
+            letter={letter}
+            dashed
+          />
+        ))}
+
+        <text
+          x={realCentreX}
+          y={STRIP_ROW_Y + 34}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={11}
+        >
+          paber (päris sõna)
+        </text>
+        <text
+          x={imageCentreX}
+          y={STRIP_ROW_Y + 34}
+          textAnchor="middle"
+          fill="#0369a1"
+          fontSize={11}
+        >
+          kujutis peeglis
+        </text>
+
+        {/* Kaugeim ja lähim täht – need kaks otsa näitavad, mis sügavusega juhtub. */}
+        <text
+          x={stripRealTileX(0)}
+          y={STRIP_ROW_Y - 26}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={10}
+        >
+          kaugel
+        </text>
+        <text
+          x={stripRealTileX(STRIP_LAST_INDEX)}
+          y={STRIP_ROW_Y - 26}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={10}
+        >
+          lähedal
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Mõtle sõnale paberiribana peegli ees: iga täht on omaette sügavusel.
+        Peeglis on sügavus vastupidine – kaugel olnust saab lähedal ja
+        vastupidi –, seepärast pöördub kogu tähtede järjekord, kuigi ükski
+        täht ise ei liigu vasakule ega paremale.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: kaks joonist üksteise all – kõigepealt MIKS järjekord
+ * pöördub (sügavus, `MirrorDepthFigure`), siis MILLISED tähed ise muutuvad
+ * (`LetterSymmetryFigure`). Sama järjekord, mis teooriateksti lõikudel.
+ * Moodul jääb 6 sammu juurde, teist theory-sammu ei lisata (sama muster mis
+ * `valgusallikad/SourceKindsFigure` ja
+ * `valguse-sirgjooneline-levimine/RayAndBeamTypesFigure`).
+ */
+export function LetterSymmetryAndDepthFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <MirrorDepthFigure />
+      <LetterSymmetryFigure />
+    </div>
   );
 }

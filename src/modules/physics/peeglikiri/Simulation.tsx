@@ -35,7 +35,7 @@ import {
  * VAADE ON PEALTVAADE (nii ütleb ka explore-sammu tekst): peegel on püstine
  * joon, sellest vasakul lebab laual pabeririba sõnaga, paremal on peegli tagune
  * ruum, kus näiline kujutis paistab. Sõna jookseb peegliga RISTI – just seetõttu
- * on iga täht omaeti sügavusel ja just seetõttu pöördub peeglis nende järjekord.
+ * on iga täht omaette sügavusel ja just seetõttu pöördub peeglis nende järjekord.
  *
  * KAKS TELGE JA MIKS NAD ON ERI MOODI JOONISTATUD:
  *

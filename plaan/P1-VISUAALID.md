@@ -47,10 +47,13 @@ Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 
 ### 3. peeglikiri – puudu on mehhanism, mitte tulemus
 
-- [ ] **Pabeririba pealtvaade** – TAKSO tähed erinevatel sügavustel peeglist,
+- [x] **Pabeririba pealtvaade** – TAKSO tähed erinevatel sügavustel peeglist,
       peegelpildis järjekord ümber pööratud. `LetterSymmetryFigure` näitab,
       *milliseid* tähti peegeldus muudab, aga *miks järjekord pöördub*, on
       praegu puhas sõnadega mõtteeksperiment. See on mooduli tuum.
+      (Tehtud: `MirrorDepthFigure` + `LetterSymmetryAndDepthFigure`, mis
+      paneb selle kokku `LetterSymmetryFigure`'iga, võti
+      `pk-tahtede-summeetria`, theory-1 küljes.)
 
 ### 4. kumerpeegli-rakendused – tagajärjed 2 ja 3 on visualiseerimata
 

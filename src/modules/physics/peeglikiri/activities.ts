@@ -167,7 +167,7 @@ const steps: Step[] = [
     body: [
       "Meeldetuletus moodulist „Tasapeegli kujutis\": kujutis on peeglist sama kaugel kui ese ja ta on PÄRIPIDINE – pea on üleval, jalad all. Peegel ei tõsta midagi pea peale.",
       "Peegel peegeldab ainult ENDAGA RISTI suunas – sügavust. Ühtki peegli PINNAGA paralleelset suunda (vasak-parem ega üleval-alt-alla) ta ei puuduta. Mis sellest sinu enda peegelpildi kohta järeldub, uurime kohe hüpoteesiga.",
-      `Miks kiri on siis ikkagi „tagurpidi"? Mõtle sõnale paberiribana, mis lebab LAUAL nii, et üks ots puudutab peeglit. Iga täht on siis omaeti sügavusel: sõna esimene täht on peeglist KAUGEL, viimane täht LÄHEDAL.`,
+      `Miks kiri on siis ikkagi „tagurpidi"? Mõtle sõnale paberiribana, mis lebab LAUAL nii, et üks ots puudutab peeglit. Iga täht on siis omaette sügavusel: sõna esimene täht on peeglist KAUGEL, viimane täht LÄHEDAL.`,
       `Sügavus pöördub – seesama fakt, ainult et nüüd eraldi iga tähe jaoks. Kaugel olnud tähest saab peeglis lähedal olev ja vastupidi, seega pöördub kogu tähtede JÄRJEKORD. Sõna „${TAXI}" paistab peeglis kujul „${TAXI_MIRRORED}", kuigi ükski üksik täht ise vasakule ega paremale ei liigu.`,
       "Selleks, et kiri peeglis LOETAV oleks, peavad klappima kaks asja korraga. Esiteks peavad tähed olema PABERIL vastupidises järjekorras. Teiseks peab iga TÄHT ISE olema peegeldatud kujuga.",
       `Enamik tähti (K, S, E, F...) näeb peeglis välja lihtsalt vale. Mõned aga näevad peegeldatuna välja täpselt samasugused: ${letterList(

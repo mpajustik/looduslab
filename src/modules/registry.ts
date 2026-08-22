@@ -522,7 +522,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "pk-tahtede-summeetria": lazy(() =>
       import("./physics/peeglikiri/figures").then((module) => ({
-        default: module.LetterSymmetryFigure,
+        default: module.LetterSymmetryAndDepthFigure,
       })),
     ),
   },
