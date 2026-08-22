@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { AnswerPayload, Answers } from "../../engine/answers";
 import type { ModuleFigures } from "../../engine/figures";
+import { allowsRetry } from "../../engine/retry";
 import type { SimulationProps } from "../../engine/simulationFeatures";
 import { unlockedSimulationFeatures } from "../../engine/simulationFeatures";
 import { QuestionCard } from "./QuestionCard";
@@ -73,6 +74,7 @@ export function ExploreStep({
             answer={answers[question.id]}
             onAnswer={onAnswer}
             figures={figures}
+            retry={allowsRetry(step.type)}
           />
         ))}
       </div>

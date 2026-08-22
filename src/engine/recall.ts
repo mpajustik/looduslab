@@ -1,4 +1,4 @@
-import type { Answers } from "./answers";
+import type { AnswerPayload, Answers } from "./answers";
 import type { Question, Step } from "./contract";
 import { stepQuestions } from "./contract";
 
@@ -28,9 +28,16 @@ export type RecalledAnswer = {
  * Vastus loetavaks. `undefined`, kui vastust ei ole või kui ta ei käi
  * küsimusega kokku (katkine moodul, vana vastus) – siis parem mitte midagi
  * kui vale asi.
+ *
+ * Avalik, sest ka vale vastuse parandamine näitab eelmist katset kõrval
+ * (src/ui/steps/QuestionCard.tsx): lehe värskendamine kustutab mustandi, aga
+ * esitatud vastus jääb – ja ilma selleta oleks „proovi veel" tühi väli, kus
+ * õpilane ei mäleta, mida ta pakkus.
  */
-function readableAnswer(question: Question, answers: Answers): string | undefined {
-  const answer = answers[question.id];
+export function readableAnswerText(
+  question: Question,
+  answer: AnswerPayload | undefined,
+): string | undefined {
   if (!answer) return undefined;
 
   switch (question.kind) {
@@ -75,7 +82,7 @@ export function recallAnswer(
   for (const step of steps) {
     for (const question of stepQuestions(step)) {
       if (question.id !== questionId) continue;
-      const text = readableAnswer(question, answers);
+      const text = readableAnswerText(question, answers[question.id]);
       return text === undefined ? null : { prompt: question.prompt, text };
     }
   }

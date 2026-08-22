@@ -1,6 +1,7 @@
 import { Lightbulb } from "lucide-react";
 import type { AnswerPayload, Answers } from "../../engine/answers";
 import type { ModuleFigures } from "../../engine/figures";
+import { allowsRetry } from "../../engine/retry";
 import { QuestionCard } from "./QuestionCard";
 import type { StepOfType } from "./types";
 
@@ -68,6 +69,7 @@ export function PracticeStep({
             answer={answers[question.id]}
             onAnswer={onAnswer}
             figures={figures}
+            retry={allowsRetry(step.type)}
           />
         ))}
       </div>

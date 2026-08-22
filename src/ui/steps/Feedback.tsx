@@ -13,7 +13,25 @@ import { cn } from "../cn";
  * `role="status"` teatab tulemuse ekraanilugejale ka siis, kui fookus jäi
  * nupule – ilma selleta jääks vastuse esitamine sõnaliselt märkamata.
  */
-export function Feedback({ result, hints }: { result: CheckResult; hints?: string[] }) {
+export function Feedback({
+  result,
+  hints,
+  showExpected: expectedAllowed = true,
+}: {
+  result: CheckResult;
+  /**
+   * Vihjed, mis on juba avatud – mitte kõik küsimuse vihjed. Ükshaaval
+   * avamise otsustab kutsuja (QuestionCard), see komponent joonistab, mis
+   * talle antakse.
+   */
+  hints?: string[];
+  /**
+   * Kas õige vastus tohib nähtavale tulla. Parandatavas sammus on ta väljas
+   * kuni teise katseni (src/engine/retry.ts) – muidu ei ole „proovi veel"
+   * enam proovimine, vaid mahakirjutamine.
+   */
+  showExpected?: boolean;
+}) {
   const state = FEEDBACK_STATES[String(result.correct) as "true" | "false" | "null"];
   const Icon = state.icon;
 
@@ -21,10 +39,10 @@ export function Feedback({ result, hints }: { result: CheckResult; hints?: strin
   // müra ja hindamata vastuse juures oleks vihje eksitav (seal ei ole „õiget").
   const showHints = result.correct === false && hints && hints.length > 0;
 
-  // Õige vastus tuleb vihjete ETTE: vastust muuta enam ei saa, seega on vihje
-  // siin mõtlemise tugi („miks see nii on"), mitte uus katse – ja tähtsaim
-  // asi ekraanil peab olema esimene.
-  const showExpected = result.correct === false && result.expected !== undefined;
+  // Õige vastus tuleb vihjete ETTE: kui ta juba paistab, on ta tähtsaim asi
+  // ekraanil ja vihje jääb selle kõrvale seletuseks („miks see nii on").
+  const showExpected =
+    expectedAllowed && result.correct === false && result.expected !== undefined;
 
   return (
     <div role="status" className={cn("flex flex-col gap-2 rounded-lg border p-4", state.box)}>

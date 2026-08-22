@@ -1,5 +1,6 @@
 import type { AnswerPayload, Answers } from "../../engine/answers";
 import type { ModuleFigures } from "../../engine/figures";
+import { allowsRetry } from "../../engine/retry";
 import type { RecalledAnswer } from "../../engine/recall";
 import { QuestionCard } from "./QuestionCard";
 import type { StepOfType } from "./types";
@@ -60,6 +61,7 @@ export function ExplainStep({
             answer={answers[question.id]}
             onAnswer={onAnswer}
             figures={figures}
+            retry={allowsRetry(step.type)}
           />
         ))}
       </div>
