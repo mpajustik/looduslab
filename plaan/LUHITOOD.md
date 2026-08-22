@@ -158,7 +158,12 @@ joonise all olevast rippmenüüst – üks rida numbri kohta.
 - [x] A6. Prototüüp päris sisuga: peegeldumisseadus sai küsimuse `practice-4`
       ja joonise `peegeldumise-osad` (viis kohta, kaks eksitajat). Versioon
       2.0.2 → **2.1.0** (minor). Telefonivaates (360 px) läbi proovitud
-- [ ] A7. `/ulevaatus` – riskisamm, seega ka `npm run review` (Codex)
+- [x] A7. `/ulevaatus` – riskisamm, seega ka `npm run review` (Codex).
+      **Codexi ülevaatus tehtud – riskisamm.** CodeRabbit 2 leidu (1 vale,
+      1 päris), Codex 2 leidu (mõlemad päris, kummalgi ülevaatajal oma).
+      Kõik neli päris viga parandatud: nimede tekstikordus skeemi, fookus
+      rippmenüüle „Proovi veel" järel, õpetajavaate vastuse vormistus ja
+      hinnatavate liikide loend
 
 **Otsustuspunkt A järel:** kujutise konstrueerimine (õpilane märgib, KUHU
 kujutis tekib) on TEINE tüüp – klõps koordinaadistikku, checker võrdleb
