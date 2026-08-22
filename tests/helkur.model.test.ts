@@ -437,6 +437,18 @@ function numericQuestion(questionId: string) {
   throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
 }
 
+/** Arvvariandid küsimuse id järgi (docs/MOODULILEPING.md „Juhuslikkus"). */
+function variantsOf(questionId: string) {
+  for (const step of activities.steps) {
+    for (const question of stepQuestions(step)) {
+      if (question.id === questionId && question.kind === "numeric") {
+        return question.variants ?? [];
+      }
+    }
+  }
+  throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+}
+
 function choiceQuestion(questionId: string) {
   for (const step of activities.steps) {
     for (const question of stepQuestions(step)) {
@@ -595,26 +607,35 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
     expect(Math.abs(answer - 4 * 26000)).toBeLessThan(10000);
   });
 
-  it("exit-2: kraad vormis annab 100 m peal 3,5 m", () => {
+  it("exit-2: 91° annab 100 m peal 3,5 m (esimene variant)", () => {
     expect(returnDeviationDeg(91)).toBe(2);
-    expect(numericQuestion("exit-2").answer).toBeCloseTo(
-      offsetAtDistanceM(2, 100),
-      12,
-    );
-    expect(numericQuestion("exit-2").answer).toBeCloseTo(3.4920769, 6);
+    const variant = variantsOf("exit-2").find((v) => v.id === "m91");
+    expect(variant?.answer).toBeCloseTo(offsetAtDistanceM(2, 100), 12);
+    expect(variant?.answer).toBeCloseTo(3.4920769, 6);
   });
 
-  it("exit-2 lõks püüab kahekordistamata vastuse ja jääb tolerantsist välja", () => {
-    // Kes arvutab 100 · tan 1° (peeglite nurgaviga ilma kahekordistamiseta),
-    // saab just selle tagasiside – mitte üldise „vale".
-    const question = numericQuestion("exit-2");
-    const trap = question.traps?.[0];
-    expect(trap?.answer).toBeCloseTo(offsetAtDistanceM(1, 100), 12);
-    expect(trap?.misconception).toBe("viga-ei-kahekordistu");
-    const answer = question.answer ?? Number.NaN;
-    expect(Math.abs(answer - (trap?.answer ?? 0))).toBeGreaterThan(
-      question.tolerance.value * 2,
-    );
+  it("exit-2 variandid: kõrvalekalle on kaks korda peeglite nurgaviga", () => {
+    for (const variant of variantsOf("exit-2")) {
+      const mirrorDeg = variant.values.nurk;
+      const deviationDeg = returnDeviationDeg(mirrorDeg);
+      expect(variant.answer).toBeCloseTo(offsetAtDistanceM(deviationDeg, 100), 12);
+    }
+  });
+
+  it("exit-2 lõksud püüavad kahekordistamata vastuse ja jäävad tolerantsist välja", () => {
+    // Kes arvutab 100 · tan(nurgaviga) ILMA kahekordistamiseta, saab just
+    // selle tagasiside – mitte üldise „vale".
+    const tolerance = 0.5;
+    for (const variant of variantsOf("exit-2")) {
+      const errorDeg = Math.abs(variant.values.nurk - 90);
+      const trap = variant.traps?.[0];
+      expect(trap?.answer, variant.id).toBeCloseTo(offsetAtDistanceM(errorDeg, 100), 12);
+      expect(trap?.misconception, variant.id).toBe("viga-ei-kahekordistu");
+      expect(
+        Math.abs(variant.answer - (trap?.answer ?? 0)),
+        variant.id,
+      ).toBeGreaterThan(tolerance * 2);
+    }
   });
 
   it("explore-3 ja explore-4 lõksud on eristatavad õigest vastusest", () => {

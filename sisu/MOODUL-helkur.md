@@ -601,7 +601,7 @@ LUGEMISTOLERANTSID, mitte mõõtemääramatus.
   45-minutilises tunnis mahub ette moodul `nurkpeegel` ja lõppu pimeda
   klassi katse.
 
-## Kordamiskaardid (5 tk)
+## Kordamiskaardid (7 tk)
 
 | id | tüüp | küsimus | vastus |
 |---|---|---|---|
@@ -610,3 +610,10 @@ LUGEMISTOLERANTSID, mitte mõõtemääramatus.
 | rc-3 | calc | Helkuri peeglite nurgaks tuli 91° täpse 90° asemel. Mitu kraadi kaldub tagasitulev kiir kõrvale ja mitu meetrit on see 100 m kaugusel? | Kõrvalekalle on kaks korda nurgaviga ehk 2°; 100 · tan 2° ≈ 3,5 m – valgus möödub autost |
 | rc-4 | explain | Miks peab helkur olema natuke ebatäpne? | Täiesti täpne helkur saadaks kogu valguse tagasi esituledesse, aga juhi silmad on tuledest umbes 0,5 m kõrval. Tagasitulev valgus peab minema kitsa koonusena nii laiali, et ulatuks tuledest silmadeni |
 | rc-5 | transfer | Sina seisad tee ääres ja vaatad helkuriga jalakäijat, keda auto tuled valgustavad. Miks ei paista helkur sulle eredalt? | Helkur saadab valguse kitsa koonusena tagasi auto poole ja sina ei ole selle koonuse sees. Sama kitsus, mis teeb ta juhi jaoks eredaks, teeb ta kõrvalseisjale tuhmiks |
+| rc-6 | concept | Mille poolest erineb helkur tasapeeglist ja matist valgest riidest valguse suunamise osas? | Tasapeegel saadab valguse ühte kindlasse suunda vastavalt langemisnurgale, matt riie hajutab valguse igasse suunda laiali. Helkur saadab valguse tagasi TÄPSELT sinna, kust see tuli – seepärast paistab ta eredalt just valgusallika juures seisjale |
+| rc-7 | graph | Kui helkuri hajuvusnurk ω kahekordistub, mis juhtub tagasipeegeldumise võimendusega ja miks? | Võimendus kahaneb umbes neli korda. Väikeste nurkade juures on võimendus ligikaudu 1/ω² – nurga kahekordistamine neljakordistab nimetaja |
+
+**exit-2 sai arvuvariandid** (moodulileping „Juhuslikkus"): peeglite nurk
+91°/88°/93°/94° täpse 90° asemel, sama valem (kõrvalekalle = 2 · nurgaviga,
+kaugus 100 m). Uusi õpilasvastuseid sellel küsimusel veel ei ole, seega
+versioon ei tõuse (moodulileping „Versioneerimine").

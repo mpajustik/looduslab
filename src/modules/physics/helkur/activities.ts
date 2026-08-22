@@ -102,22 +102,27 @@ const WORKED_MIRROR_ERROR_DEG = WORKED_MIRROR_DEG - 90;
 const WORKED_DEVIATION_DEG = returnDeviationDeg(WORKED_MIRROR_DEG);
 const WORKED_OFFSET_M = offsetAtDistanceM(WORKED_DEVIATION_DEG, START_DISTANCE_M);
 
-/** Väljumispilet (exit-2): kraad vormis, kaks kraadi valgusele. */
-const EXIT_MIRROR_DEG = 91;
-const EXIT_MIRROR_ERROR_DEG = EXIT_MIRROR_DEG - 90;
-const EXIT_DEVIATION_DEG = returnDeviationDeg(EXIT_MIRROR_DEG);
-const EXIT_OFFSET_M = offsetAtDistanceM(EXIT_DEVIATION_DEG, START_DISTANCE_M);
 /**
- * Lõks exit-2 juures: kes unustab kahekordistamise, arvutab 100 · tan 1°.
- *
- * Kõrvalekalle tuleb siin peeglite nurgaveast ILMA kahekordistamiseta – täpselt
- * see viga, mida lõks püüab. Arv käib läbi sama mudeli, seega jääb ta õigeks ka
- * siis, kui kaugus kunagi muutub.
+ * Väljumispileti nurgaveavariandid (exit-2): sama valem, neli kraadiarvu –
+ * variandi mõte (docs/MOODULILEPING.md „Juhuslikkus"). Lõks igal variandil on
+ * sama viga: kes unustab kahekordistamise, arvutab kaugus · tan(nurgaviga)
+ * ILMA kahekordistamiseta.
  */
-const EXIT_TRAP_OFFSET_M = offsetAtDistanceM(
-  EXIT_MIRROR_ERROR_DEG,
-  START_DISTANCE_M,
-);
+const EXIT_VARIANTS = [
+  { id: "m91", mirrorDeg: 91 },
+  { id: "m88", mirrorDeg: 88 },
+  { id: "m93", mirrorDeg: 93 },
+  { id: "m94", mirrorDeg: 94 },
+].map(({ id, mirrorDeg }) => {
+  const errorDeg = Math.abs(mirrorDeg - 90);
+  const deviationDeg = returnDeviationDeg(mirrorDeg);
+  const offsetM = offsetAtDistanceM(deviationDeg, START_DISTANCE_M);
+  const trapOffsetM = offsetAtDistanceM(errorDeg, START_DISTANCE_M);
+  return { id, mirrorDeg, errorDeg, deviationDeg, offsetM, trapOffsetM };
+});
+
+/** Kordamiskaardi rc-3 näide: sama arvud, mis exit-2 esimene variant. */
+const REVIEW_CARD_EXIT_VARIANT = EXIT_VARIANTS[0];
 
 /**
  * Lugemistolerantsid, MITTE mõõtemääramatus: simulatsioon on ideaalne, aga
@@ -445,21 +450,27 @@ const steps: Step[] = [
       {
         kind: "numeric",
         id: "exit-2",
-        prompt: `Helkuri peeglite nurgaks tuli tehases ${formatNumber(EXIT_MIRROR_DEG)}° täpse 90° asemel. Mitu meetrit möödub tagasitulev valgus autost ${formatNumber(START_DISTANCE_M)} m kaugusel?`,
+        prompt: `Helkuri peeglite nurgaks tuli tehases {nurk}° täpse 90° asemel. Mitu meetrit möödub tagasitulev valgus autost ${formatNumber(START_DISTANCE_M)} m kaugusel?`,
         hints: [
-          "Kõrvalekalle on kaks korda peeglite nurgaviga.",
-          `${formatNumber(START_DISTANCE_M)} · tan ${wholeDegrees(EXIT_DEVIATION_DEG)}°`,
+          "Kõrvalekalle on kaks korda peeglite nurgaviga: |{nurk} − 90°| · 2.",
+          `Vastus on ${formatNumber(START_DISTANCE_M)} · tan(kõrvalekalle).`,
         ],
         unit: "m",
         tolerance: EXIT_TOLERANCE,
-        answer: EXIT_OFFSET_M,
-        traps: [
-          {
-            answer: EXIT_TRAP_OFFSET_M,
-            misconception: "viga-ei-kahekordistu",
-            feedback: `See on ${wholeDegrees(EXIT_MIRROR_ERROR_DEG)}° suuruse kõrvalekalde vastus. Peeglite nurgaviga on ${wholeDegrees(EXIT_MIRROR_ERROR_DEG)}°, aga kiir kaldub kaks korda rohkem: ${wholeDegrees(EXIT_DEVIATION_DEG)}°.`,
-          },
-        ],
+        variants: EXIT_VARIANTS.map(
+          ({ id, mirrorDeg, errorDeg, deviationDeg, offsetM, trapOffsetM }) => ({
+            id,
+            values: { nurk: mirrorDeg },
+            answer: offsetM,
+            traps: [
+              {
+                answer: trapOffsetM,
+                misconception: "viga-ei-kahekordistu",
+                feedback: `See on ${wholeDegrees(errorDeg)}° suuruse kõrvalekalde vastus. Peeglite nurgaviga on ${wholeDegrees(errorDeg)}°, aga kiir kaldub kaks korda rohkem: ${wholeDegrees(deviationDeg)}°.`,
+              },
+            ],
+          }),
+        ),
       },
       {
         kind: "text",
@@ -494,8 +505,8 @@ const reviewCards: ReviewCard[] = [
   {
     id: "rc-3",
     type: "calc",
-    question: `Helkuri peeglite nurgaks tuli ${formatNumber(EXIT_MIRROR_DEG)}° täpse 90° asemel. Mitu kraadi kaldub tagasitulev kiir kõrvale ja mitu meetrit on see ${formatNumber(START_DISTANCE_M)} m kaugusel?`,
-    answer: `Kõrvalekalle on kaks korda nurgaviga ehk ${wholeDegrees(EXIT_DEVIATION_DEG)}°; ${formatNumber(START_DISTANCE_M)} · tan ${wholeDegrees(EXIT_DEVIATION_DEG)}° ≈ ${metres(EXIT_OFFSET_M)} m – valgus möödub autost.`,
+    question: `Helkuri peeglite nurgaks tuli ${formatNumber(REVIEW_CARD_EXIT_VARIANT.mirrorDeg)}° täpse 90° asemel. Mitu kraadi kaldub tagasitulev kiir kõrvale ja mitu meetrit on see ${formatNumber(START_DISTANCE_M)} m kaugusel?`,
+    answer: `Kõrvalekalle on kaks korda nurgaviga ehk ${wholeDegrees(REVIEW_CARD_EXIT_VARIANT.deviationDeg)}°; ${formatNumber(START_DISTANCE_M)} · tan ${wholeDegrees(REVIEW_CARD_EXIT_VARIANT.deviationDeg)}° ≈ ${metres(REVIEW_CARD_EXIT_VARIANT.offsetM)} m – valgus möödub autost.`,
   },
   {
     id: "rc-4",
@@ -510,6 +521,22 @@ const reviewCards: ReviewCard[] = [
       "Sina seisad tee ääres ja vaatad helkuriga jalakäijat, keda auto tuled valgustavad. Miks ei paista helkur sulle eredalt?",
     answer:
       "Helkur saadab valguse kitsa koonusena tagasi auto poole ja sina ei ole selle koonuse sees. Sama kitsus, mis teeb ta juhi jaoks eredaks, teeb ta kõrvalseisjale tuhmiks.",
+  },
+  {
+    id: "rc-6",
+    type: "concept",
+    question:
+      "Mille poolest erineb helkur tasapeeglist ja matist valgest riidest valguse suunamise osas?",
+    answer:
+      "Tasapeegel saadab valguse ühte kindlasse suunda vastavalt langemisnurgale, matt riie hajutab valguse igasse suunda laiali. Helkur teeb kolmandat asja: ta saadab valguse tagasi TÄPSELT sinna, kust see tuli – seepärast paistab ta eredalt just valgusallika (autotulede) juures seisjale.",
+  },
+  {
+    id: "rc-7",
+    type: "graph",
+    question:
+      "Kui helkuri hajuvusnurk ω kahekordistub, mis juhtub tagasipeegeldumise võimendusega ja miks?",
+    answer:
+      "Võimendus kahaneb umbes neli korda. Väikeste nurkade juures on võimendus ligikaudu 1/ω² – nurga kahekordistamine neljakordistab nimetaja, seega väheneb kogu murd neli korda.",
   },
 ];
 

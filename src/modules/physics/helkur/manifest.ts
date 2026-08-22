@@ -46,6 +46,9 @@ export const manifest = defineModule({
   // 1.0.2: theory-1 joonisele (hl-kolm-pinda) lisati kuubinurga 3D-joonis
   // (CubeCornerFigure) ThreeSurfacesFigure'i juurde – visuaali muutus,
   // patch (docs/MOODULILEPING.md).
-  version: "1.0.2",
+  // 2.0.0: exit-2 sai ESIMEST korda arvuvariandid (answer → variants) –
+  // major moodulilepingu järgi, kuigi küsimusel õpilasvastuseid veel ei ole.
+  // Kaks uut kordamiskaarti (concept, graph), 5 → 7 tk.
+  version: "2.0.0",
   status: "active",
 });

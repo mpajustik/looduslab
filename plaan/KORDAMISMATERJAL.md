@@ -66,7 +66,7 @@ jätta).
 kaarditüüpi VÕI vahele jäänud tüüp on nii `graph` kui midagi lisaks, ja
 ühelgi pole ühtki varianti.
 
-- [ ] `helkur`: lisa `concept`- ja `graph`-kaart (`sisu/MOODUL-helkur.md`
+- [x] `helkur`: lisa `concept`- ja `graph`-kaart (`sisu/MOODUL-helkur.md`
       RIDA 604 tabelisse + `activities.ts` `reviewCards`); vaata, kas mõni
       4 harjutusküsimusest sobib arvuvariandiga (nurgaviga practice-1
       mõjub heaks kandidaadiks – sama valem, teine kraadiarv)
