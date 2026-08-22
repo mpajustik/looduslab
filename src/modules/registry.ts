@@ -493,7 +493,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "kf-valgustatud-pool": lazy(() =>
       import("./physics/kuu-faasid/figures").then((module) => ({
-        default: module.LitHalfFigure,
+        default: module.LitHalfAndSynodicFigure,
       })),
     ),
     "kf-kaks-sirpi": lazy(() =>

@@ -39,6 +39,9 @@ export const manifest = defineModule({
   //
   // 1.0.1: kolmele küsimusele lisati vihje, mis seni puudus (explore-3,
   // practice-4, exit-1) – sõnastus, mitte õige vastus, seega patch.
-  version: "1.0.1",
+  // 1.0.2: theory-1 joonisele (kf-valgustatud-pool) lisati 27,3 vs 29,5 päeva
+  // joonis (SynodicVsSiderealFigure) LitHalfFigure'i juurde – visuaali
+  // muutus, patch (docs/MOODULILEPING.md).
+  version: "1.0.2",
   status: "active",
 });
