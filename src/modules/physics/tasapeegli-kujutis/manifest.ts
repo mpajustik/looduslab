@@ -35,6 +35,9 @@ export const manifest = defineModule({
   // 1.0.1: viiele küsimusele lisati vihje, mis seni puudus (explore-4,
   // practice-2, practice-4, exit-1, exit-2) – sõnastus, mitte õige vastus,
   // seega patch.
-  version: "1.0.1",
+  // 1.0.2: theory-1 joonisele (tp-nailine-kujutis) lisati „samm lähemale"
+  // joonis (StepCloserFigure) VirtualImageFigure'i juurde – visuaali
+  // muutus, patch (docs/MOODULILEPING.md).
+  version: "1.0.2",
   status: "active",
 });

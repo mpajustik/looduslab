@@ -336,7 +336,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "tp-nailine-kujutis": lazy(() =>
       import("./physics/tasapeegli-kujutis/figures").then((module) => ({
-        default: module.VirtualImageFigure,
+        default: module.VirtualImageAndStepCloserFigure,
       })),
     ),
   },

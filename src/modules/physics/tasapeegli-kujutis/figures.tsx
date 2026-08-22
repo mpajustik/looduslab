@@ -1,9 +1,15 @@
+import { imageDistance, objectImageSeparation } from "./model";
+
 /**
  * Mooduli joonised (src/engine/figures.ts).
  *
  * Nagu Simulation.tsx, on ka need VAATED: füüsikat siin ei arvutata. Mudeli
  * importi siia ei tule – kumbki joonis ei näita ühtki ARVU, ainult olukorda.
  * Nii ei saa joonis mudeliga vastuollu minna: tal ei ole midagi väita.
+ *
+ * Erand on `StepCloserFigure`, mis TÕESTAB teooriateksti lauset „vahe väheneb
+ * KAKS sammu" arvuliselt – tema kaks vahemaad tulevad `model.ts` funktsioonidest
+ * `imageDistance` ja `objectImageSeparation`, mitte käsitsi kirjutatud arvuna.
  *
  * **Hooki joonis ei tohi vastust ette öelda.** `tp-poe-peegel` näitab, ET
  * kaugemale astudes paistab peeglist täpselt sama palju – aga MIKS, seda ei
@@ -329,5 +335,169 @@ export function VirtualImageFigure() {
         Silma jõuavad peegeldunud kiired; nende pikendused lõikuvad peegli taga – seal paistab kujutis olevat.
       </figcaption>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// tp-nailine-kujutis – teooria (samm lähemale → vahe kaks sammu)
+// ---------------------------------------------------------------------------
+
+const STEP_VIEW = { width: 380, height: 260 };
+const STEP_MIRROR_X = 190;
+/** Pikslit ühe meetri kohta – sama skaala mõlemas reas, et kahanemine oleks NÄHA. */
+const STEP_SCALE = 32;
+const STEP_ROW_BEFORE_Y = 76;
+const STEP_ROW_AFTER_Y = 190;
+
+/** Enne ja pärast sammu lähemale – arvud tulevad mudelist, mitte peast. */
+const STEP_BEFORE_DISTANCE_M = 2;
+const STEP_SIZE_M = 1;
+const STEP_AFTER_DISTANCE_M = STEP_BEFORE_DISTANCE_M - STEP_SIZE_M;
+const STEP_BEFORE_SEPARATION_M = objectImageSeparation(STEP_BEFORE_DISTANCE_M);
+const STEP_AFTER_SEPARATION_M = objectImageSeparation(STEP_AFTER_DISTANCE_M);
+
+/** Lihtne inimese ikoon: pea + keha, sama muster mis `ShopFrame`-is. */
+function StepPerson({ x, y }: { x: number; y: number }) {
+  return (
+    <g>
+      <circle cx={x} cy={y - 22} r={8} className="fill-ink" />
+      <line
+        x1={x}
+        y1={y - 14}
+        x2={x}
+        y2={y + 14}
+        className="stroke-ink"
+        strokeWidth={7}
+        strokeLinecap="round"
+      />
+    </g>
+  );
+}
+
+/** Sama ikoon katkendjoonena – kujutis peegli taga. */
+function StepImage({ x, y }: { x: number; y: number }) {
+  return (
+    <g className="fill-none stroke-brand" strokeWidth={2}>
+      <circle cx={x} cy={y - 22} r={8} strokeDasharray="3 3" />
+      <line x1={x} y1={y - 14} x2={x} y2={y + 14} strokeDasharray="4 3" />
+    </g>
+  );
+}
+
+type StepRowProps = {
+  y: number;
+  distanceM: number;
+  separationM: number;
+  caption: string;
+};
+
+function StepRow({ y, distanceM, separationM, caption }: StepRowProps) {
+  const personX = STEP_MIRROR_X - distanceM * STEP_SCALE;
+  const imageX = STEP_MIRROR_X + imageDistance(distanceM) * STEP_SCALE;
+  return (
+    <g>
+      <line
+        x1={STEP_MIRROR_X}
+        y1={y - 46}
+        x2={STEP_MIRROR_X}
+        y2={y + 30}
+        className="stroke-ink"
+        strokeWidth={3}
+      />
+      <StepPerson x={personX} y={y} />
+      <StepImage x={imageX} y={y} />
+      {/* Vahe: üks nool ühest servast teiseni, sildiga kogupikkus. */}
+      <g className="stroke-ink-soft" strokeWidth={1}>
+        <line x1={personX} y1={y + 34} x2={personX} y2={y + 44} />
+        <line x1={imageX} y1={y + 34} x2={imageX} y2={y + 44} />
+        <line x1={personX} y1={y + 40} x2={imageX} y2={y + 40} />
+      </g>
+      <text
+        x={(personX + imageX) / 2}
+        y={y + 56}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={12}
+        fontWeight={600}
+      >
+        vahe: {separationM} m
+      </text>
+      <text
+        x={8}
+        y={y - 40}
+        textAnchor="start"
+        className="fill-ink-soft"
+        fontSize={11}
+      >
+        {caption}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * „Samm lähemale → vahe kaks sammu": kaks rida ühel skaalal.
+ *
+ * Teooriateksti esimene lõik ütles seni ainult sõnadega, et sinu ja kujutise
+ * vahe väheneb kaks korda rohkem kui sinu enda samm – see on mooduli kõige
+ * üllatavam lause ja `worked`-näidise arvuline sisu, aga senini ilma pildita.
+ * Mõlemad read kasutavad SAMA skaalat (`STEP_SCALE`), et kahanemine oleks
+ * silmaga võrreldav, mitte ainult numbrina loetav.
+ */
+export function StepCloserFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${STEP_VIEW.width} ${STEP_VIEW.height}`}
+        role="img"
+        aria-label={`Joonis kahest reast ühel skaalal. Ülemises reas seisab inimene peeglist ${STEP_BEFORE_DISTANCE_M} meetri kaugusel ja tema kujutis sama kaugel peegli taga, vahe on ${STEP_BEFORE_SEPARATION_M} meetrit. Alumises reas on inimene astunud ${STEP_SIZE_M} meetri võrra lähemale, kujutis on samuti lähemale astunud, ja vahe on nüüd ${STEP_AFTER_SEPARATION_M} meetrit – vahe vähenes kaks korda rohkem, kui inimene ise liikus.`}
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <StepRow
+          y={STEP_ROW_BEFORE_Y}
+          distanceM={STEP_BEFORE_DISTANCE_M}
+          separationM={STEP_BEFORE_SEPARATION_M}
+          caption={`${STEP_BEFORE_DISTANCE_M} m peeglist`}
+        />
+        <StepRow
+          y={STEP_ROW_AFTER_Y}
+          distanceM={STEP_AFTER_DISTANCE_M}
+          separationM={STEP_AFTER_SEPARATION_M}
+          caption={`${STEP_SIZE_M} m lähemale astutud`}
+        />
+        <text
+          x={STEP_VIEW.width / 2}
+          y={STEP_VIEW.height - 8}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={11}
+        >
+          {STEP_SIZE_M} m samm sina, {
+            STEP_BEFORE_SEPARATION_M - STEP_AFTER_SEPARATION_M
+          } m vähem vahet
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Astud {STEP_SIZE_M} m lähemale – kujutis astub sinuga koos {STEP_SIZE_M} m
+        lähemale, seega teie vahe väheneb{" "}
+        {STEP_BEFORE_SEPARATION_M - STEP_AFTER_SEPARATION_M} m ehk kaks korda
+        rohkem kui sinu enda samm.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: näiline kujutis (`VirtualImageFigure`) ja selle all
+ * „samm lähemale" joonis (`StepCloserFigure`) – kaks eri ideed samast
+ * teooriatekstist ühe joonisena, moodul jääb 6 sammu juurde, teist
+ * theory-sammu ei lisata (sama muster mis mujal P1-s).
+ */
+export function VirtualImageAndStepCloserFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <VirtualImageFigure />
+      <StepCloserFigure />
+    </div>
   );
 }
