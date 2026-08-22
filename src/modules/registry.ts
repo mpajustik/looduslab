@@ -365,7 +365,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "ev-punane-oun": lazy(() =>
       import("./physics/esemete-varvus/figures").then((module) => ({
-        default: module.RedAppleFigure,
+        default: module.ApplePlusMixingFigure,
       })),
     ),
     "ev-kolm-eset": lazy(() =>

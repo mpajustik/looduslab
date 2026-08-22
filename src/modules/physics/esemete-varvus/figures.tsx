@@ -1,11 +1,18 @@
 import {
   CHANNEL_STOPS,
+  DARK_LABEL_COLOUR,
+  DARK_ROOM_COLOUR,
   OUTLINE_COLOUR,
   channelColour,
   swatchColour,
   swatchLabelColour,
 } from "./display";
-import { perceivedColour, reflectedChannels } from "./model";
+import {
+  CHANNELS,
+  perceivedColour,
+  perceivedColourForChannels,
+  reflectedChannels,
+} from "./model";
 
 /**
  * Mooduli joonised (src/engine/figures.ts).
@@ -373,6 +380,146 @@ export function RedAppleFigure() {
         valgus muutub õunas soojuseks.
       </figcaption>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ev-punane-oun – teooria (liitmisreegel)
+// ---------------------------------------------------------------------------
+
+const MIX_VIEW = { width: 380, height: 260 };
+const MIX_R = 72;
+/** Kolme ringi keskpunktid – klassikaline Venni kolmnurk. */
+const MIX_CENTRES = {
+  red: { x: 150, y: 108 },
+  green: { x: 230, y: 108 },
+  blue: { x: 190, y: 180 },
+} as const;
+
+/**
+ * Sildi taust: väike ümarnurgaga plaat teksti taga.
+ *
+ * Ring ise on `mix-blend-mode: screen` läbi kolme kihi ülekattes ükskõik mis
+ * toonis – kollasest lillani. Must tekst ilma taustata kaoks tumedatel
+ * kattealadel ära ja valge tekst omakorda helesinisel. Läbipaistev valge plaat
+ * annab piisava kontrasti IGA võimaliku alusvärvi peal, ilma et peaks iga
+ * ala jaoks eraldi kontrasti arvutama.
+ */
+function MixLabel({ x, y, text }: { x: number; y: number; text: string }) {
+  const width = text.length * 6.4 + 14;
+  return (
+    <g>
+      <rect
+        x={x - width / 2}
+        y={y - 12}
+        width={width}
+        height={20}
+        rx={10}
+        fill="#ffffff"
+        opacity={0.88}
+      />
+      <text
+        x={x}
+        y={y + 3}
+        textAnchor="middle"
+        fill={DARK_LABEL_COLOUR}
+        fontSize={12}
+        fontWeight={700}
+      >
+        {text}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * Liitmisreegel: kolm kattuvat valgusringi.
+ *
+ * Nagu teooriateksti viimane lõik ütleb – „kui tagasi tuleb korraga punane ja
+ * roheline, näeb silm kollast; kui kõik kolm, siis valget" –, aga see lõik oli
+ * senini puhas jutt ilma pildita. Ringid kasutavad `mix-blend-mode: screen`,
+ * sest see JÄLJENDABKI valguste liitumist (mitte värviainete segunemist):
+ * punane + roheline ekraanil annabki kollase, mitte pruuni, nagu guaššiga.
+ *
+ * Taust on tume (nagu simulatsiooni pime tuba), sest valgel taustal ei näita
+ * `screen` midagi – valge ekraanil jääbki iga ring nähtamatuks. Ringivärvid
+ * tulevad `channelColour`-ist, samad toonid mis nooltel mujal moodulis, nii
+ * et õpilane seob need kohe omavahel.
+ *
+ * Kõik neli ala (kolm üksik-, kolm kahekaupa- ja üks kolmekaupa kattumine)
+ * saavad nime `perceivedColourForChannels`-ist – MITTE käsitsi kirjutatud
+ * sõnana. Nii ei saa see joonis mudelist lahku minna.
+ */
+export function AdditiveMixingFigure() {
+  const nameOf = (ids: string[]) => perceivedColourForChannels(ids);
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${MIX_VIEW.width} ${MIX_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: kolm valgusringi kattuvad tumedal taustal. Üksi paistab iga ring oma värvi: punane, roheline, sinine. Punase ja rohelise kattealal on kollane, punase ja sinise kattealal lilla, rohelise ja sinise kattealal helesinine. Kõigi kolme ühisel kattealal keskel on valge."
+        className="w-full rounded-2xl border border-line"
+        style={{ backgroundColor: DARK_ROOM_COLOUR }}
+      >
+        <text
+          x={MIX_VIEW.width / 2}
+          y={26}
+          textAnchor="middle"
+          fill="#ffffff"
+          fontSize={12}
+          fontWeight={600}
+        >
+          valguste liitumine (mitte värviainete segunemine!)
+        </text>
+
+        {CHANNELS.map((channel) => {
+          const centre = MIX_CENTRES[channel.id as keyof typeof MIX_CENTRES];
+          return (
+            <circle
+              key={channel.id}
+              cx={centre.x}
+              cy={centre.y}
+              r={MIX_R}
+              fill={channelColour(channel.id)}
+              style={{ mixBlendMode: "screen" }}
+            />
+          );
+        })}
+
+        {/* Üksikalade sildid – väljaspool teisi ringe. */}
+        <MixLabel x={112} y={78} text={nameOf(["red"])} />
+        <MixLabel x={268} y={78} text={nameOf(["green"])} />
+        <MixLabel x={190} y={232} text={nameOf(["blue"])} />
+
+        {/* Kahekaupa kattealade sildid. */}
+        <MixLabel x={190} y={92} text={nameOf(["red", "green"])} />
+        <MixLabel x={140} y={168} text={nameOf(["red", "blue"])} />
+        <MixLabel x={240} y={168} text={nameOf(["green", "blue"])} />
+
+        {/* Kõigi kolme ühine ala. */}
+        <MixLabel x={190} y={150} text={nameOf(["red", "green", "blue"])} />
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Kolm valgusringi kattuvad: kahe värvi ühisalal näeb silm nende liitu
+        (punane + roheline = kollane), kõigi kolme ühisalal valget. See on
+        valguste liitumine – guaššiga segades tuleks teistsugune tulemus.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: õuna näide (miks TEMA on punane) ja selle all liitmisreegel
+ * (mis värvi näeb SILM, kui korraga tuleb tagasi mitu kanalit) – kaks eri
+ * ideed samast teooriatekstist ühe joonisena, moodul jääb 6 sammu juurde,
+ * teist theory-sammu ei lisata (sama muster mis mujal P1-s).
+ */
+export function ApplePlusMixingFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <RedAppleFigure />
+      <AdditiveMixingFigure />
+    </div>
   );
 }
 

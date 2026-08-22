@@ -121,8 +121,14 @@ osa, mis praegu jääb sõnadeks.
       `UmbraPenumbraFigure`'iga võtme `vp-taisvari-poolvari` alla
       komponendina `UmbraPenumbraAndPointSourceFigure` – moodul jääb 6 sammu
       juurde, teist theory-sammu ei lisatud. Version bumbitud 1.0.2.)
-- [ ] **esemete-varvus** – liitmisreegel kolme kattuva ringina
+- [x] **esemete-varvus** – liitmisreegel kolme kattuva ringina
       (P+R→kollane, kõik kolm→valge). Olemas: `RedAppleFigure`.
+      (Tehtud: `AdditiveMixingFigure`, mis paneb selle kokku
+      `RedAppleFigure`'iga võtme `ev-punane-oun` alla komponendina
+      `ApplePlusMixingFigure` – moodul jääb 6 sammu juurde, teist
+      theory-sammu ei lisatud. Ringid `mix-blend-mode: screen` tumedal
+      taustal – valguste liitumine, mitte värviainete segunemine.
+      Version bumbitud 1.0.2.)
 - [ ] **valgusfiltrid** – „filter ≠ prisma" kahe paneelina: filter (valge
       sisse → punane välja, midagi ei lahutata) vs prisma (valge sisse →
       värvilehvik). Levinud segiajamine. Olemas: `SingleFilterFigure`.

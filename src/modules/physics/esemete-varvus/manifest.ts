@@ -38,6 +38,9 @@ export const manifest = defineModule({
   // 1.0.1: neljale küsimusele lisati vihje, mis seni puudus (explore-2,
   // explore-4, practice-4, exit-1) – sõnastus, mitte õige vastus, seega
   // patch.
-  version: "1.0.1",
+  // 1.0.2: theory-1 joonisele (ev-punane-oun) lisati liitmisreegli joonis
+  // (AdditiveMixingFigure) õuna joonise juurde – visuaali muutus, patch
+  // (docs/MOODULILEPING.md).
+  version: "1.0.2",
   status: "active",
 });
