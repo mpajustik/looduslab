@@ -433,7 +433,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "kr-vaatevali": lazy(() =>
       import("./physics/kumerpeegli-rakendused/figures").then((module) => ({
-        default: module.ViewFieldFigure,
+        default: module.ViewFieldAndSizeIllusionFigure,
       })),
     ),
     "kr-ristmik": lazy(() =>

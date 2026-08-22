@@ -57,10 +57,12 @@ Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 
 ### 4. kumerpeegli-rakendused – tagajärjed 2 ja 3 on visualiseerimata
 
-- [ ] **Peeglivaate makett** – sama auto tasapeeglis ja kumerpeeglis kõrvuti.
+- [x] **Peeglivaate makett** – sama auto tasapeeglis ja kumerpeeglis kõrvuti.
       `ViewFieldFigure` katab vaatevälja (tagajärg 1), aga „esemed paistavad
       väiksemad" ja „kaugus tundub suurem" – millest tuleb kogu autopeegli
-      hoiatus – on ainult tekst.
+      hoiatus – on ainult tekst. (Tehtud: `MirrorSizeIllusionFigure` +
+      `ViewFieldAndSizeIllusionFigure`, mis paneb selle kokku
+      `ViewFieldFigure`'iga, võti `kr-vaatevali`, theory-1 küljes.)
 
 ### 5. noguspeegli-rakendused – kaks kõige raskemat lõiku on tekstis
 

@@ -494,6 +494,160 @@ export function ViewFieldFigure() {
 }
 
 // ---------------------------------------------------------------------------
+// kr-vaatevali – teooria, teine pool: tagajärjed 2 ja 3 (väiksem, kaugem)
+// ---------------------------------------------------------------------------
+
+const MOCK_VIEW = { width: 360, height: 172 };
+const MOCK_PANEL = { width: 168, height: 96, top: 40 };
+const MOCK_CAR = { width: 46, height: 22 };
+
+/** Auto siluett – sama kuju mõlemas peeglis, ainult mõõtkava erineb. */
+function MockCar({
+  cx,
+  cy,
+  scale,
+}: {
+  cx: number;
+  cy: number;
+  scale: number;
+}) {
+  const w = MOCK_CAR.width * scale;
+  const h = MOCK_CAR.height * scale;
+  return (
+    <g transform={`translate(${cx - w / 2} ${cy - h / 2})`}>
+      <rect
+        x={0}
+        y={h * 0.35}
+        width={w}
+        height={h * 0.65}
+        rx={h * 0.18}
+        className="fill-ink"
+      />
+      <rect
+        x={w * 0.22}
+        y={0}
+        width={w * 0.5}
+        height={h * 0.5}
+        rx={h * 0.12}
+        className="fill-ink"
+      />
+    </g>
+  );
+}
+
+/**
+ * Üks peegel: raam + peegeldatud auto omas mõõtkavas.
+ *
+ * See joonis EI väida ühtegi arvu (erinevalt `ViewFieldFigure`-ist) – ta näitab
+ * ainult SEDA, et sama auto peegeldub kahes peeglis eri suurusena, ja mida aju
+ * sellest järeldab. Mõõtkava (`scale`) on paigutuse otsus, mitte mudeli arv.
+ */
+function MockPanel({
+  x,
+  title,
+  scale,
+  conclusion,
+}: {
+  x: number;
+  title: string;
+  scale: number;
+  conclusion: string;
+}) {
+  const centreX = x + MOCK_PANEL.width / 2;
+  const centreY = MOCK_PANEL.top + MOCK_PANEL.height / 2;
+  return (
+    <g>
+      <text
+        x={centreX}
+        y={16}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={12}
+        fontWeight={600}
+      >
+        {title}
+      </text>
+      <rect
+        x={x}
+        y={MOCK_PANEL.top}
+        width={MOCK_PANEL.width}
+        height={MOCK_PANEL.height}
+        rx={10}
+        className="fill-brand-soft stroke-brand"
+        strokeWidth={2}
+      />
+      <MockCar cx={centreX} cy={centreY} scale={scale} />
+      <text
+        x={centreX}
+        y={MOCK_PANEL.top + MOCK_PANEL.height + 20}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={11}
+        fontWeight={600}
+      >
+        {conclusion}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * Teooriajoonis, teine pool: sama kaugusel olev auto kahes peeglis.
+ *
+ * Vasakul tasapeegel (auto paistab suurena → tundub lähedal), paremal
+ * kumerpeegel (SAMA auto samal kaugusel paistab väiksena → tundub kaugemal).
+ * See katab tagajärjed 2 ja 3 teooriatekstist: peegel ei liiguta autot
+ * kuhugi, ta ainult muudab, kui suurena see paistab.
+ */
+export function MirrorSizeIllusionFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${MOCK_VIEW.width} ${MOCK_VIEW.height}`}
+        role="img"
+        aria-label="Kaks peeglit kõrvuti, kummaski peegeldub täpselt sama kaugel seisev auto. Vasakul tasapeeglis paistab auto suurena, silt ütleb „paistab suur, tundub lähedal“. Paremal kumerpeeglis paistab sama auto palju väiksemana, silt ütleb „paistab väike, tundub kaugel“."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <MockPanel
+          x={8}
+          title="tasapeegel"
+          scale={1}
+          conclusion="paistab suur → tundub lähedal"
+        />
+        <MockPanel
+          x={184}
+          title="kumerpeegel"
+          scale={0.4}
+          conclusion="paistab väike → tundub kaugel"
+        />
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Sama auto, sama kaugus mõlemal pool – peegel ei liiguta seda kuhugi.
+        Kumerpeeglis paistab auto lihtsalt väiksem, ja väiksem tundub aju
+        jaoks kaugem.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: kaks joonist üksteise all – kõigepealt tagajärg 1
+ * (`ViewFieldFigure`, vaateväli laieneb), siis tagajärjed 2 ja 3
+ * (`MirrorSizeIllusionFigure`, väiksem paistmine → kaugem tundub). Sama
+ * järjekord, mis teooriateksti lõikudel. Moodul jääb ühe theory-sammu
+ * juurde, teist ei lisata (sama muster mis `valgusallikad/SourceKindsFigure`
+ * ja `peeglikiri/LetterSymmetryAndDepthFigure`).
+ */
+export function ViewFieldAndSizeIllusionFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <ViewFieldFigure />
+      <MirrorSizeIllusionFigure />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // kr-ristmik – practice-3
 // ---------------------------------------------------------------------------
 
