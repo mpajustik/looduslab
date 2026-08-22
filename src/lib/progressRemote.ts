@@ -7,6 +7,7 @@ import {
   type RemoteProgress,
 } from "./progressSync";
 import { classify, currentStudent, loadClient } from "./remoteSession";
+import { readMembership } from "./studentIdentity";
 
 /**
  * Õpilase edenemise kirjutamine Supabase'i (samm 2.11).
@@ -28,6 +29,16 @@ export function createSupabaseRemote(
 ): RemoteProgress {
   return {
     async push(progress: ModuleProgress, reset: boolean): Promise<PushResult> {
+      // Külalise valik on TEADA kohapeal, ilma võrguta (src/lib/studentIdentity.ts
+      // `markGuest` – õpilane ütles ise „jätka külalisena", tema töö EI JÕUAgi
+      // kunagi serverisse). Ilma selle kontrollita laaditaks katkise võrguga
+      // külalisele supabase-js alla ja `saveState` näitaks vahepeal
+      // „Salvestan …" / „Salvestan, kui võrk taastub" – lubadus, mida ei saa
+      // kunagi täita (Codexi ülevaatuse leid, samm 2). Sessiooni-kontroll
+      // allpool jääb ka alles: see püüab klassiga liitumata õpilase ja
+      // õpetaja oma seadme, mida seadmepoolne lipp ei tea.
+      if (readMembership() === "guest") return "skipped";
+
       const client = await getClient();
       const student = await currentStudent(client);
       if (!student.ok) return student.result;
@@ -88,6 +99,8 @@ export function createSupabaseRemote(
     },
 
     async remove(moduleId: string): Promise<PushResult> {
+      if (readMembership() === "guest") return "skipped";
+
       const client = await getClient();
       const student = await currentStudent(client);
       if (!student.ok) return student.result;

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { appNow } from "../lib/devClock";
 import { sharedProgressSync } from "../lib/progressRemote";
+import type { SaveState } from "../lib/progressSync";
 import { sharedReviewSync } from "../lib/reviewRemote";
 import { browserStorage } from "../lib/storage";
 import type { AnswerPayload, Answers } from "./answers";
@@ -55,6 +56,11 @@ export type ModuleProgressHandle = {
   hasProgress: boolean;
   /** Kas moodul on läbi tehtud – siis kuulub ekraan kokkuvõttele. */
   isCompleted: boolean;
+  /**
+   * Kas vastused on serverisse jõudnud (`unknown`/`off` = ära ütle midagi).
+   * Vaade ainult kuvab – seisu omanik on sünkroonimisjärjekord.
+   */
+  saveState: SaveState;
   goToIndex: (index: number) => void;
   answer: (step: Step, questionId: string, payload: AnswerPayload) => void;
   /** Viimase sammu „Lõpetan": märgib mooduli tehtuks (kordusvajutus ei muuda). */
@@ -86,14 +92,13 @@ export function useModuleProgress({
   // Server tuleb juurde ainult `persist` režiimis. `createProgressStore`
   // jätaks preview puhul `sync` niikuinii kasutamata, aga siin on see ka
   // nähtav: õpetaja „Vaata õpilasena" ei loo isegi järjekorda.
-  const store = useMemo(
-    () =>
-      createProgressStore(
-        mode,
-        browserStorage,
-        mode === "persist" ? sharedProgressSync() : null,
-      ),
+  const sync = useMemo(
+    () => (mode === "persist" ? sharedProgressSync() : null),
     [mode],
+  );
+  const store = useMemo(
+    () => createProgressStore(mode, browserStorage, sync),
+    [mode, sync],
   );
   // Kordamiskaartide hoidla saab režiimi samast kohast: preview ei tekita
   // ühtegi kaarti ei seadmesse ega serverisse, ka siis, kui õpetaja demo
@@ -122,6 +127,24 @@ export function useModuleProgress({
     setProgress(loadProgress(store, { moduleId, moduleVersion, steps }));
     setRunId((current) => current + 1);
   }
+
+  /**
+   * Salvestusseis järjekorrast. `useSyncExternalStore` on siin õige riist:
+   * järjekord elab väljaspool Reacti (üks kogu rakenduse peale) ja muutub ka
+   * siis, kui selles komponendis midagi ei juhtu – nt kui võrk taastub.
+   *
+   * Eelvaates järjekorda EI OLE (`sync === null`), seega jääb seis `unknown`
+   * ja ekraan vaikib – reegel 14 ilma eraldi erandita.
+   */
+  const saveState = useSyncExternalStore(
+    useCallback(
+      (listener: () => void) => sync?.subscribe(moduleId, listener) ?? (() => {}),
+      [sync, moduleId],
+    ),
+    useCallback(() => sync?.saveState(moduleId) ?? "unknown", [sync, moduleId]),
+    // Serveris renderdades ei ole järjekorda ega brauserit.
+    () => "unknown" as const,
+  );
 
   const stored = useMemo(() => toAnswers(progress), [progress]);
 
@@ -174,6 +197,7 @@ export function useModuleProgress({
     runId,
     hasProgress: index > 0 || Object.keys(progress.responses).length > 0,
     isCompleted: progress.status === "completed",
+    saveState,
     goToIndex: (target) => {
       const step = steps[target];
       if (step) commit((current) => withCurrentStep(current, step.id));

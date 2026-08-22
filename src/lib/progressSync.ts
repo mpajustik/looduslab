@@ -37,6 +37,20 @@ export type RemoteProgress = {
   remove(moduleId: string): Promise<PushResult>;
 };
 
+/**
+ * Mida õpilasele sünkroonimise kohta ekraanil öelda (MOODULILEHT-UX samm 2).
+ *
+ * Need ei ole uus olek, vaid järjekorra enda seisu NIMED: `pending` sisu ja
+ * viimane `PushResult` kokku. Kaks tähendavad „ära ütle midagi":
+ *
+ * - `unknown` – selle mooduli kohta ei ole veel midagi juhtunud (moodul on
+ *   just avatud, esimest vastust ei ole). Tühi rida on ausam kui „Salvestatud".
+ * - `off` – server vastas `skipped`: külaline ilma sessioonita, õpetaja oma
+ *   seadmes, klassiga liitumata õpilane. Siin EI OLE kunagi midagi salvestada,
+ *   seega ei tohi ka lubadust anda (plaan: „külalisele ei näidata").
+ */
+export type SaveState = "unknown" | "saving" | "waiting" | "saved" | "off";
+
 export type ProgressSyncHandle = ProgressSync & {
   /**
    * Proovi järjekord tühjaks saata. Kutsutakse lehe avamisel ja siis, kui
@@ -44,6 +58,10 @@ export type ProgressSyncHandle = ProgressSync & {
    * ühendusega vastus seadmesse kuni järgmise klõpsuni.
    */
   flush(): Promise<void>;
+  /** Mooduli salvestusseis praegu – vaade loeb, ei muuda. */
+  saveState(moduleId: string): SaveState;
+  /** Teata muutusest. Tagastab lahtiütlemise (React `useSyncExternalStore`). */
+  subscribe(moduleId: string, listener: () => void): () => void;
 };
 
 export function createProgressSync(
@@ -65,6 +83,28 @@ export function createProgressSync(
   let running: Promise<void> | null = null;
   /** Saatmise AJAL tuli uus muudatus – tee veel üks ring. */
   let again = false;
+
+  /**
+   * Ekraanile mõeldud seis mooduli kaupa. Eraldi `pending`-ist, sest tühi
+   * järjekord tähendab kaht eri asja: „kohal" ja „ei olegi veel midagi olnud".
+   */
+  const states = new Map<string, SaveState>();
+  const listeners = new Map<string, Set<() => void>>();
+  // Lehe avamisel järjekorras leitud kirje ootab võrku – ta jäi eelmisest
+  // korrast saatmata. `flush` teeb sellest kohe „salvestan", kui võrk on.
+  for (const moduleId of pending.keys()) states.set(moduleId, "waiting");
+
+  function setState(moduleId: string, next: SaveState): void {
+    if (states.get(moduleId) === next) return;
+    states.set(moduleId, next);
+    for (const listener of listeners.get(moduleId) ?? []) listener();
+  }
+
+  /** `off` on lõplik: külalisele ei vilgu vahepeal „Salvestan …". */
+  function markSending(moduleId: string): void {
+    if (states.get(moduleId) === "off") return;
+    setState(moduleId, "saving");
+  }
 
   function read(): string | null {
     if (!storage) return null;
@@ -98,6 +138,8 @@ export function createProgressSync(
       // tagasi (nt „Alusta uuesti" tuli peale vastuse salvestamist).
       if (pending.get(moduleId) !== entry) continue;
 
+      markSending(moduleId);
+
       let result: PushResult;
       try {
         result =
@@ -110,11 +152,16 @@ export function createProgressSync(
         result = "retry";
       }
 
-      if (result === "retry") continue;
-      // Uuem kirje tuli just saatmise ajal – teda EI tohi kustutada.
+      if (result === "retry") {
+        setState(moduleId, "waiting");
+        continue;
+      }
+      // Uuem kirje tuli just saatmise ajal – teda EI tohi kustutada. Seis jääb
+      // siis „salvestan": kohal on vana seis, mitte see, mida ekraan näitab.
       if (pending.get(moduleId) === entry) {
         pending.delete(moduleId);
         save();
+        setState(moduleId, result === "skipped" ? "off" : "saved");
       }
     }
   }
@@ -142,6 +189,10 @@ export function createProgressSync(
   function enqueue(moduleId: string, entry: SyncEntry): void {
     pending.set(moduleId, entry);
     save();
+    // Kohe, mitte alles saatmise alguses: vastuse esitamise ja esimese
+    // võrgupäringu vahele jääks muidu hetk, kus ekraanil seisab veel eelmise
+    // vastuse „Salvestatud ✓".
+    markSending(moduleId);
     // Kui saatmine juba käib, teeb see lipp talle veel ühe ringi – muidu
     // jääks just lisatud kirje ootama järgmist klõpsu.
     again = true;
@@ -159,5 +210,20 @@ export function createProgressSync(
     },
     remove: (moduleId) => enqueue(moduleId, { op: "delete" }),
     flush: run,
+    saveState: (moduleId) => states.get(moduleId) ?? "unknown",
+    subscribe: (moduleId, listener) => {
+      let forModule = listeners.get(moduleId);
+      if (!forModule) {
+        forModule = new Set();
+        listeners.set(moduleId, forModule);
+      }
+      forModule.add(listener);
+      return () => {
+        forModule.delete(listener);
+        // Tühi hulk kaob kaasa: järjekord elab kogu seansi, seega jääks iga
+        // avatud mooduli järel muidu tühi kirje igaveseks rippuma.
+        if (forModule.size === 0) listeners.delete(moduleId);
+      };
+    },
   };
 }

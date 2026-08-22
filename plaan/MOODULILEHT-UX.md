@@ -73,12 +73,26 @@ võrgukatkestusel „Salvestan, kui võrk taastub" (mitte punane veateade).
 Koodis ei ole seda sõna kusagil. Telefonis vastav õpilane ei tea, kas töö
 jõuab õpetajani.
 
-- [ ] Sammu allservas väike olekurida, mis loeb sünkroonijärjekorra seisu
-      (`src/engine/syncQueue.ts`) – uut olekut juurde ei tekitata
-- [ ] Kolm seisu: salvestatud / salvestan / ootab võrku. Veateadet ei ole
-- [ ] Külalise ja `preview` režiimis EI näidata „Salvestatud" – seal ei
-      salvestata serverisse midagi (reegel 14). Külalisel on oma riba juba
-      olemas (`ModulePage.tsx` `showGuestNotice`)
+- [x] Sammu allservas väike olekurida (`src/ui/SaveNotice.tsx`), mis loeb
+      sünkroonijärjekorra seisu (`src/lib/progressSync.ts` `saveState` +
+      `subscribe`) – uut olekut juurde ei tekitata, ainult `pending` sisu ja
+      viimane `PushResult` saavad nime. Vaade saab seisu engine'ilt
+      (`useModuleProgress.saveState`, `useSyncExternalStore`), seega ta ei tea
+      endiselt, kuhu ja kas üldse salvestatakse
+- [x] Kolm seisu: salvestatud / salvestan / ootab võrku. Veateadet ei ole –
+      katkine võrk ei ole õpilase viga ja vastus on seadmes alles
+- [x] Külalise ja `preview` režiimis EI näidata „Salvestatud". Preview't ei
+      pea eraldi keelama: seal ei ole järjekorda üldse (`sync === null`).
+      Külalise tunneb ära `skipped` vastuse järgi – see katab ka klassiga
+      liitumata õpilase ja õpetaja oma seadmes, mida `showGuestNotice` ei tea.
+      Seis `off` on lõplik, muidu vilguks vahepeal „Salvestan …".
+      Codexi ülevaatuse leid: külalise `skipped` tuli algversioonis alles
+      Supabase'i sessioonikontrollist, seega enne serveri vastust (ja katkise
+      võrguga kuni järgmise online-sündmuseni) võis külaline ikka näha
+      „Salvestan …" või „Salvestan, kui võrk taastub" – lubadust, mida ei saa
+      kunagi täita. Parandus: `progressRemote.ts` küsib enne võrku
+      `readMembership() === "guest"` (seadmepoolne, ilma võrguta – õpilane
+      ütles selle ise „jätka külalisena" nupuga)
 
 ## 3. Tagasitulek keset moodulit on tumm — Sonnet
 

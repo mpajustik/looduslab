@@ -21,6 +21,7 @@ import type { SimulationProps } from "../engine/simulationFeatures";
 import { useModuleProgress } from "../engine/useModuleProgress";
 import { Button } from "./Button";
 import { ModuleSummary } from "./ModuleSummary";
+import { SaveNotice } from "./SaveNotice";
 import { DraftContext, useDraftStore } from "./steps/drafts";
 import { STEP_LABELS, STEP_NOTES, stepRegistry } from "./steps/registry";
 import type { StepComponent } from "./steps/types";
@@ -277,6 +278,12 @@ export function StepShell({
           </div>
 
           <div className="flex flex-col gap-3 border-t border-line pt-4">
+            {/* Salvestusteade on sammu ALL, vastuse ja „Edasi" vahel: just seal
+                küsib õpilane endalt „kas läks kirja?". Seis tuleb engine'ilt,
+                kes loeb sünkroonimisjärjekorda – vaade ei tea, kuhu ja kas
+                üldse salvestatakse (sama põhjus mis mujal selles failis). */}
+            <SaveNotice state={progress.saveState} />
+
             {/* Lukus nupp ilma põhjenduseta on 8. klassi õpilase jaoks lihtsalt
                 katkine nupp. Lause on nähtav (mitte ainult ekraanilugejale) ja
                 kaob ise, kui vastus on esitatud. Viimasel sammul ütleb ta

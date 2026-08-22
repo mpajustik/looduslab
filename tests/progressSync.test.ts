@@ -228,3 +228,91 @@ describe("createProgressSync", () => {
     expect(pushed).toEqual([demo]);
   });
 });
+
+describe("saveState", () => {
+  it("vaikib, kuni midagi ei ole veel salvestada", () => {
+    const { storage } = memoryStorage();
+    const sync = createProgressSync(fakeRemote().remote, () => storage);
+
+    expect(sync.saveState("physics.demo")).toBe("unknown");
+  });
+
+  it("vastus on esitamise hetkel salvestamisel ja kohale jõudes salvestatud", async () => {
+    const { storage } = memoryStorage();
+    const sync = createProgressSync(fakeRemote().remote, () => storage);
+
+    sync.push(demo);
+    // Enne saatmise lõppu – ekraanil ei tohi seista eelmine „Salvestatud".
+    expect(sync.saveState("physics.demo")).toBe("saving");
+
+    await sync.flush();
+
+    expect(sync.saveState("physics.demo")).toBe("saved");
+  });
+
+  it("katkine võrk tähendab ootamist, mitte viga", async () => {
+    const { storage } = memoryStorage();
+    const { remote } = fakeRemote(["retry"]);
+    const sync = createProgressSync(remote, () => storage);
+
+    sync.push(demo);
+    await sync.flush();
+
+    expect(sync.saveState("physics.demo")).toBe("waiting");
+
+    await sync.flush(); // võrk taastus
+
+    expect(sync.saveState("physics.demo")).toBe("saved");
+  });
+
+  it("külalisele ei lubata midagi ka uue vastuse peale", async () => {
+    const { storage } = memoryStorage();
+    const { remote } = fakeRemote(["skipped", "skipped"]);
+    const sync = createProgressSync(remote, () => storage);
+
+    sync.push(demo);
+    await sync.flush();
+
+    expect(sync.saveState("physics.demo")).toBe("off");
+
+    // Ilma `markSending`-i erandita vilguks siin vahepeal „Salvestan …".
+    sync.push(withCurrentStep(demo, "explore-1"));
+
+    expect(sync.saveState("physics.demo")).toBe("off");
+  });
+
+  it("eelmisest korrast saatmata jäänud vastus ootab juba lehe avamisel", () => {
+    const { storage } = memoryStorage({
+      [SYNC_QUEUE_KEY]: JSON.stringify({
+        version: 1,
+        pending: {
+          "physics.demo": { op: "write", progress: demo, reset: false },
+        },
+      }),
+    });
+    const sync = createProgressSync(fakeRemote().remote, () => storage);
+
+    expect(sync.saveState("physics.demo")).toBe("waiting");
+  });
+
+  it("teatab muutusest ainult selle mooduli kuulajale", async () => {
+    const { storage } = memoryStorage();
+    const sync = createProgressSync(fakeRemote().remote, () => storage);
+    let demoTeated = 0;
+    let teineTeated = 0;
+
+    const stop = sync.subscribe("physics.demo", () => void demoTeated++);
+    sync.subscribe("physics.teine", () => void teineTeated++);
+
+    sync.push(demo);
+    await sync.flush();
+
+    expect(demoTeated).toBe(2); // saving → saved
+    expect(teineTeated).toBe(0);
+
+    stop();
+    sync.push(withCurrentStep(demo, "explore-1"));
+
+    expect(demoTeated).toBe(2);
+  });
+});
