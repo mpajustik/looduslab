@@ -100,10 +100,10 @@ Järgmisel päeval tagasi tulles avaneb moodul vaikselt 4. sammul, ilma ühegi
 lauseta. Ainus vihje on `Samm 4/6` paremas ülanurgas, mida õpilane lugema ei
 satu.
 
-- [ ] Rida „Jätkad sealt, kus pooleli jäid" mooduli avamisel, kui
+- [x] Rida „Jätkad sealt, kus pooleli jäid" mooduli avamisel, kui
       salvestatud samm ei ole esimene
-- [ ] Rida kaob esimese sammuvahetusega – ta on tervitus, mitte püsiv silt
-- [ ] Kokkuvõttel (`isCompleted`) seda rida ei ole – seal on juba „Valmis!"
+- [x] Rida kaob esimese sammuvahetusega – ta on tervitus, mitte püsiv silt
+- [x] Kokkuvõttel (`isCompleted`) seda rida ei ole – seal on juba „Valmis!"
 
 ## 4. Telefonis on „Edasi" kerimise taga — Sonnet, ALLES pärast telefonis proovimist
 

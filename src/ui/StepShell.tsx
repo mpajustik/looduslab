@@ -123,6 +123,27 @@ export function StepShell({
 
   const { index, answers, runId } = progress;
 
+  /**
+   * „Jätkad sealt, kus pooleli jäid" – tervitus, mitte püsiv silt. Väärtus
+   * külmub esimesel renderdusel selleks sammuks, millel õpilane moodulisse
+   * SISENES: kui see ei ole esimene samm, on ta ilmselt tagasi tulnud
+   * järgmisel päeval.
+   *
+   * `dismissed` peab jääma jäädavalt tõeseks pärast ESIMEST sammuvahetust –
+   * muidu ilmuks rida uuesti, kui õpilane vajutab „Tagasi" ja siis „Edasi"
+   * tagasi samale sammule (CodeRabbiti ülevaatuse leid). Muudatus käib
+   * renderduse ajal, mitte efektis (Reacti soovitatud muster „olek eelmise
+   * renderduse põhjal") – efektis oleks `setState` lint'i järgi keelatud.
+   */
+  const [enteredAtIndex] = useState(index);
+  const [prevIndex, setPrevIndex] = useState(index);
+  const [dismissed, setDismissed] = useState(false);
+  if (index !== prevIndex) {
+    setPrevIndex(index);
+    if (!dismissed) setDismissed(true);
+  }
+  const showWelcomeBack = enteredAtIndex > 0 && !dismissed && !progress.isCompleted;
+
   // Teise moodulisse minnes kaob lahtine „Alusta uuesti" küsimus koos vana
   // mooduliga – muidu kinnitaks „Jah" nupp uue mooduli vastuste kustutamise,
   // mida õpilane ei ole veel isegi näinud küsitavat (renderdamise ajal, mitte
@@ -227,6 +248,11 @@ export function StepShell({
       ) : (
         <>
           <div className="flex flex-col gap-4">
+            {showWelcomeBack ? (
+              <p className="text-sm text-ink-soft">
+                Jätkad sealt, kus pooleli jäid.
+              </p>
+            ) : null}
             <div className="flex flex-col gap-1">
               {label ? (
                 <p className="text-sm font-semibold tracking-wide text-brand">{label}</p>
