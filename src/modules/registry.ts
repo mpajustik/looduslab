@@ -382,7 +382,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "vf-uks-filter": lazy(() =>
       import("./physics/valgusfiltrid/figures").then((module) => ({
-        default: module.SingleFilterFigure,
+        default: module.SingleFilterAndPrismFigure,
       })),
     ),
     "vf-kaks-pesa": lazy(() =>

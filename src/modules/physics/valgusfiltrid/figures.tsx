@@ -9,7 +9,7 @@ import {
   swatchColour,
   swatchLabelColour,
 } from "./display";
-import { perceivedColour, transmittedChannels } from "./model";
+import { perceivedColour, transmittedChannels, type ChannelId } from "./model";
 
 /**
  * Mooduli joonised (src/engine/figures.ts).
@@ -402,6 +402,172 @@ export function SingleFilterFigure() {
         jõuab ainult punane valgus, seepärast paistab ekraan {screenColourName}.
       </figcaption>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// vf-uks-filter – teooria (filter ≠ prisma)
+// ---------------------------------------------------------------------------
+
+const CONTRAST_VIEW = { width: 400, height: 200 };
+const CONTRAST_DIVIDER_X = 200;
+
+/**
+ * Prisma väljuvad kiired – KUUS värvi, mitte kolm.
+ *
+ * See on ainus koht kogu moodulis, kus värv EI tule mudelist ega `display.ts`
+ * kanalitabelist – ja seda meelega. Teooriatekst ütleb ise, et prisma on
+ * 9. klassi teema: siin ei ole vaja vastata, mitu KANALIT läbi läheb, vaid
+ * ainult näidata, et valge valgus koosneb PALJUST värvist, mitte kolmest, ja
+ * et need kõik jäävad ALLES – ainult laiali aetuna. Kolme kanaliga fänn
+ * näeks välja nagu RGB-mudel, mitte vikerkaar, ja jätaks vale mulje.
+ */
+const PRISM_FAN_COLOURS = [
+  "#dc2626",
+  "#f97316",
+  "#eab308",
+  "#16a34a",
+  "#2563eb",
+  "#7c3aed",
+] as const;
+
+/** Kolme kanali nooled `FilterVsPrismFigure` vasakul paneelil (rect y 56–128). */
+const FILTER_PANEL_RAY_Y: Record<ChannelId, number> = {
+  red: 72,
+  green: 92,
+  blue: 112,
+};
+
+/**
+ * Filter ≠ prisma: kaks paneeli kõrvuti sama valge lambiga.
+ *
+ * Teooriateksti kolmas lõik – „Filter ei ole prisma… prisma ei lahuta
+ * midagi, ta lihtsalt ei lase osa värve läbi" – oli seni ainult sõnadena
+ * kirjas. See on kogu mooduli kõige levinum segiajamine (õpilane arvab, et
+ * FILTER lahutab värvid nagu prisma), seepärast saab see oma joonise, mitte
+ * lihtsalt lause `SingleFilterFigure` kõrval.
+ *
+ * Vasak paneel kordab `SingleFilterFigure` IDEED (üks kanal läbi, kaks kaob
+ * soojusena) miniatuuris; parem paneel näitab, et prismast tuleb sama
+ * valgusest välja KÕIK, mis sisse läks, ainult laiali kantuna – ükski värv ei
+ * kadunud ega tulnud juurde.
+ */
+export function FilterVsPrismFigure() {
+  const filterThrough = new Set(
+    transmittedChannels("white", ["red"]).map((channel) => channel.id),
+  );
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${CONTRAST_VIEW.width} ${CONTRAST_VIEW.height}`}
+        role="img"
+        aria-label="Joonis kahest paneelist kõrvuti. Vasakul paneelil, pealkirjaga filter, läbib valge lamp punase filtri ja väljub ainult üks punane nool – roheline ja sinine jäävad filtrisse kinni. Paremal paneelil, pealkirjaga prisma, läbib sama valge lamp kolmnurkse prisma ja väljub kuus värvilist noolt lehvikuna: punane, oranž, kollane, roheline, sinine, lilla. Paneelide all seisab: filter võtab värve ära, prisma ei võta midagi ära, ainult laotab need laiali."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <line
+          x1={CONTRAST_DIVIDER_X}
+          y1={12}
+          x2={CONTRAST_DIVIDER_X}
+          y2={168}
+          stroke={OUTLINE_COLOUR}
+          strokeDasharray="4 4"
+        />
+
+        {/* --- Vasak paneel: filter --- */}
+        <text x={100} y={20} textAnchor="middle" className="fill-ink" fontSize={12} fontWeight={700}>
+          FILTER
+        </text>
+        <circle cx={30} cy={92} r={11} fill="#fefce8" stroke={OUTLINE_COLOUR} />
+        <rect
+          x={78}
+          y={56}
+          width={13}
+          height={72}
+          rx={2}
+          fill={filterColour("red")}
+          opacity={FILTER_OPACITY}
+          stroke={OUTLINE_COLOUR}
+        />
+        {CHANNEL_STOPS.map((channel) => {
+          const passes = filterThrough.has(channel.id);
+          const y = FILTER_PANEL_RAY_Y[channel.id];
+          return (
+            <Arrow
+              key={channel.id}
+              x1={44}
+              y1={y}
+              x2={passes ? 160 : 84}
+              y2={y}
+              colour={channel.colour}
+              head={passes}
+              halo={!passes}
+            />
+          );
+        })}
+        <text x={100} y={150} textAnchor="middle" className="fill-ink" fontSize={10}>
+          üks värv läbi, kaks kaob soojusena
+        </text>
+
+        {/* --- Parem paneel: prisma --- */}
+        <text x={300} y={20} textAnchor="middle" className="fill-ink" fontSize={12} fontWeight={700}>
+          PRISMA
+        </text>
+        <circle cx={222} cy={92} r={11} fill="#fefce8" stroke={OUTLINE_COLOUR} />
+        <Arrow x1={236} y1={92} x2={266} y2={92} colour="#94a3b8" />
+        <polygon
+          points="266,68 266,116 296,92"
+          fill="#e2e8f0"
+          stroke={OUTLINE_COLOUR}
+          opacity={0.7}
+        />
+        {PRISM_FAN_COLOURS.map((colour, index) => {
+          const spread = (index - (PRISM_FAN_COLOURS.length - 1) / 2) * 12;
+          return (
+            <Arrow
+              key={colour}
+              x1={296}
+              y1={92}
+              x2={370}
+              y2={92 + spread}
+              colour={colour}
+            />
+          );
+        })}
+        <text x={300} y={150} textAnchor="middle" className="fill-ink" fontSize={10}>
+          kõik värvid alles, ainult laiali aetud
+        </text>
+
+        <text
+          x={CONTRAST_VIEW.width / 2}
+          y={188}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={11}
+        >
+          filter VÕTAB ÄRA, prisma ainult LAOTAB LAIALI
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Filter neelab osa valgusest ja see kaob soojusena. Prisma ei neela
+        midagi – ta lihtsalt aetab kõik värvid, mis valges valguses juba
+        olid, üksteisest lahku.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: mehhanismi joonis (`SingleFilterFigure`) ja selle all
+ * levinud segiajamise joonis (`FilterVsPrismFigure`) – kaks eri ideed samast
+ * teooriatekstist ühe joonisena, moodul jääb 6 sammu juurde, teist
+ * theory-sammu ei lisata (sama muster mis mujal P1-s).
+ */
+export function SingleFilterAndPrismFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <SingleFilterFigure />
+      <FilterVsPrismFigure />
+    </div>
   );
 }
 
