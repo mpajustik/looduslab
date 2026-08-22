@@ -467,6 +467,9 @@ describe("activities", () => {
  * mudelilt küsitud.
  */
 describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
+  // exit-2 sai arvuvariandid (vt eraldi describe „exit-2 arvuvariandid"
+  // allpool) – see abifunktsioon eeldab endiselt ÜHTE `answer`-it, seega
+  // exit-2 sinna ei kuulu.
   const numericQuestion = (questionId: string) => {
     for (const step of activities.steps) {
       for (const question of stepQuestions(step)) {
@@ -480,6 +483,16 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
     throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
   };
 
+  /** exit-2 tolerants ja ühik jäävad KÜSIMUSE, mitte variandi külge. */
+  const exit2 = () => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === "exit-2" && question.kind === "numeric") return question;
+      }
+    }
+    throw new Error('Arvküsimust "exit-2" ei ole moodulis');
+  };
+
   it.each([
     ["explore-1", "kujutis 1 m kaugusel", 1],
     ["explore-2", "kogu tee 2,5 m kaugusel", 5],
@@ -487,7 +500,6 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
     ["explore-5", "vähim peegel 1,8 m inimesele", 0.9],
     ["practice-1", "Mari 1,5 m → vähim peegel", 0.75],
     ["practice-3", "0,3 m peegel, 1,7 m inimene", 0.6],
-    ["exit-2", "vahemaa kujutiseni 1,2 m kaugusel", 2.4],
   ])("%s (%s) → %s m", (questionId, _what, expected) => {
     expect(numericQuestion(questionId as string).answer).toBeCloseTo(
       expected as number,
@@ -507,7 +519,7 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
   it("kaugustel on ±0,1 m ja kõrgustel ±0,05 m, mõlemad absoluutsed", () => {
     // Liuguri samm on 0,1 m ja 0,05 m; protsenttolerants jätaks väikeste
     // arvude juures vähem mänguruumi kui üks liuguri samm.
-    const kaugused = ["explore-1", "explore-2", "exit-2"];
+    const kaugused = ["explore-1", "explore-2"];
     const kõrgused = ["explore-3", "explore-5", "practice-1", "practice-3"];
     for (const id of kaugused) {
       expect(numericQuestion(id).tolerance, id).toEqual({ mode: "absolute", value: 0.1 });
@@ -515,6 +527,8 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
     for (const id of kõrgused) {
       expect(numericQuestion(id).tolerance, id).toEqual({ mode: "absolute", value: 0.05 });
     }
+    expect(exit2().tolerance).toEqual({ mode: "absolute", value: 0.1 });
+    expect(exit2().unit).toBe("m");
   });
 
   it("checker võtab vastu nii komaga arvu kui ka ühikuga kirjutatud vastuse", () => {
@@ -560,6 +574,44 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
     expect(objectImageSeparation(1.5)).toBeCloseTo(3, 9);
     expect(kaart("rc-4")?.answer).toContain("0,9 m");
     expect(minMirrorHeight(1.8)).toBeCloseTo(0.9, 9);
+  });
+});
+
+/**
+ * Arvuvariantide füüsika (docs/MOODULILEPING.md „Juhuslikkus").
+ *
+ * `activities.ts` on ANDMED: variandi vastus on seal käsitsi kirjas, sest
+ * valem ei tohi elada sisufailis (CLAUDE.md reegel 1) – seepärast küsib test
+ * vastuse `model.ts`-ilt.
+ */
+describe("exit-2 arvuvariandid käivad mudeliga kokku", () => {
+  const variantsOf = (questionId: string) => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "numeric") {
+          return question.variants ?? [];
+        }
+      }
+    }
+    throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  it("iga variant on vahemaa = 2 · kaugus ja jääb liugurite vahemikku", () => {
+    const variants = variantsOf("exit-2");
+    expect(variants.length).toBeGreaterThanOrEqual(2);
+    for (const variant of variants) {
+      expect(variant.answer).toBeCloseTo(
+        objectImageSeparation(variant.values.kaugus),
+        10,
+      );
+      expect(variant.values.kaugus).toBeGreaterThanOrEqual(SLIDERS.objectDistanceM.min);
+      expect(variant.values.kaugus).toBeLessThanOrEqual(SLIDERS.objectDistanceM.max);
+    }
+  });
+
+  it("variantide vastused on üksteisest eristatavad", () => {
+    const answers = variantsOf("exit-2").map((variant) => variant.answer);
+    expect(new Set(answers).size).toBe(answers.length);
   });
 });
 

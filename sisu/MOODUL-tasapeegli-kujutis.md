@@ -343,7 +343,7 @@ meetrist oleks 0,04 m ehk vähem kui üks samm).
   45-minutilises tunnis eelneb sellele `peegeldumisseadus` ja järgneb päris
   katse teibiga.
 
-## Kordamiskaardid (5 tk)
+## Kordamiskaardid (7 tk)
 
 | id | tüüp | küsimus | vastus |
 |---|---|---|---|
@@ -352,3 +352,11 @@ meetrist oleks 0,04 m ehk vähem kui üks samm).
 | rc-3 | calc | Seisad 1,5 m kaugusel peeglist. Kui suur on vahemaa sinu ja su kujutise vahel? | 1,5 + 1,5 = 3 m |
 | rc-4 | calc | Kui kõrge peegel on vaja 1,8 m pikale inimesele, et ta end täies pikkuses näeks? | 1,8 / 2 = 0,9 m |
 | rc-5 | selgitus | Miks ei aita kaugemale astumine, kui tahad peeglis rohkem endast näha? | Kaugenedes kalduvad pealae ja jalgade kiired täpselt sama palju, seega jääb nende tabamiskohtade vahe peeglil samaks – nähtav osa on alati kaks korda peegli kõrgus |
+| rc-6 | graph | Kui joonistaksid graafiku „sinu kaugus peeglist" (x) vs „vahemaa sinu ja kujutise vahel" (y), mis kuju see saab? | Sirge läbi nullpunkti tõusuga 2 – vahemaa on kaugusega võrdeline (vahemaa = 2 · kaugus) |
+| rc-7 | transfer | Miks on riietepoodides alati suur, täispikkuses peegel, kuigi klient seisab sellest tavaliselt eemal? | Vajaliku peegli kõrgus (pool inimese pikkusest) ei sõltu kaugusest – kaugemale astumine ei tee vajalikku peeglit väiksemaks |
+
+**exit-2 sai arvuvariandid** (moodulileping „Juhuslikkus"): neli kaugust
+liugurite vahemikust `SLIDERS.objectDistanceM` (1,2/0,8/2,0/1,5 m), sama
+valem (vahemaa = 2 · kaugus). Uusi õpilasvastuseid sellel küsimusel veel ei
+ole, seega versioon tõuseb ainult skeemimuutuse pärast (moodulileping
+„Versioneerimine").

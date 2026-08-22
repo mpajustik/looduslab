@@ -74,9 +74,9 @@ kaarditüüpi VÕI vahele jäänud tüüp on nii `graph` kui midagi lisaks, ja
       variandikandidaate (näidiku ümardamispiir on juba `display.ts`-is
       testitud – ETTEVAATUST variandi valikuga selle piiri lähedal, vt
       moodulilepingu display.ts selgitust)
-- [ ] `tasapeegli-kujutis`: lisa `graph`- ja `transfer`-kaart; variandi
+- [x] `tasapeegli-kujutis`: lisa `graph`- ja `transfer`-kaart; variandi
       kandidaat on peegli kaugus/kujutise kaugus arvutus
-- [ ] Iga mooduli juures otsusta versiooninumber (moodulileping –
+- [x] Iga mooduli juures otsusta versiooninumber (moodulileping –
       esimene kord `variants` = major); kolme mooduli `version` väli
       manifest.ts-is tõuseb vastavalt
 - [ ] Pärast kõiki kolme: `/ulevaatus` (koond, ei ole riskisamm)

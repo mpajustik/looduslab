@@ -93,9 +93,21 @@ const SMALL_MIRROR_M = 0.3;
 const FRIEND_HEIGHT_M = 1.7;
 const SMALL_MIRROR_VISIBLE_M = visibleBodyHeight(SMALL_MIRROR_M, FRIEND_HEIGHT_M);
 
-/** Exit 2: 1,2 m kaugusel peeglist. */
-const EXIT_DISTANCE_M = 1.2;
-const EXIT_SEPARATION_M = objectImageSeparation(EXIT_DISTANCE_M);
+/**
+ * Exit 2 arvuvariandid (docs/MOODULILEPING.md „Juhuslikkus"): neli kaugust
+ * `SLIDERS.objectDistanceM` vahemikus (0,5…3 m), sama valem
+ * `objectImageSeparation` (vahemaa = 2d).
+ */
+const EXIT_2_VARIANTS = [
+  { id: "d12", distanceM: 1.2 },
+  { id: "d08", distanceM: 0.8 },
+  { id: "d20", distanceM: 2 },
+  { id: "d15", distanceM: 1.5 },
+].map(({ id, distanceM }) => ({
+  id,
+  distanceM,
+  separationM: objectImageSeparation(distanceM),
+}));
 
 /** Exit 3 (vabatekst) ja rc-4: 1,7 m sõber 1 m peegli ees. */
 const SHOP_MIRROR_M = 1;
@@ -402,11 +414,16 @@ const steps: Step[] = [
       {
         kind: "numeric",
         id: "exit-2",
-        prompt: `Seisad ${m(EXIT_DISTANCE_M)} kaugusel tasapeeglist. Kui suur on vahemaa sinu ja su kujutise vahel?`,
+        prompt:
+          "Seisad {kaugus} m kaugusel tasapeeglist. Kui suur on vahemaa sinu ja su kujutise vahel?",
         hints: ["Kujutis on peegli taga sama kaugel, kui sina oled peegli ees – liida need kaks vahemaad."],
         unit: "m",
         tolerance: DISTANCE_TOLERANCE,
-        answer: EXIT_SEPARATION_M,
+        variants: EXIT_2_VARIANTS.map(({ id, distanceM, separationM }) => ({
+          id,
+          values: { kaugus: distanceM },
+          answer: separationM,
+        })),
       },
       {
         kind: "text",
@@ -459,6 +476,22 @@ const reviewCards: ReviewCard[] = [
     // peab see tingimus kirjas olema – muidu õpetaks ta suure peegli juures
     // valet (CodeRabbiti leid 2026-08-11).
     answer: `Kaugenedes kalduvad pealae ja jalgade kiired täpselt sama palju, seega jääb nende tabamiskohtade vahe peeglil samaks – nähtav osa on kaks korda peegli kõrgus, kuni paistad tervenisti (rohkem sind ei ole). Näiteks ${m(FRIEND_HEIGHT_M)} pikale inimesele piisab ${m(FRIEND_MIN_MIRROR_M)} peeglist, olgu ta kus tahes.`,
+  },
+  {
+    id: "rc-6",
+    type: "graph",
+    question:
+      "Kui joonistaksid graafiku, mille x-teljel on sinu kaugus peeglist ja y-teljel vahemaa sinu ja kujutise vahel, mis kuju see graafik saab?",
+    answer:
+      "Sirge läbi nullpunkti tõusuga 2 – vahemaa on kaugusega VÕRDELINE (vahemaa = 2·kaugus), sest iga sammu, mille sina astud, astub ka kujutis peegli taga.",
+  },
+  {
+    id: "rc-7",
+    type: "transfer",
+    question:
+      "Miks on riietepoodides alati suur, täispikkuses peegel, kuigi klient seisab sellest tavaliselt paar sammu eemal?",
+    answer:
+      "Vajaliku peegli kõrgus (pool inimese pikkusest) ei sõltu kaugusest üldse – kaugemale astumine ei tee vajalikku peeglit väiksemaks. Peegel peab olema piisavalt suur juba kõige lähedasemast vaatepunktist, muidu ei näe klient end kunagi täies pikkuses.",
   },
 ];
 
