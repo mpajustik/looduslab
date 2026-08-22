@@ -450,7 +450,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "nr-kaks-suunda": lazy(() =>
       import("./physics/noguspeegli-rakendused/figures").then((module) => ({
-        default: module.TwoDirectionsFigure,
+        default: module.TwoDirectionsSourceAndConcentrationFigure,
       })),
     ),
   },

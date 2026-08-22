@@ -1,5 +1,15 @@
 import type { ReactNode } from "react";
-import { focalLength } from "./model";
+import { formatNumber } from "../../../lib/format";
+import {
+  MIRROR_DIAMETER_CM,
+  SLIDERS,
+  WALL_DISTANCE_M,
+  beamDiameter,
+  focalLength,
+  metresFromCentimetres,
+  metresFromMillimetres,
+  solarConcentration,
+} from "./model";
 
 /**
  * Mooduli joonised (src/engine/figures.ts).
@@ -508,5 +518,342 @@ export function TwoDirectionsFigure() {
         suund – valguse tee on pööratav.
       </figcaption>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// nr-kaks-suunda – teooria, teine osa: „allikas ei ole punkt“
+// ---------------------------------------------------------------------------
+
+const SOURCE_VIEW = { width: 360, height: 206 };
+const SOURCE_PANEL = { top: 30, height: 130 };
+
+/** Sama peegel, mis explore-1 vaikeseisus – arv ei tohi lahku minna. */
+const SOURCE_FIGURE_RADIUS_CM = SLIDERS.radiusCm.min;
+const SOURCE_FIGURE_FOCAL_M = focalLength(
+  metresFromCentimetres(SOURCE_FIGURE_RADIUS_CM),
+);
+const SOURCE_FIGURE_MIRROR_M = metresFromCentimetres(MIRROR_DIAMETER_CM);
+
+/** Valgusringi laius (m) mudelist – sama valem, mis explore-1/2 küsimustel. */
+function sourceBeamWidthM(sourceMm: number): number {
+  return beamDiameter(
+    SOURCE_FIGURE_MIRROR_M,
+    SOURCE_FIGURE_FOCAL_M,
+    metresFromMillimetres(sourceMm),
+    WALL_DISTANCE_M,
+  );
+}
+
+/** Ekraanile: kaks kohta koma järel, nagu explore-sammu vastustel. */
+const sourceWidth = (valueM: number): string => formatNumber(valueM, 2);
+
+/**
+ * Paneeli visuaalne poollaius pikslites: RUUTJUUR laiusest, mitte laius ise.
+ *
+ * See on PAIGUTUSE otsus, mitte füüsika (sama põhjendus mis
+ * `kumerpeegli-rakendused/MockPanel`-i `scale`-il): tegelikud laiused (0,10 m,
+ * 0,50 m, 2,10 m) on kakskümmend korda lahus, ja lineaarne skaala teeks
+ * esimese paneeli olematuks või kolmanda ekraanivälliseks. Ruutjuur hoiab
+ * järjekorra ja suhte NÄHTAVANA – täpne arv seisab ikkagi tekstina paneeli
+ * all, joonis ise pikslites midagi ei väida.
+ */
+const SOURCE_VISUAL_SCALE = 40;
+
+/** Peegli poollaius paneelil (px) – sama kõigil kolmel, nagu simulatsioonis. */
+const SOURCE_MIRROR_HALF_PX = 15;
+
+/**
+ * Klammerdatud peegli poollaiusega alt: mudeli valem ütleb, et valgusring on
+ * ALATI vähemalt peegli laiune (s = 0 piirjuhul täpselt nii lai, vt
+ * `beamDiameter`). Ilma klambrita jääks ruutjuure-skaala punktallika juures
+ * peeglist kitsamaks ja joonis näitaks kimpu kitsenemas – täpselt vastupidist
+ * sellele, mida mudel väidab (CodeRabbiti leid).
+ */
+function sourceVisualHalfWidthPx(widthM: number): number {
+  return Math.max(Math.sqrt(widthM) * SOURCE_VISUAL_SCALE, SOURCE_MIRROR_HALF_PX);
+}
+
+function SourcePanel({
+  x,
+  panelWidth,
+  label,
+  sourceMm,
+}: {
+  x: number;
+  panelWidth: number;
+  label: string;
+  sourceMm: number;
+}) {
+  const widthM = sourceBeamWidthM(sourceMm);
+  const halfPx = sourceVisualHalfWidthPx(widthM);
+  const axisY = SOURCE_PANEL.top + SOURCE_PANEL.height / 2;
+  const mirrorX = x + 16;
+  const wallX = x + panelWidth - 16;
+
+  return (
+    <g>
+      <rect
+        x={x}
+        y={SOURCE_PANEL.top}
+        width={panelWidth}
+        height={SOURCE_PANEL.height}
+        rx={10}
+        className="fill-white stroke-line"
+        strokeWidth={1}
+      />
+      {/* Laienev kimp: värv JA joonemuster, mitte ainult värv (DISAINIJUHIS). */}
+      <polygon
+        points={`${mirrorX},${axisY - SOURCE_MIRROR_HALF_PX} ${wallX},${axisY - halfPx} ${wallX},${axisY + halfPx} ${mirrorX},${axisY + SOURCE_MIRROR_HALF_PX}`}
+        className="fill-brand"
+        fillOpacity={0.14}
+      />
+      <g className="stroke-brand" strokeWidth={1.5} strokeDasharray="5 3">
+        <line
+          x1={mirrorX}
+          y1={axisY - SOURCE_MIRROR_HALF_PX}
+          x2={wallX}
+          y2={axisY - halfPx}
+        />
+        <line
+          x1={mirrorX}
+          y1={axisY + SOURCE_MIRROR_HALF_PX}
+          x2={wallX}
+          y2={axisY + halfPx}
+        />
+      </g>
+      {/* Peegel: jäme joon, sama kõigil kolmel paneelil. */}
+      <line
+        x1={mirrorX}
+        y1={axisY - SOURCE_MIRROR_HALF_PX}
+        x2={mirrorX}
+        y2={axisY + SOURCE_MIRROR_HALF_PX}
+        className="stroke-ink"
+        strokeWidth={4}
+        strokeLinecap="round"
+      />
+      {/* Sein: ring seisab siin, laius loetav mõõdujoonelt. */}
+      <line
+        x1={wallX}
+        y1={axisY - halfPx - 4}
+        x2={wallX}
+        y2={axisY + halfPx + 4}
+        className="stroke-ink-soft"
+        strokeWidth={2}
+      />
+      <text
+        x={x + panelWidth / 2}
+        y={SOURCE_PANEL.top - 8}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={10}
+        fontWeight={600}
+      >
+        {label}
+      </text>
+      <text
+        x={x + panelWidth / 2}
+        y={SOURCE_PANEL.top + SOURCE_PANEL.height + 18}
+        textAnchor="middle"
+        className="fill-ink-soft"
+        fontSize={9}
+      >
+        {sourceWidth(widthM)} m lai ring
+      </text>
+    </g>
+  );
+}
+
+/**
+ * Teooriajoonis: sama peegel, kolm allikasuurust – ideaalne punkt, LED-kiip,
+ * hõõgniit. Kõik kolm laiust tulevad `beamDiameter`-ist, sama valemiga, mida
+ * kasutab explore-1/2 (CLAUDE.md reegel 1) – see joonis on nende ülesannete
+ * eelvaade, mitte eraldi väide.
+ */
+export function SourceSizeFigure() {
+  const pointWidthM = sourceBeamWidthM(0);
+  const ledWidthM = sourceBeamWidthM(2);
+  const filamentWidthM = sourceBeamWidthM(10);
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${SOURCE_VIEW.width} ${SOURCE_VIEW.height}`}
+        role="img"
+        aria-label={`Kolm paneeli kõrvuti, igas sama peegel vasakul ja laienev valguskimp seinani paremal. Vasakpoolses paneelis on ideaalne punktallikas: kimp jääb peegli laiuseks ehk ${sourceWidth(pointWidthM)} m. Keskmises paneelis on 2 millimeetrise LED-kiibiga allikas: kimp laieneb ${sourceWidth(ledWidthM)} meetrini. Parempoolses paneelis on 10 millimeetrise hõõgniidiga allikas: kimp laieneb juba ${sourceWidth(filamentWidthM)} meetrini. Mida suurem allikas, seda laiem ring seinal, kuigi peegel on kõigil kolmel täpselt sama.`}
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <SourcePanel x={4} panelWidth={104} label="ideaalne punkt" sourceMm={0} />
+        <SourcePanel x={116} panelWidth={104} label="LED-kiip 2 mm" sourceMm={2} />
+        <SourcePanel
+          x={228}
+          panelWidth={128}
+          label="hõõgniit 10 mm"
+          sourceMm={10}
+        />
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Sama peegel kõigil kolmel. Ainus vahe on allika suurus – ja just see,
+        mitte peegel, otsustab, kui laiaks kimp kaugusega läheb.
+      </figcaption>
+    </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// nr-kaks-suunda – teooria, kolmas osa: peegli suurus vs koondumine
+// ---------------------------------------------------------------------------
+
+const CONCENTRATION_VIEW = { width: 360, height: 196 };
+const CONCENTRATION_PANEL_WIDTH = 110;
+const CONCENTRATION_BASELINE_Y = 176;
+const CONCENTRATION_BAR_MAX_HEIGHT = 118;
+const CONCENTRATION_BAR_WIDTH = 30;
+
+/**
+ * Kolm peeglit: sama arvud, mis practice-1/2 ülesannetel (päikeseahi, väike
+ * päikeseahi, kaks korda pikem fookuskaugus). Kordus on meelega – õpilane
+ * näeb neid samu arve kahes kohas.
+ */
+const CONCENTRATION_CASES = [
+  { label: "suur peegel", diameterM: 1, focalM: 1 },
+  { label: "väike peegel", diameterM: 0.1, focalM: 0.1 },
+  { label: "suur, lame peegel", diameterM: 1, focalM: 2 },
+] as const;
+
+/** Koondumistegurid mudelist – ei ühtegi neist ei ole siia käsitsi kirjutatud. */
+const CONCENTRATION_VALUES = CONCENTRATION_CASES.map((mirror) =>
+  solarConcentration(mirror.diameterM, mirror.focalM),
+);
+const MAX_CONCENTRATION = Math.max(...CONCENTRATION_VALUES);
+
+/** Ümardatud sajalisteni jutu sisse, sama otsus, mis activities.ts `about`-il. */
+const concentrationLabel = (value: number): string =>
+  formatNumber(Math.round(value / 100) * 100);
+
+function ConcentrationPanel({
+  x,
+  label,
+  diameterM,
+  focalM,
+  concentration,
+}: {
+  x: number;
+  label: string;
+  diameterM: number;
+  focalM: number;
+  concentration: number;
+}) {
+  const centreX = x + CONCENTRATION_PANEL_WIDTH / 2;
+  const barHeight =
+    (concentration / MAX_CONCENTRATION) * CONCENTRATION_BAR_MAX_HEIGHT;
+  const barTop = CONCENTRATION_BASELINE_Y - barHeight;
+
+  return (
+    <g>
+      <text
+        x={centreX}
+        y={16}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={11}
+        fontWeight={600}
+      >
+        {label}
+      </text>
+      <text
+        x={centreX}
+        y={32}
+        textAnchor="middle"
+        className="fill-ink-soft"
+        fontSize={9}
+      >
+        D = {formatNumber(diameterM, 1)} m · f = {formatNumber(focalM, 1)} m
+      </text>
+      {/* Tihedustulp: kõrgus tuleb otse koondumistegurist, mitte silma järgi. */}
+      <rect
+        x={centreX - CONCENTRATION_BAR_WIDTH / 2}
+        y={barTop}
+        width={CONCENTRATION_BAR_WIDTH}
+        height={barHeight}
+        rx={5}
+        className="fill-teacher"
+      />
+      <text
+        x={centreX}
+        y={barTop - 8}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={11}
+        fontWeight={600}
+      >
+        ≈ {concentrationLabel(concentration)}×
+      </text>
+    </g>
+  );
+}
+
+/**
+ * Teooriajoonis: kolm peeglit, üks tulp iga peegli koondumisteguri jaoks.
+ *
+ * Vasak ja keskmine tulp on ÜHEPIKKUSED – eri suurusega peeglid, aga sama
+ * suhe läbimõõt : fookuskaugus, seega sama tihedus. Vasak ja parem peegel on
+ * SAMA suurusega (D = 1 m mõlemal), aga eri fookuskaugusega, seega eri
+ * kõrgusega tulp. Kaks eri võrdlust ühel pildil – täpselt see, mida tekst
+ * hoiatab, et enamik segi ajab.
+ */
+export function MirrorSizeVsConcentrationFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${CONCENTRATION_VIEW.width} ${CONCENTRATION_VIEW.height}`}
+        role="img"
+        aria-label={`Kolm peeglit kõrvuti, iga peegli all tulp, mille kõrgus näitab koondumistegurit. Vasakul suur peegel, läbimõõt 1 meeter ja fookuskaugus 1 meeter, koondumistegur umbes ${concentrationLabel(CONCENTRATION_VALUES[0])} korda. Keskel väike peegel, läbimõõt 10 sentimeetrit ja fookuskaugus 10 sentimeetrit – tulp on täpselt sama kõrge, koondumistegur samuti umbes ${concentrationLabel(CONCENTRATION_VALUES[1])} korda, sest suhe läbimõõt jagatud fookuskaugusega on mõlemal sama. Paremal on sama suur peegel kui vasakul, läbimõõt 1 meeter, aga kaks korda pikema fookuskaugusega, 2 meetrit – tulp on palju madalam, koondumistegur ainult umbes ${concentrationLabel(CONCENTRATION_VALUES[2])} korda.`}
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <line
+          x1={6}
+          y1={CONCENTRATION_BASELINE_Y}
+          x2={CONCENTRATION_VIEW.width - 6}
+          y2={CONCENTRATION_BASELINE_Y}
+          className="stroke-ink-soft"
+          strokeWidth={1.5}
+        />
+        {CONCENTRATION_CASES.map((mirror, index) => (
+          <ConcentrationPanel
+            key={mirror.label}
+            x={index * CONCENTRATION_PANEL_WIDTH}
+            label={mirror.label}
+            diameterM={mirror.diameterM}
+            focalM={mirror.focalM}
+            concentration={CONCENTRATION_VALUES[index]}
+          />
+        ))}
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Vasak ja keskmine peegel on eri suurusega, aga sama suhtega – ja
+        seepärast sama tihe. Vasak ja parem peegel on sama suurusega, aga eri
+        suhtega – ja seepärast eri tihe, kuigi mõlemad on ühe meetri suured.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: kolm joonist üksteise all, sama järjekord, mis
+ * teooriateksti lõikudel – kõigepealt kaks suunda (`TwoDirectionsFigure`),
+ * siis „allikas ei ole punkt" (`SourceSizeFigure`), siis peegli suurus vs
+ * koondumine (`MirrorSizeVsConcentrationFigure`). Moodul jääb ühe
+ * theory-sammu juurde, teist ei lisata (sama muster mis
+ * `valgusallikad/SourceKindsFigure` ja
+ * `kumerpeegli-rakendused/ViewFieldAndSizeIllusionFigure`).
+ */
+export function TwoDirectionsSourceAndConcentrationFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <TwoDirectionsFigure />
+      <SourceSizeFigure />
+      <MirrorSizeVsConcentrationFigure />
+    </div>
   );
 }

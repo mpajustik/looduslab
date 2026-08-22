@@ -66,12 +66,20 @@ Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 
 ### 5. noguspeegli-rakendused – kaks kõige raskemat lõiku on tekstis
 
-- [ ] **„Allikas ei ole punkt"** – kolm paneeli: LED-kiip 2 mm vs hõõgniit
-      10 mm → kitsam vs laiem väljuv kimp.
-- [ ] **Peegli suurus vs kontsentratsioon** – tekst ise ütleb, et „just seda
-      vahet ajab enamik segi". Selge signaal, et sõnadest ei piisa: suur ja
-      väike peegel sama suhtega `läbimõõt : fookuskaugus` vs sama suur peegel
-      eri suhtega.
+- [x] **„Allikas ei ole punkt"** – kolm paneeli: ideaalne punktallikas vs
+      LED-kiip 2 mm vs hõõgniit 10 mm → sama peegel, laienev kimp, laiused
+      mudelist (`beamDiameter`, samad arvud mis explore-1/2).
+      (Tehtud: `SourceSizeFigure`.)
+- [x] **Peegli suurus vs kontsentratsioon** – tekst ise ütleb, et „just seda
+      vahet ajab enamik segi". Kolm peeglit + tihedustulbad
+      (`solarConcentration`): suur ja väike peegel sama suhtega
+      `läbimõõt : fookuskaugus` (võrdsed tulbad) vs sama suur peegel eri
+      suhtega (madalam tulp). Samad arvud mis practice-1/2.
+      (Tehtud: `MirrorSizeVsConcentrationFigure`, mis paneb selle kokku
+      `TwoDirectionsFigure`'i ja `SourceSizeFigure`'iga võtme
+      `nr-kaks-suunda` alla komponendina
+      `TwoDirectionsSourceAndConcentrationFigure` – moodul jääb 6 sammu
+      juurde, teist theory-sammu ei lisatud.)
 
 ### 6. varjutused – „miks mitte iga kuu" on ainult tekst
 
