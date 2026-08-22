@@ -462,7 +462,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "np-kaks-peeglit": lazy(() =>
       import("./physics/nurkpeegel/figures").then((module) => ({
-        default: module.TwoMirrorsFigure,
+        default: module.TwoMirrorsAndSpecialCasesFigure,
       })),
     ),
     // Joonis on ühe KÜSIMUSE juures (practice-3), mitte terve sammu oma –

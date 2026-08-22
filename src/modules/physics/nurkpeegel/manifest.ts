@@ -44,6 +44,8 @@ export const manifest = defineModule({
   //
   // 1.0.1: kahele küsimusele lisati vihje, mis seni puudus (practice-4,
   // exit-2) – sõnastus, mitte õige vastus, seega patch.
-  version: "1.0.1",
+  // 1.0.2: theory-1 joonisele lisati kaks erijuhtu (θ = 90° ja θ = 0°) –
+  // visuaali täiendus, mitte õppesisu muutus, seega patch.
+  version: "1.0.2",
   status: "active",
 });

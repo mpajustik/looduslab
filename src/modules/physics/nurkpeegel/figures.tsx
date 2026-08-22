@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { type Vector2, traceCornerRay } from "./model";
 
 /**
@@ -631,6 +632,238 @@ export function TwoMirrorsFigure() {
         kogu pööre tuleb kaks korda suurem.
       </figcaption>
     </figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// np-kaks-peeglit – kaks erijuhtu (θ = 90° ja θ = 0°) lisapaneelina
+// ---------------------------------------------------------------------------
+
+const CASE_VIEW = { width: 360, height: 230 };
+const CASE_PANEL_WIDTH = 165;
+const CASE_PANEL_HEIGHT = 150;
+const CASE_PANEL_TOP = 34;
+const CASE_PANEL_LEFT = [5, 5 + CASE_PANEL_WIDTH + 20];
+
+/** Täisnurkse juhu geomeetria: sama mudel, mis üldjuhul, ainult θ = 90°. */
+const RIGHT_ANGLE_INCIDENCE_DEG = 30;
+const RIGHT_ANGLE_FIRST_HIT_M = 0.05;
+const RIGHT_ANGLE_SCALE = 500;
+const RIGHT_ANGLE_VERTEX: Point = { x: 20, y: 130 };
+const RIGHT_ANGLE_INCIDENT_LEN_PX = 45;
+const RIGHT_ANGLE_OUTGOING_LEN_PX = 55;
+const RIGHT_ANGLE_MIRROR1_RATIO = 1.35;
+const RIGHT_ANGLE_MIRROR2_RATIO = 1.3;
+
+/**
+ * Täisnurkne erijuht: sama `traceCornerRay`, mis üldjoonisel, ainult θ = 90°
+ * ja väiksem mõõtkava, et paneeli sisse mahtuda. Väljuv kiir tuleb geomeetriast
+ * täpselt vastassuunaline sissetulevaga – seda ei kirjuta siin keegi käsitsi,
+ * see on lihtsalt see, mida δ = 2θ = 180° annab.
+ */
+function RightAngleCase() {
+  const path = traceCornerRay(90, RIGHT_ANGLE_INCIDENCE_DEG, RIGHT_ANGLE_FIRST_HIT_M);
+  const mirrors = mirrorDirections(90);
+  const vertex = RIGHT_ANGLE_VERTEX;
+
+  const toScreenCase = (point: Vector2): Point => ({
+    x: vertex.x + point.x * RIGHT_ANGLE_SCALE,
+    y: vertex.y - point.y * RIGHT_ANGLE_SCALE,
+  });
+
+  const firstHit = toScreenCase(path.firstHitM);
+  const secondHit = toScreenCase(path.secondHitM);
+  const incident = toScreenDirection(path.incidentDirection);
+  const outgoing = toScreenDirection(path.outgoingDirection);
+
+  const incidentStart = along(
+    firstHit,
+    opposite(incident),
+    RIGHT_ANGLE_INCIDENT_LEN_PX,
+  );
+  const outgoingEnd = along(secondHit, outgoing, RIGHT_ANGLE_OUTGOING_LEN_PX);
+
+  const mirror1Length =
+    RIGHT_ANGLE_FIRST_HIT_M * RIGHT_ANGLE_MIRROR1_RATIO * RIGHT_ANGLE_SCALE;
+  const mirror2Length =
+    Math.hypot(secondHit.x - vertex.x, secondHit.y - vertex.y) *
+    RIGHT_ANGLE_MIRROR2_RATIO;
+
+  return (
+    <g>
+      <Mirror
+        from={vertex}
+        direction={mirrors.first}
+        length={mirror1Length}
+        backSide={{ x: 0, y: 1 }}
+      />
+      <Mirror
+        from={vertex}
+        direction={mirrors.second}
+        length={mirror2Length}
+        backSide={{ x: -1, y: 0 }}
+      />
+      <path
+        d={angleArc(vertex, mirrors.first, mirrors.second, 16)}
+        className="fill-none stroke-ink"
+        strokeWidth={1.5}
+      />
+      <g
+        className="fill-none stroke-brand"
+        strokeWidth={2.5}
+        markerMid={`url(#${ARROW_LIGHT})`}
+      >
+        <path d={rayPath(incidentStart, firstHit, 0.4)} />
+        <path d={rayPath(firstHit, secondHit, 0.5)} />
+        <path d={rayPath(secondHit, outgoingEnd, 0.6)} />
+      </g>
+    </g>
+  );
+}
+
+/** Paralleelse juhu geomeetria: kaks samasuunalist 45°-mudelit, käsitsi. */
+const PARALLEL_HIT_TOP: Point = { x: 60, y: 40 };
+const PARALLEL_HIT_BOTTOM: Point = { x: 60, y: 110 };
+const PARALLEL_MIRROR_DIR: Point = { x: Math.SQRT1_2, y: Math.SQRT1_2 };
+const PARALLEL_MIRROR_HALF_LEN = 15;
+
+/**
+ * Paralleelne erijuht (periskoop): θ = 0° ei ole nurkpeegli mudelile antav
+ * sisend – ilma tiputa ei ole `traceCornerRay`-l midagi arvutada (model.ts
+ * kommentaar `deviationDeg` juures). Geomeetria on siin seepärast käsitsi,
+ * täpselt nagu hook-joonisel `OverFenceFigure`: peegeldumisseadus (45° peeglid,
+ * täpselt sama nurk mõlemal) on ELEMENTAARNE geomeetria, mis ei vaja selle
+ * mooduli tipu-põhist valemit. Mõlemad peeglid on TÄPSELT sama suunaga, mitte
+ * silma järgi paralleelsed – see ongi θ = 0° päris tähendus.
+ */
+function ParallelCase() {
+  const mirrorTopFrom = along(
+    PARALLEL_HIT_TOP,
+    opposite(PARALLEL_MIRROR_DIR),
+    PARALLEL_MIRROR_HALF_LEN,
+  );
+  const mirrorBottomFrom = along(
+    PARALLEL_HIT_BOTTOM,
+    opposite(PARALLEL_MIRROR_DIR),
+    PARALLEL_MIRROR_HALF_LEN,
+  );
+  const incomingStart = { x: 10, y: PARALLEL_HIT_TOP.y };
+  const outgoingEnd = { x: 150, y: PARALLEL_HIT_BOTTOM.y };
+
+  return (
+    <g>
+      <Mirror
+        from={mirrorTopFrom}
+        direction={PARALLEL_MIRROR_DIR}
+        length={PARALLEL_MIRROR_HALF_LEN * 2}
+        backSide={{ x: Math.SQRT1_2, y: -Math.SQRT1_2 }}
+      />
+      <Mirror
+        from={mirrorBottomFrom}
+        direction={PARALLEL_MIRROR_DIR}
+        length={PARALLEL_MIRROR_HALF_LEN * 2}
+        backSide={{ x: -Math.SQRT1_2, y: Math.SQRT1_2 }}
+      />
+      <g
+        className="fill-none stroke-brand"
+        strokeWidth={2.5}
+        markerMid={`url(#${ARROW_LIGHT})`}
+      >
+        <path d={rayPath(incomingStart, PARALLEL_HIT_TOP, 0.5)} />
+        <path d={rayPath(PARALLEL_HIT_TOP, PARALLEL_HIT_BOTTOM, 0.5)} />
+        <path d={rayPath(PARALLEL_HIT_BOTTOM, outgoingEnd, 0.6)} />
+      </g>
+    </g>
+  );
+}
+
+/** Paneeli raam, pealkiri ja allkiri – kaks ühesugust kasti kõrvuti. */
+function CasePanel({
+  index,
+  title,
+  caption,
+  children,
+}: {
+  index: number;
+  title: string;
+  caption: string;
+  children: ReactNode;
+}) {
+  const left = CASE_PANEL_LEFT[index];
+  return (
+    <g transform={`translate(${left} ${CASE_PANEL_TOP})`}>
+      <rect
+        x={0}
+        y={0}
+        width={CASE_PANEL_WIDTH}
+        height={CASE_PANEL_HEIGHT}
+        rx={10}
+        className="fill-white stroke-line"
+        strokeWidth={1.5}
+      />
+      <text
+        x={CASE_PANEL_WIDTH / 2}
+        y={-12}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={13}
+        fontWeight={600}
+      >
+        {title}
+      </text>
+      {children}
+      <text
+        x={CASE_PANEL_WIDTH / 2}
+        y={CASE_PANEL_HEIGHT + 20}
+        textAnchor="middle"
+        className="fill-ink-soft"
+        fontSize={11}
+      >
+        {caption}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * Kaks erijuhtu kõrvuti: täisnurkne nurkpeegel (θ = 90°, helkuri põhimõte) ja
+ * paralleelsed peeglid (θ = 0°, periskoop). Teooriatekst ütleb mõlemat
+ * sõnadega – see joonis näitab, MIKS: vasakul on sissetulev ja väljuv kiir
+ * silmnähtavalt vastassuunalised, paremal silmnähtavalt paralleelsed ja ainult
+ * nihkunud.
+ */
+export function SpecialCasesFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${CASE_VIEW.width} ${CASE_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: kaks erijuhtu kõrvuti. Vasakul paneelil on peeglite nurk 90 kraadi: kiir tuleb paremalt ülevalt, peegeldub kahelt peeglilt ja väljub täpselt vastassuunas, kust ta tuli. Paremal paneelil on kaks paralleelset 45 kraadi kaldu peeglit üksteise all: kiir tuleb vasakult, peegeldub ülemiselt peeglilt alla, siis alumiselt peeglilt uuesti paremale ja väljub samas suunas, kust ta tuli, ainult allapoole nihkunult."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+        <CasePanel index={0} title="θ = 90°" caption="pööre 180° – täpselt vastassuunas">
+          <RightAngleCase />
+        </CasePanel>
+        <CasePanel index={1} title="θ = 0°" caption="pööre 0° – ainult nihe (periskoop)">
+          <ParallelCase />
+        </CasePanel>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Kaks erijuhtu samast valemist: täisnurkne nurkpeegel pöörab kiire alati
+        täpselt tagasi, paralleelsed peeglid ei pööra üldse, ainult nihutavad.
+      </figcaption>
+    </figure>
+  );
+}
+
+/** Üldjuhu joonis ja kaks erijuhtu koos, teooriasammu `theory-1` küljes. */
+export function TwoMirrorsAndSpecialCasesFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <TwoMirrorsFigure />
+      <SpecialCasesFigure />
+    </div>
   );
 }
 
