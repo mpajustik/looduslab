@@ -32,11 +32,27 @@ const LED_1M_RATIO = distanceToSizeRatio(
   EXAMPLE_SOURCES.led.distanceM,
 );
 
-/** Harjutus 2: lambipirn 0,08 m, 4 m kauguselt – esimene LAIENDATUD allikas. */
-const BULB_4M_RATIO = distanceToSizeRatio(
-  EXAMPLE_SOURCES.lambipirn.sizeM,
-  EXAMPLE_SOURCES.lambipirn.distanceM,
-);
+/**
+ * Harjutus 2 arvuvariandid (docs/MOODULILEPING.md „Juhuslikkus"): neli
+ * mõõtme-kauguse paari, kõik LAIENDATUD allikad (suhe kaugelt alla piiri 60).
+ *
+ * **ETTEVAATUST piiriga:** ükski variant ei tohi anda suhet piiri 60 lähedale
+ * (display.ts nihutab näidiku näitu piiri lähedal sildist eemale, aga see
+ * mudel ei puuduta – siin on oht lihtsalt see, et ülesanne näeks ühel
+ * variandil välja nagu piirijuht, teisel selgelt mitte). Kõik neli jäävad
+ * alla 50, seega margin on lai.
+ */
+const PRACTICE_1_VARIANTS = [
+  { id: "d4", sizeM: 0.08, distanceM: 4 },
+  { id: "d3", sizeM: 0.1, distanceM: 3 },
+  { id: "d2", sizeM: 0.05, distanceM: 2 },
+  { id: "d5", sizeM: 0.2, distanceM: 5 },
+].map(({ id, sizeM, distanceM }) => ({
+  id,
+  sizeM,
+  distanceM,
+  ratio: distanceToSizeRatio(sizeM, distanceM),
+}));
 
 /**
  * Simulatsiooni ülesanne 1: päevavalgustoru 1,2 m juures vähim kaugus,
@@ -264,14 +280,18 @@ const steps: Step[] = [
         kind: "numeric",
         id: "practice-1",
         prompt:
-          "Lambipirni läbimõõt on 0,08 m ja sa vaatad teda 4 m kauguselt. Mitu korda on kaugus suurem kui pirn? 4 / 0,08 = ___",
+          "Valgusallika läbimõõt on {moode} m ja sa vaatad teda {kaugus} m kauguselt. Mitu korda on kaugus suurem kui allikas? {kaugus} / {moode} = ___",
         hints: [
           "Mõlemad arvud on juba meetrites – teisendama ei pea.",
           `Kui vastus tuleb vähemalt ${POINT_SOURCE_MIN_RATIO}, on tegu punktallikaga. Siin ta nii suur ei ole.`,
         ],
         unit: "korda",
         tolerance: { mode: "percent", value: 5 },
-        answer: BULB_4M_RATIO,
+        variants: PRACTICE_1_VARIANTS.map(({ id, sizeM, distanceM, ratio }) => ({
+          id,
+          values: { moode: sizeM, kaugus: distanceM },
+          answer: ratio,
+        })),
       },
       {
         // Iseseisev, mitu õiget (spets p 3). Segamine on vaikimisi sees.
@@ -444,6 +464,22 @@ const reviewCards: ReviewCard[] = [
     type: "transfer",
     question: "Päike on hiiglaslik. Miks ta on meie jaoks ikkagi punktvalgusallikas?",
     answer: `Ta on väga kaugel: kaugus on ${ratioText(SUN_RATIO)} korda suurem kui Päikese enda läbimõõt, seega üle ${POINT_SOURCE_MIN_RATIO} piiri (piir on kaasav – ka täpselt ${POINT_SOURCE_MIN_RATIO} loeb punktallikaks).`,
+  },
+  {
+    id: "rc-6",
+    type: "explain",
+    question:
+      "LED ja päevavalguslamp lähevad kasutamisel soojaks ja annavad ju valgust. Miks nimetatakse neid ikkagi KÜLMADEKS valgusallikateks?",
+    answer:
+      "„Külm“ ei kirjelda, kui palav lamp puudutades on ega valguse värvust – see ütleb, KUIDAS valgus tekib. Soojuslik allikas kiirgab, sest keha on hõõguma minemas kuum (üle umbes 600 °C, nagu hõõgniit või leek); külm allikas tekitab valgust muu protsessiga ega pea selleks nii kuumaks minema.",
+  },
+  {
+    id: "rc-7",
+    type: "graph",
+    question:
+      "Allika mõõde jääb samaks, aga vaatluskaugus kahekordistub. Mis juhtub suhtega kaugus / mõõde?",
+    answer:
+      "Suhe kahekordistub ka – suhe on kaugusega VÕRDELINE (sirge läbi nullpunkti), sest mõõde on jagamisel muutumatu nimetaja.",
   },
 ];
 

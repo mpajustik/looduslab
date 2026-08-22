@@ -215,7 +215,7 @@ practice-3 ja exit-2; explore-2 küsib kaugust ja tema ühik on `m`.
   45-minutilises tunnis järgneb sellele `lambivalik` või
   `vari-ja-poolvari`.
 
-## Kordamiskaardid (5 tk)
+## Kordamiskaardid (7 tk)
 
 | id | tüüp | küsimus | vastus |
 |---|---|---|---|
@@ -224,3 +224,12 @@ practice-3 ja exit-2; explore-2 küsib kaugust ja tema ühik on `m`.
 | rc-3 | concept | Too näide soojuslikust ja külmast valgusallikast | Soojuslik: Päike, küünal, hõõglamp. Külm: LED, päevavalguslamp, jaaniuss |
 | rc-4 | calc | LED läbimõõduga 5 mm on 1 m kaugusel. Mitu korda on kaugus suurem ja mis liiki allikaga on tegu? | 1 / 0,005 = 200 korda – punktvalgusallikas |
 | rc-5 | transfer | Päike on hiiglaslik. Miks ta on meie jaoks ikkagi punktvalgusallikas? | Ta on väga kaugel: kaugus on 108 korda suurem kui tema läbimõõt, üle 60 piiri (piir on kaasav: ka täpselt 60 loeb punktallikaks) |
+| rc-6 | explain | LED ja päevavalguslamp lähevad kasutamisel soojaks. Miks nimetatakse neid ikkagi külmadeks valgusallikateks? | „Külm" ütleb, KUIDAS valgus tekib, mitte kui palav lamp on: soojuslik allikas kiirgab, sest keha on hõõguma minemas kuum, külm allikas tekitab valgust muu protsessiga |
+| rc-7 | graph | Allika mõõde jääb samaks, aga vaatluskaugus kahekordistub. Mis juhtub suhtega kaugus / mõõde? | Suhe kahekordistub ka – suhe on kaugusega VÕRDELINE (sirge läbi nullpunkti), sest mõõde on jagamisel muutumatu nimetaja |
+
+**practice-1 sai arvuvariandid** (moodulileping „Juhuslikkus"): neli
+mõõtme-kauguse paari (4/0,08; 3/0,1; 2/0,05; 5/0,2 m), kõik selgelt alla
+piiri 60 (ETTEVAATUST piiriga lähedal – vt display.ts selgitust näidiku
+ümardamise kohta). Uusi õpilasvastuseid sellel küsimusel veel ei ole, seega
+versioon tõuseb ainult skeemimuutuse pärast (moodulileping
+„Versioneerimine").

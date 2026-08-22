@@ -38,6 +38,9 @@ export const manifest = defineModule({
   //
   // 2.0.1: neljale küsimusele lisati vihje, mis seni puudus (explore-1,
   // practice-2, exit-1, exit-2) – sõnastus, mitte õige vastus, seega patch.
-  version: "2.0.1",
+  // 3.0.0: practice-1 sai ESIMEST korda arvuvariandid (answer → variants) –
+  // major moodulilepingu järgi, kuigi küsimusel õpilasvastuseid veel ei ole.
+  // Kaks uut kordamiskaarti (explain, graph), 5 → 7 tk.
+  version: "3.0.0",
   status: "active",
 });

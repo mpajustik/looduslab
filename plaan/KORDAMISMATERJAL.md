@@ -70,7 +70,7 @@ kaarditüüpi VÕI vahele jäänud tüüp on nii `graph` kui midagi lisaks, ja
       RIDA 604 tabelisse + `activities.ts` `reviewCards`); vaata, kas mõni
       4 harjutusküsimusest sobib arvuvariandiga (nurgaviga practice-1
       mõjub heaks kandidaadiks – sama valem, teine kraadiarv)
-- [ ] `valgusallikad`: lisa `graph`- ja `explain`-kaart; kontrolli
+- [x] `valgusallikad`: lisa `graph`- ja `explain`-kaart; kontrolli
       variandikandidaate (näidiku ümardamispiir on juba `display.ts`-is
       testitud – ETTEVAATUST variandi valikuga selle piiri lähedal, vt
       moodulilepingu display.ts selgitust)

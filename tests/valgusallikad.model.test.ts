@@ -393,7 +393,6 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
   it.each([
     ["explore-2", "päevavalgustoru punktallikaks (m)", 72, 6],
     ["explore-3", "LED 0,5 m kauguselt (korda)", 100, 6],
-    ["practice-1", "lambipirn 4 m kauguselt (korda)", 50, 6],
     ["practice-3", "Päikese suhe (korda)", 107.76, 2],
     ["exit-2", "tänavalamp 12 m kõrgusel (korda)", 200, 6],
   ])("%s (%s) → %s", (questionId, _what, expected, digits) => {
@@ -478,6 +477,45 @@ describe("ülesannete vastused käivad spetsifikatsiooniga kokku", () => {
       "extended",
     );
     expect(pointSourceDistance(sizeM)).toBeGreaterThan(distanceM);
+  });
+});
+
+/**
+ * Arvuvariantide füüsika (docs/MOODULILEPING.md „Juhuslikkus").
+ *
+ * `activities.ts` on ANDMED: variandi vastus on seal käsitsi kirjas, sest
+ * valem ei tohi elada sisufailis (CLAUDE.md reegel 1) – seepärast küsib test
+ * vastuse `model.ts`-ilt.
+ */
+describe("practice-1 arvuvariandid käivad mudeliga kokku", () => {
+  const variantsOf = (questionId: string) => {
+    for (const step of activities.steps) {
+      for (const question of stepQuestions(step)) {
+        if (question.id === questionId && question.kind === "numeric") {
+          return question.variants ?? [];
+        }
+      }
+    }
+    throw new Error(`Arvküsimust "${questionId}" ei ole moodulis`);
+  };
+
+  it("iga variant on kaugus / mõõde ja jääb selgelt alla piiri 60", () => {
+    const variants = variantsOf("practice-1");
+    expect(variants.length).toBeGreaterThanOrEqual(2);
+    for (const variant of variants) {
+      expect(variant.answer).toBeCloseTo(
+        distanceToSizeRatio(variant.values.moode, variant.values.kaugus),
+        10,
+      );
+      // ETTEVAATUST piiriga (vt activities.ts kommentaar): ükski variant ei
+      // tohi anda suhet piiri 60 lähedale.
+      expect(variant.answer).toBeLessThan(POINT_SOURCE_MIN_RATIO - 5);
+    }
+  });
+
+  it("variantide vastused on üksteisest eristatavad", () => {
+    const answers = variantsOf("practice-1").map((variant) => variant.answer);
+    expect(new Set(answers).size).toBe(answers.length);
   });
 });
 
