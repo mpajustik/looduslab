@@ -83,9 +83,14 @@ Ploki suurim auk: tekst kannab nelja eraldi ideed puhta jutuna.
 
 ### 6. varjutused – „miks mitte iga kuu" on ainult tekst
 
-- [ ] **Kaldus Kuu-raja külgvaade** – 5° kalle ja kaks sõlme (lõikekohta)
+- [x] **Kaldus Kuu-raja külgvaade** – 5° kalle ja kaks sõlme (lõikekohta)
       märgitud. Mooduli raskeim koht. `TwoEclipsesFigure` näitab kahte
       varjutust, aga mitte seda, miks neid harva juhtub.
+      (Tehtud: `MoonOrbitTiltFigure`, mis paneb selle kokku
+      `TwoEclipsesFigure`'iga võtme `vj-kaks-varjutust` alla komponendina
+      `TwoEclipsesAndOrbitTiltFigure` – moodul jääb 6 sammu juurde, teist
+      theory-sammu ei lisatud. Kalle joonisel liialdatud 20°-ni, 5° oleks
+      paberil nähtamatu.)
 
 ---
 

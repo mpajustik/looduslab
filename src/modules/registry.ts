@@ -319,7 +319,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "vj-kaks-varjutust": lazy(() =>
       import("./physics/varjutused/figures").then((module) => ({
-        default: module.TwoEclipsesFigure,
+        default: module.TwoEclipsesAndOrbitTiltFigure,
       })),
     ),
     "vj-varjutuse-rada": lazy(() =>

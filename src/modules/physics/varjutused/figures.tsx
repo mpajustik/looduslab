@@ -227,6 +227,111 @@ export function TwoEclipsesFigure() {
 }
 
 // ---------------------------------------------------------------------------
+// vj-kaks-varjutust (2. paneel) – Kuu raja kalle, miks mitte iga kuu
+// ---------------------------------------------------------------------------
+
+const TILT_VIEW = { width: 340, height: 220 };
+const TILT_EARTH_X = 170;
+const TILT_EARTH_Y = 110;
+/** Ellipsi pooltelgede kaudu joonistatud "külgvaade" Kuu ringorbiidile. */
+const TILT_RX = 130;
+const TILT_RY = 45;
+/**
+ * Joonisel kasutatud kalle on 20°, mitte päris 5° – 5° oleks paberil
+ * nähtamatu (kaks joont langeksid peaaegu kokku). Nurga SUURUS ei ole
+ * siin õpitav sisu, ainult see, ET rada on kaldu ja lõikub ekliptikaga
+ * kahes kohas – seda 20° juba näitab.
+ */
+const TILT_ANGLE_DEG = 20;
+
+export function MoonOrbitTiltFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${TILT_VIEW.width} ${TILT_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: külgvaade Maast ja Kuu rajast. Ekliptika (Maa rada Päikese ümber laiendatuna) on horisontaalne katkendjoon Maast läbi. Kuu rada on kaldu ellipsina joonistatud ja lõikub ekliptikaga kahes punktis, mis on märgitud sõlmedena. Kahes teises kohas käib Kuu rajal kõrgel ekliptikast üleval või all – need on tavalise kuu asendid, kus varjutust ei tule."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        {/* Ekliptika – Maa-Päikese tasand laiendatuna, katkendjoon. */}
+        <line
+          x1={20}
+          y1={TILT_EARTH_Y}
+          x2={320}
+          y2={TILT_EARTH_Y}
+          className="stroke-ink-soft"
+          strokeWidth={1.5}
+          strokeDasharray="6 5"
+        />
+        <text x={20} y={TILT_EARTH_Y - 10} textAnchor="start" className="fill-ink-soft" fontSize={11}>
+          ekliptika (Maa rada Päikese ümber)
+        </text>
+
+        {/* Kuu rada – kaldu ellips ümber Maa. */}
+        <ellipse
+          cx={TILT_EARTH_X}
+          cy={TILT_EARTH_Y}
+          rx={TILT_RX}
+          ry={TILT_RY}
+          transform={`rotate(-${TILT_ANGLE_DEG} ${TILT_EARTH_X} ${TILT_EARTH_Y})`}
+          className="stroke-teacher"
+          strokeWidth={2}
+          fill="none"
+        />
+
+        {/* Maa keskel. */}
+        <circle cx={TILT_EARTH_X} cy={TILT_EARTH_Y} r={10} className="fill-ink" />
+        <text x={TILT_EARTH_X} y={TILT_EARTH_Y + 24} textAnchor="middle" className="fill-ink-soft" fontSize={11}>
+          Maa
+        </text>
+
+        {/* Sõlmed – kus Kuu rada lõikub ekliptikaga; siin on varjutus võimalik. */}
+        <circle cx={265.4} cy={TILT_EARTH_Y} r={6} className="fill-teacher" stroke="white" strokeWidth={2} />
+        <circle cx={74.6} cy={TILT_EARTH_Y} r={6} className="fill-teacher" stroke="white" strokeWidth={2} />
+        <text x={265.4} y={TILT_EARTH_Y - 16} textAnchor="middle" className="fill-ink" fontSize={11} fontWeight={600}>
+          sõlm
+        </text>
+        <text x={74.6} y={TILT_EARTH_Y - 16} textAnchor="middle" className="fill-ink" fontSize={11} fontWeight={600}>
+          sõlm
+        </text>
+
+        {/* Kuu tavalises kuus – rajal ekliptikast üleval või all, vari läheb mööda. */}
+        <circle cx={154.6} cy={67.7} r={7} className="fill-ink" />
+        <text x={154.6} y={54} textAnchor="middle" className="fill-ink-soft" fontSize={11}>
+          Kuu üleval
+        </text>
+        <circle cx={185.4} cy={152.3} r={7} className="fill-ink" />
+        <text x={185.4} y={175} textAnchor="middle" className="fill-ink-soft" fontSize={11}>
+          Kuu all
+        </text>
+
+        <text x={8} y={TILT_VIEW.height - 8} className="fill-ink-soft" fontSize={11}>
+          kalle joonisel liialdatud – päriselt ainult ~5°
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Kuu rada on ekliptika suhtes kaldu – varjutus saab tulla ainult siis, kui Kuu on parajasti sõlmes.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: kaks joonist üksteise all – kõigepealt „kes kelle varju
+ * jääb" (`TwoEclipsesFigure`), siis „miks mitte iga kuu" (`MoonOrbitTiltFigure`).
+ * Sama järjekord, mis teooriateksti lõikudel. Moodul jääb ühe theory-sammu
+ * juurde, teist ei lisata (sama muster mis `kumerpeegli-rakendused/ViewFieldAndSizeIllusionFigure`).
+ */
+export function TwoEclipsesAndOrbitTiltFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <TwoEclipsesFigure />
+      <MoonOrbitTiltFigure />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // vj-varjutuse-rada – harjutus (kaardilugemine)
 // ---------------------------------------------------------------------------
 
