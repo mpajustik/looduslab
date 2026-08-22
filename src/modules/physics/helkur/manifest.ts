@@ -43,6 +43,9 @@ export const manifest = defineModule({
   // 1.0.1: neljale küsimusele lisati vihje, mis seni puudus (practice-2,
   // practice-3, practice-4, exit-1) – sõnastus, mitte õige vastus, seega
   // patch.
-  version: "1.0.1",
+  // 1.0.2: theory-1 joonisele (hl-kolm-pinda) lisati kuubinurga 3D-joonis
+  // (CubeCornerFigure) ThreeSurfacesFigure'i juurde – visuaali muutus,
+  // patch (docs/MOODULILEPING.md).
+  version: "1.0.2",
   status: "active",
 });

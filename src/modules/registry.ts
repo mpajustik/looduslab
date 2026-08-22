@@ -481,7 +481,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "hl-kolm-pinda": lazy(() =>
       import("./physics/helkur/figures").then((module) => ({
-        default: module.ThreeSurfacesFigure,
+        default: module.ThreeSurfacesAndCubeCornerFigure,
       })),
     ),
   },

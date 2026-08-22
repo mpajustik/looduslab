@@ -578,3 +578,219 @@ export function ThreeSurfacesFigure() {
     </figure>
   );
 }
+
+// ---------------------------------------------------------------------------
+// hl-kolm-pinda – teooria (kuubinurk isomeetrias)
+// ---------------------------------------------------------------------------
+
+const CUBE_VIEW = { width: 360, height: 260 };
+/** Esinurk (kus põrand ja kaks seina kohtuvad LÄHIMAS servas). */
+const CUBE_FRONT = { x: 150, y: 224 };
+/** Põranda poolteljed (isomeetriline diagonaal) ja seinte kõrgus. */
+const CUBE_HALF = 66;
+const CUBE_HEIGHT = 148;
+
+const CUBE_RIGHT = { x: CUBE_FRONT.x + CUBE_HALF, y: CUBE_FRONT.y - CUBE_HALF / 2 };
+const CUBE_LEFT = { x: CUBE_FRONT.x - CUBE_HALF, y: CUBE_FRONT.y - CUBE_HALF / 2 };
+/** Tagumine alaserv – siit läheb üles PÜSTINE serv, mida kolm pinda jagavad. */
+const CUBE_BACK_BOTTOM = { x: CUBE_FRONT.x, y: CUBE_FRONT.y - CUBE_HALF };
+const CUBE_BACK_TOP = { x: CUBE_BACK_BOTTOM.x, y: CUBE_BACK_BOTTOM.y - CUBE_HEIGHT };
+const CUBE_RIGHT_TOP = { x: CUBE_RIGHT.x, y: CUBE_RIGHT.y - CUBE_HEIGHT };
+const CUBE_LEFT_TOP = { x: CUBE_LEFT.x, y: CUBE_LEFT.y - CUBE_HEIGHT };
+
+const polygonPoints = (points: Point[]) =>
+  points.map((point) => `${point.x},${point.y}`).join(" ");
+
+/**
+ * Punkt tasapinnalise nelinurga SEES: `corner + s·(edgeA) + t·(edgeB)`.
+ *
+ * Kiire põrkepunktid TULEVAD SIIT, mitte käsitsi valitud koordinaadist – kui
+ * `s` ja `t` on vahemikus (0, 1), on tulemus garanteeritult tahu SEES, mitte
+ * kogemata õhus või kahe tahu ühisserval (CodeRabbiti moodi leid: kolmest
+ * põrkepunktist kaks olid varem tahust väljas, kuigi joonis väitis vastupidist).
+ */
+function facePoint(
+  corner: Point,
+  edgeA: Point,
+  edgeB: Point,
+  s: number,
+  t: number,
+): Point {
+  return {
+    x: corner.x + edgeA.x * s + edgeB.x * t,
+    y: corner.y + edgeA.y * s + edgeB.y * t,
+  };
+}
+
+/**
+ * Kuubinurk isomeetrias: põrand + kaks seina, nagu toa nurk.
+ *
+ * Teooriateksti viimane lause ütleb, et päris helkur on „täpitud pisikestest
+ * kuubinurkadest: kolm peeglit risti nagu toa nurk, kus kaks seina ja põrand
+ * kokku saavad" – aga kaks kõrvutist tasapaneeli (`ThreeSurfacesFigure`) ei
+ * saa kolmandat mõõdet kunagi näidata. See joonis on 2D `ThreeSurfacesFigure`
+ * RUUMILINE vaste: sama kolm risti pinda, aga nüüd päriselt kolmes suunas.
+ *
+ * **Põrkepunktid on siin SKEMAATILISED, mitte tuletatud** (samal viisil nagu
+ * `ThreeSurfacesFigure` matt-paneeli seitse suunda) – need ei tule
+ * arvutusest, sest see moodul ei arvuta kiirte teid peeglite vahel (vt
+ * faili päist). Väljuva kiire SUUND on aga tuletatud sisenevast (vastassuund) –
+ * joonis väidab seda, mida tekst juba väidab: kiir puudutab kõiki kolme
+ * pinda ja tuleb tagasi täpselt vastassuunas.
+ */
+export function CubeCornerFigure() {
+  const incomingStart = { x: 296, y: 30 };
+  // Iga põrkepunkt on OMA tahu sees (s, t ∈ (0, 1)) – vt `facePoint`.
+  const hitRightWall = facePoint(
+    CUBE_RIGHT,
+    { x: CUBE_BACK_BOTTOM.x - CUBE_RIGHT.x, y: CUBE_BACK_BOTTOM.y - CUBE_RIGHT.y },
+    { x: CUBE_RIGHT_TOP.x - CUBE_RIGHT.x, y: CUBE_RIGHT_TOP.y - CUBE_RIGHT.y },
+    0.5,
+    0.55,
+  );
+  const hitLeftWall = facePoint(
+    CUBE_LEFT,
+    { x: CUBE_BACK_BOTTOM.x - CUBE_LEFT.x, y: CUBE_BACK_BOTTOM.y - CUBE_LEFT.y },
+    { x: CUBE_LEFT_TOP.x - CUBE_LEFT.x, y: CUBE_LEFT_TOP.y - CUBE_LEFT.y },
+    0.5,
+    0.55,
+  );
+  const hitFloor = facePoint(
+    CUBE_FRONT,
+    { x: CUBE_RIGHT.x - CUBE_FRONT.x, y: CUBE_RIGHT.y - CUBE_FRONT.y },
+    { x: CUBE_LEFT.x - CUBE_FRONT.x, y: CUBE_LEFT.y - CUBE_FRONT.y },
+    0.5,
+    0.2,
+  );
+  // Väljuv kiir on sisenevaga VASTASSUUNALINE (helkuri põhiomadus) – seepärast
+  // tuletatud sissetuleva suuna negatsioonina, mitte käsitsi valitud punktina.
+  const incomingDirection = {
+    x: hitRightWall.x - incomingStart.x,
+    y: hitRightWall.y - incomingStart.y,
+  };
+  const outgoingEnd = {
+    x: hitFloor.x - incomingDirection.x,
+    y: hitFloor.y - incomingDirection.y,
+  };
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${CUBE_VIEW.width} ${CUBE_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: kuubi sisenurk isomeetrilises vaates, nagu toa nurk, kus põrand ja kaks seina kohtuvad. Kõik kolm pinda on peeglid. Sissetulev kiir puudutab paremat seina, siis vasakut seina, siis põrandat, ja tuleb tagasi peaaegu täpselt samast suunast, kust ta tuli."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+
+        {/* Põrand ja kaks seina – kolm risti pinda, iga oma tooniga. */}
+        <polygon
+          points={polygonPoints([CUBE_FRONT, CUBE_RIGHT, CUBE_BACK_BOTTOM, CUBE_LEFT])}
+          className="fill-brand stroke-ink"
+          fillOpacity={0.18}
+        />
+        <polygon
+          points={polygonPoints([
+            CUBE_RIGHT,
+            CUBE_BACK_BOTTOM,
+            CUBE_BACK_TOP,
+            CUBE_RIGHT_TOP,
+          ])}
+          className="fill-brand stroke-ink"
+          fillOpacity={0.32}
+        />
+        <polygon
+          points={polygonPoints([
+            CUBE_LEFT,
+            CUBE_BACK_BOTTOM,
+            CUBE_BACK_TOP,
+            CUBE_LEFT_TOP,
+          ])}
+          className="fill-brand stroke-ink"
+          fillOpacity={0.46}
+        />
+        <g className="stroke-ink" strokeWidth={1.5} strokeLinejoin="round">
+          <polyline
+            points={polygonPoints([CUBE_FRONT, CUBE_RIGHT, CUBE_RIGHT_TOP])}
+            fill="none"
+          />
+          <polyline
+            points={polygonPoints([CUBE_FRONT, CUBE_LEFT, CUBE_LEFT_TOP])}
+            fill="none"
+          />
+          <line
+            x1={CUBE_BACK_BOTTOM.x}
+            y1={CUBE_BACK_BOTTOM.y}
+            x2={CUBE_BACK_TOP.x}
+            y2={CUBE_BACK_TOP.y}
+          />
+        </g>
+
+        <text x={CUBE_FRONT.x} y={CUBE_FRONT.y + 20} textAnchor="middle" className="fill-ink-soft" fontSize={10}>
+          põrand
+        </text>
+        <text x={CUBE_RIGHT_TOP.x + 6} y={CUBE_RIGHT_TOP.y + 14} textAnchor="start" className="fill-ink-soft" fontSize={10}>
+          sein A
+        </text>
+        <text x={CUBE_LEFT_TOP.x - 6} y={CUBE_LEFT_TOP.y + 14} textAnchor="end" className="fill-ink-soft" fontSize={10}>
+          sein B
+        </text>
+
+        {/* Kiire tee: sissetulev pidev, kolm põrget, väljuv katkendlik. */}
+        <g className="fill-none stroke-brand" strokeWidth={2.5} strokeLinecap="round">
+          <path
+            d={rayPath(incomingStart, hitRightWall, 0.55)}
+            markerMid={`url(#${ARROW_LIGHT})`}
+          />
+          <path d={`M ${hitRightWall.x} ${hitRightWall.y} L ${hitLeftWall.x} ${hitLeftWall.y}`} />
+          <path d={`M ${hitLeftWall.x} ${hitLeftWall.y} L ${hitFloor.x} ${hitFloor.y}`} />
+        </g>
+        <g className="fill-none stroke-info" strokeWidth={2.5} strokeLinecap="round" strokeDasharray="6 5">
+          <path
+            d={rayPath(hitFloor, outgoingEnd, 0.6)}
+            markerMid={`url(#${ARROW_RETURN})`}
+          />
+        </g>
+        <circle cx={hitRightWall.x} cy={hitRightWall.y} r={2.5} className="fill-ink" />
+        <circle cx={hitLeftWall.x} cy={hitLeftWall.y} r={2.5} className="fill-ink" />
+        <circle cx={hitFloor.x} cy={hitFloor.y} r={2.5} className="fill-ink" />
+
+        <text x={incomingStart.x + 6} y={incomingStart.y - 4} textAnchor="middle" className="fill-brand" fontSize={10} fontWeight={600}>
+          sisse
+        </text>
+        <text x={outgoingEnd.x + 6} y={outgoingEnd.y + 4} textAnchor="start" className="fill-info" fontSize={10} fontWeight={600}>
+          välja
+        </text>
+
+        <text
+          x={CUBE_VIEW.width / 2}
+          y={CUBE_VIEW.height - 8}
+          textAnchor="middle"
+          className="fill-ink-soft"
+          fontSize={10}
+        >
+          kolm põrget – kiir tagasi peaaegu sealt, kust tuli
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Päris helkur on kolm peeglit risti, nagu toa nurk. Kiir põrkab kõigilt
+        kolmelt ja tuleb tagasi peaaegu täpselt sealt, kust ta tuli.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: kaks kõrvutist tasapaneeli (`ThreeSurfacesFigure`) ja
+ * selle all kolmemõõtmeline kuubinurk (`CubeCornerFigure`) – kaks eri
+ * raskusastet samast teooriatekstist ühe joonisena, moodul jääb 6 sammu
+ * juurde, teist theory-sammu ei lisata (sama muster mis mujal P1-s).
+ */
+export function ThreeSurfacesAndCubeCornerFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <ThreeSurfacesFigure />
+      <CubeCornerFigure />
+    </div>
+  );
+}
