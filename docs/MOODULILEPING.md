@@ -281,6 +281,13 @@ Kaardid elavad `activities.ts`-is (mitte manifest'is ega omaette failis),
 sest nad on sama sorti sisu mis küsimused: tekst + õige vastus + kontroll.
 Kaardi jaoks eraldi faili ei tehta – vt failide loend ülal.
 
+Soovituslikult kõik viis tüüpi esindatud (concept/calc/graph/explain/
+transfer). Kui mõni tüüp moodulile ei sobi, põhjenda ühe lausega, ära jäta
+lihtsalt vahele. Kui harjutusküsimusel on üldse arvuline vastus, olgu
+vähemalt pooltel `variants` (≥3) – vastasel juhul näeb õpilane uuesti
+proovides samu arve (vt versioneerimisreeglid ülal, kui `variants` lisandub
+küsimusele, kus juba on vastuseid kogunenud).
+
 **Kaardid kirjutatakse valmis KOHE mooduli loomisel**, ka enne etappi 3, kus
 kordamismootor valmib. Spetsifikatsioonifailis (sisu/MOODUL-*.md) on nad
 niikuinii olemas – nende hilisem juurde kirjutamine tähendaks kõigi

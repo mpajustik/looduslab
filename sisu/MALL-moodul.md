@@ -89,3 +89,7 @@ vastusega>
 Kaardid lähevad mooduli activities.ts faili (reviewCards eksport) ja
 kirjutatakse valmis KOHE mooduli loomisel – ka siis, kui kordamismootor
 (etapp 3) pole veel valmis.
+
+Soovituslikult kõik viis tüüpi esindatud (concept/calc/graph/explain/
+transfer). Kui mõni tüüp moodulile ei sobi (nt puhtal mõistemoodulil pole
+`calc`-i), põhjenda ühe lausega, ära jäta lihtsalt vahele.

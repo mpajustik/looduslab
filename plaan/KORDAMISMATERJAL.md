@@ -49,14 +49,14 @@ muudeta, kordub sama auk iga UUE mooduli juures (`/jaga-plokk` +
 `sisu/MALL-moodul.md` annavad praegu malli, mis lubab kõik 5 kaarti vahele
 jätta).
 
-- [ ] `sisu/MALL-moodul.md` „Kordamiskaardid (3–6 tk)" saab lisamärkuse:
+- [x] `sisu/MALL-moodul.md` „Kordamiskaardid (3–6 tk)" saab lisamärkuse:
       soovituslikult kõik 5 tüüpi esindatud (concept/calc/graph/explain/
       transfer); kui mõni tüüp moodulile ei sobi (nt puhtal mõistemoodulil
       pole `calc`-i), põhjenda ühe lausega, ära jäta lihtsalt vahele
-- [ ] `docs/MOODULILEPING.md` „activities.ts – kordamiskaardid" saab sama
+- [x] `docs/MOODULILEPING.md` „activities.ts – kordamiskaardid" saab sama
       märkuse + soovituse, et vähemalt pooltel harjutusküsimustel oleks
       `variants` (≥3), kui küsimusel on üldse arvuline vastus
-- [ ] Uue mooduli protsessi (moodulilepingu „Uue mooduli loomine") checklisti
+- [x] Uue mooduli protsessi (moodulilepingu „Uue mooduli loomine") checklisti
       ei muudeta – see on juba katvusraporti-põhine ja ainekava-katvus on
       eraldi asi kordamiskatvusest
 
