@@ -475,6 +475,40 @@ const steps: Step[] = [
           },
         ],
       },
+      {
+        // Esimene „märgi joonisele" küsimus (plaan/LUHITOOD.md etapp A6).
+        // Kohtade numbrid joonistab joonis ise (figures.tsx) – siin on ainult
+        // see, MIS number millise nime saab.
+        //
+        // Seisab harjutamise LÕPUS meelega: siia jõudes on õpilane kõiki
+        // mõisteid juba kasutanud, seega on see kokkuvõte, mitte sõnavaratest
+        // enne arvutamist.
+        kind: "label",
+        id: "practice-4",
+        prompt: "Märgi joonisele, mis on mis. Vali igale numbrile õige nimi.",
+        hints: ["Nurki mõõdetakse alati pinna ristsirgest, mitte peegli pinnast."],
+        figure: "peegeldumise-osad",
+        spots: [
+          { id: "langev", marker: 1, answer: "langev-kiir" },
+          { id: "peegeldunud", marker: 2, answer: "peegeldunud-kiir" },
+          { id: "ristsirge", marker: 3, answer: "pinna-ristsirge" },
+          { id: "alfa", marker: 4, answer: "langemisnurk" },
+          { id: "beeta", marker: 5, answer: "peegeldumisnurk" },
+        ],
+        // Nimede järjekord on autori oma ja jääb samaks ka uuel katsel: seda
+        // liiki engine ei sega (plaan/LUHITOOD.md O2). Kaks viimast on
+        // eksitajad – nad on selle mooduli mõisted, aga sellel joonisel neid
+        // ei ole. Ilma nendeta oleks viimane koht järelejäänud nimest arvatav.
+        names: [
+          { id: "langev-kiir", text: "langev kiir" },
+          { id: "peegeldunud-kiir", text: "peegeldunud kiir" },
+          { id: "pinna-ristsirge", text: "pinna ristsirge" },
+          { id: "langemisnurk", text: "langemisnurk" },
+          { id: "peegeldumisnurk", text: "peegeldumisnurk" },
+          { id: "hajunud-kiir", text: "hajunud kiir" },
+          { id: "peegli-pind", text: "peegli pind" },
+        ],
+      },
     ],
   },
   {

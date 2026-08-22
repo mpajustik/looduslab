@@ -262,6 +262,11 @@ export const moduleFigures: Record<string, ModuleFigures> = {
         default: module.PeriscopeFigure,
       })),
     ),
+    "peegeldumise-osad": lazy(() =>
+      import("./physics/peegeldumisseadus/figures").then((module) => ({
+        default: module.ReflectionPartsToLabelFigure,
+      })),
+    ),
   },
   "physics.vedeliku-rohk": {
     tamm: lazy(() =>

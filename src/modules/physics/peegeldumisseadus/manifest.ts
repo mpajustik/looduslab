@@ -45,7 +45,10 @@ export const manifest = defineModule({
   //        mitte õige vastus, seega patch.
   // 2.0.2: theory-1 juurde lisati joonis „kiir = joon + nool" – visuaal on
   //        patch.
+  // 2.1.0: uus küsimus practice-4 – esimene „märgi joonisele" (kind: "label")
+  //        koos oma sildistamata joonisega. Uus küsimus olemasolevate kõrvale,
+  //        ükski vana vastus ei muutu – MINOR (plaan/LUHITOOD.md samm A6).
   // Reeglid: docs/MOODULILEPING.md „Versioonimine".
-  version: "2.0.2",
+  version: "2.1.0",
   status: "active",
 });

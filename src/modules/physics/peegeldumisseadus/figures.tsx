@@ -28,6 +28,12 @@ import {
 /** Nooleotsad. Ühed id-d kogu failis: korraga on ekraanil üks joonis. */
 const ARROW_INCIDENT = "fig-arrow-incident";
 const ARROW_REFLECTED = "fig-arrow-reflected";
+/**
+ * Värvitu nooleots. Vajalik ainult sildistamisjoonisel: seal peavad mõlemad
+ * kiired olema ÜHTE värvi, muidu annaks värv vastuse ette (vt
+ * ReflectionPartsToLabelFigure).
+ */
+const ARROW_NEUTRAL = "fig-arrow-neutral";
 
 /** Pinna ristsirge suund: pind on x-teljel, ristsirge osutab üles (+y). */
 const NORMAL_DIRECTION: Vector2 = { x: 0, y: 1 };
@@ -61,6 +67,17 @@ function RayArrowDefs() {
         orient="auto"
       >
         <path d="M 0 0 L 10 5 L 0 10 z" className="fill-info" />
+      </marker>
+      <marker
+        id={ARROW_NEUTRAL}
+        viewBox="0 0 10 10"
+        refX="5"
+        refY="5"
+        markerWidth="5"
+        markerHeight="5"
+        orient="auto"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" className="fill-ink" />
       </marker>
     </defs>
   );
@@ -330,6 +347,163 @@ export function ReflectionConceptFigure() {
         <span className="font-semibold text-brand">α</span> – langemisnurk,{" "}
         <span className="font-semibold text-info">β</span> – peegeldumisnurk.
         Mõlemat mõõdetakse pinna ristsirgest, mitte peegli pinnast.
+      </figcaption>
+    </figure>
+  );
+}
+
+// --- Joonis: märgi osad (practice-4) ---------------------------------------
+
+/**
+ * Numbrimärgi raadius. 11 px viewBoxi ühikutes ≈ 22 px läbimõõt telefonis –
+ * loetav, aga ei kata kiiri kinni. Märk ise ei ole klikitav: nime valib
+ * õpilane joonise all olevast rippmenüüst (src/ui/steps/LabelInput.tsx).
+ */
+const SPOT_RADIUS = 11;
+/** Kui kaugel langemispunktist märgid kiirtel ja ristsirgel seisavad. */
+const SPOT_ON_RAY = 110;
+const SPOT_ON_NORMAL = 106;
+/** Nurgamärgid kaartest väljaspool, et nad kaart ei kataks (kaar on 46). */
+const SPOT_ON_ARC = 62;
+/**
+ * Nooleotsad on siin mujal kui mõistejoonisel: seal hoiduvad nad nurgasiltide
+ * eest, siin peavad nad hoiduma NUMBRIMÄRKIDE eest, mis seisavad kiirte peal.
+ * Mõlemal kiirel keskel – siis jääb märgi ja noole vahele ~45 ühikut.
+ */
+const LABEL_ARROW_AT = 0.55;
+
+/**
+ * Üks nummerdatud koht. Valge täidis ja äärisega ring: nii on number loetav ka
+ * seal, kus ta kiire peale satub, ja ta paistab joonisest ERALDI asjana.
+ */
+function SpotMarker({ x, y, marker }: { x: number; y: number; marker: number }) {
+  return (
+    <g>
+      <circle
+        cx={x}
+        cy={y}
+        r={SPOT_RADIUS}
+        className="fill-white stroke-ink"
+        strokeWidth={2}
+      />
+      <text
+        x={x}
+        y={y}
+        className="fill-ink"
+        fontSize={14}
+        fontWeight={700}
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {marker}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * Sama stseen mis mõistejoonisel, aga SILTIDETA: iga osa juures on ainult
+ * number ja nime paneb õpilane ise (küsimus practice-4, `kind: "label"`).
+ *
+ * Numbrid elavad SIIN, mitte activities.ts-is: küsimus ütleb, mis number
+ * millise nime saab, aga KUS see number joonisel on, teab ainult joonis
+ * (kasutaja otsus 2026-08-22, plaan/LUHITOOD.md etapp A). Nii ei ole ühtegi
+ * koordinaati kahes failis.
+ *
+ * Nurk ja kiirte suunad tulevad `model.ts`-ist, nagu igal siinsel joonisel
+ * (CLAUDE.md reegel 1) – joonis ei väida füüsikat, mida keegi ei valva.
+ */
+export function ReflectionPartsToLabelFigure() {
+  const incidentUp = opposite(incidentDirection(CONCEPT_ANGLE_DEG));
+  const reflectedUp = reflectedDirection(CONCEPT_ANGLE_DEG);
+
+  const source = pointAt(CONCEPT_ORIGIN, incidentUp, CONCEPT_RAY);
+  const target = pointAt(CONCEPT_ORIGIN, reflectedUp, CONCEPT_RAY);
+  const normalTop = pointAt(CONCEPT_ORIGIN, NORMAL_DIRECTION, CONCEPT_NORMAL_UP);
+  const normalBottom = pointAt(
+    CONCEPT_ORIGIN,
+    opposite(NORMAL_DIRECTION),
+    CONCEPT_NORMAL_DOWN,
+  );
+
+  // Märkide kohad. Kiirte omad seisavad kiire peal, nurkade omad kaarte taga –
+  // nii ei jää ükski number teise otsa ega kata kaart ära.
+  const spots = [
+    { marker: 1, at: pointAt(CONCEPT_ORIGIN, incidentUp, SPOT_ON_RAY) },
+    { marker: 2, at: pointAt(CONCEPT_ORIGIN, reflectedUp, SPOT_ON_RAY) },
+    { marker: 3, at: pointAt(CONCEPT_ORIGIN, NORMAL_DIRECTION, SPOT_ON_NORMAL) },
+    {
+      marker: 4,
+      at: pointAt(CONCEPT_ORIGIN, bisector(NORMAL_DIRECTION, incidentUp), SPOT_ON_ARC),
+    },
+    {
+      marker: 5,
+      at: pointAt(CONCEPT_ORIGIN, bisector(NORMAL_DIRECTION, reflectedUp), SPOT_ON_ARC),
+    },
+  ];
+
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 ${CONCEPT_VIEW.minY} ${CONCEPT_VIEW.width} ${CONCEPT_VIEW.height}`}
+        role="img"
+        // Kirjeldus ütleb, KUS numbrid on, aga MITTE, mis nad on – muidu oleks
+        // vastus ekraanilugejaga õpilase jaoks juba siin kirjas.
+        aria-label="Joonis: valguskiir langeb ülalt vasakult tasapeeglile ja lahkub ülal paremale. Joonisel on viis nummerdatud kohta. 1 on vasakpoolsel kaldjoonel, 2 parempoolsel kaldjoonel, 3 püstisel katkendjoonel, 4 vasakpoolsel kaarel katkendjoone ja vasaku joone vahel ning 5 parempoolsel kaarel katkendjoone ja parema joone vahel."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <RayArrowDefs />
+
+        <FlatSurface
+          left={CONCEPT_MIRROR.left}
+          right={CONCEPT_MIRROR.right}
+          y={CONCEPT_ORIGIN.y}
+        />
+
+        <line
+          x1={normalBottom.x}
+          y1={normalBottom.y}
+          x2={normalTop.x}
+          y2={normalTop.y}
+          className="stroke-ink-soft"
+          strokeWidth={2}
+          strokeDasharray="6 5"
+        />
+
+        {/* Kaared on hallid, mitte teal ja sinine: värv seoks nurga kohe oma
+            kiirega ja annaks vastuse ette. */}
+        <g className="fill-none stroke-ink-soft" strokeWidth={2}>
+          <path
+            d={arcPath(CONCEPT_ORIGIN, NORMAL_DIRECTION, incidentUp, CONCEPT_ARC, 0)}
+          />
+          <path
+            d={arcPath(CONCEPT_ORIGIN, NORMAL_DIRECTION, reflectedUp, CONCEPT_ARC, 1)}
+          />
+        </g>
+
+        {/* Ka kiired on siin ühte värvi: mõistejoonisel eristab teal langeva
+            ja sinine peegeldunud kiire, aga siin peab õpilane nad NOOLE, mitte
+            värvi järgi ära tundma. */}
+        <g className="fill-none stroke-ink" strokeWidth={3} strokeLinecap="round">
+          <path
+            d={rayPath(source, CONCEPT_ORIGIN, LABEL_ARROW_AT)}
+            markerMid={`url(#${ARROW_NEUTRAL})`}
+          />
+          <path
+            d={rayPath(CONCEPT_ORIGIN, target, LABEL_ARROW_AT)}
+            markerMid={`url(#${ARROW_NEUTRAL})`}
+          />
+        </g>
+        <circle cx={CONCEPT_ORIGIN.x} cy={CONCEPT_ORIGIN.y} r={4} className="fill-ink" />
+
+        {/* Märgid viimasena – nad peavad jääma kõige peale */}
+        {spots.map((spot) => (
+          <SpotMarker key={spot.marker} x={spot.at.x} y={spot.at.y} marker={spot.marker} />
+        ))}
+      </svg>
+
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Nooled näitavad, kummale poole valgus liigub.
       </figcaption>
     </figure>
   );
