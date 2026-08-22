@@ -311,3 +311,89 @@ export function UmbraPenumbraFigure() {
     </figure>
   );
 }
+
+// ---------------------------------------------------------------------------
+// theory-1 lisajoonis: punktallikas annab ainult täisvarju
+// ---------------------------------------------------------------------------
+
+/** Kaks kiirt punktallikast (allika laius = 0) mõlemast palliservast mööda. */
+const POINT_UMBRA_TOP = rayEndY(AXIS_Y, BALL_TOP);
+const POINT_UMBRA_BOTTOM = rayEndY(AXIS_Y, BALL_BOTTOM);
+
+/**
+ * Sama stend, aga laiusega lamp on asendatud punktiga: allikal pole „teist
+ * serva", seega tuleb ekraanile ainult ÜKS terav piir kummalgi pool, mitte
+ * hägune vaheala. Tekst ütleb seda sõnadega („poolvarju pole kellelgi
+ * tekitada"), see joonis näitab, miks – kõrvuti `UmbraPenumbraFigure`'iga on
+ * vahe kohe silmaga näha, ilma et peaks kahte moodulit korraga peas hoidma.
+ */
+export function PointSourceOnlyUmbraFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${RAY_VIEW.width} ${RAY_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: sama stend, aga lamp on nüüd punktallikas, mitte laiusega riba. Kaks kiirt lähtuvad ühestainsast punktist mõlemast palli servast mööda. Ekraanil on ainult kaks tsooni: terava piiriga tume täisvari keskel ja valgustatud osa mõlemal pool – poolvarju ei ole."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <g className="stroke-ink-soft" strokeWidth={1}>
+          <line x1={LAMP_X} y1={AXIS_Y} x2={SCREEN_X} y2={POINT_UMBRA_TOP} />
+          <line x1={LAMP_X} y1={AXIS_Y} x2={SCREEN_X} y2={POINT_UMBRA_BOTTOM} />
+        </g>
+
+        {/* Punktallikas: väike täpp, mitte riba – tema pärast poolvarju ei teki. */}
+        <circle cx={LAMP_X} cy={AXIS_Y} r={4} className="fill-teacher" />
+        <text x={2} y={AXIS_Y + 30} textAnchor="start" className="fill-ink-soft" fontSize={12}>
+          punktallikas
+        </text>
+
+        <circle cx={BALL_X} cy={AXIS_Y} r={BALL_R} className="fill-ink" />
+        <text x={BALL_X} y={BALL_BOTTOM + 20} textAnchor="middle" className="fill-ink-soft" fontSize={12}>
+          pall
+        </text>
+
+        <line
+          x1={SCREEN_X}
+          y1={POINT_UMBRA_TOP - 14}
+          x2={SCREEN_X}
+          y2={POINT_UMBRA_BOTTOM + 14}
+          className="stroke-ink-soft"
+          strokeWidth={3}
+        />
+        <text x={SCREEN_X} y={POINT_UMBRA_BOTTOM + 30} textAnchor="middle" className="fill-ink-soft" fontSize={12}>
+          ekraan
+        </text>
+
+        <rect
+          x={SCREEN_X - 4}
+          y={POINT_UMBRA_TOP}
+          width={8}
+          height={POINT_UMBRA_BOTTOM - POINT_UMBRA_TOP}
+          className="fill-ink"
+        />
+
+        <text x={SCREEN_X + 8} y={AXIS_Y + 4} className="fill-ink-soft" fontSize={12}>
+          täisvari
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Punktallikas: ainult terav täisvari, poolvarju ei teki.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: `UmbraPenumbraFigure` (laiusega lamp, kolm ala) ja selle
+ * all `PointSourceOnlyUmbraFigure` (punktallikas, ainult täisvari) – moodul
+ * jääb 6 sammu juurde, teist theory-sammu ei lisata (sama muster mis
+ * `liitvalgus-ja-spekter/SpectrumAndCompositeFigure`).
+ */
+export function UmbraPenumbraAndPointSourceFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <UmbraPenumbraFigure />
+      <PointSourceOnlyUmbraFigure />
+    </div>
+  );
+}

@@ -107,12 +107,20 @@ osa, mis praegu jääb sõnadeks.
       komponendina `SpectrumAndCompositeFigure` – moodul jääb 6 sammu
       juurde, teist theory-sammu ei lisatud. Version bumbitud 1.0.2, sest
       MOODULILEPING.md loeb visuaali muutuse patchiks.)
-- [ ] **lambivalik** – lambipakendi silt, kus kolm arvu (lm, W, K) peal
+- [x] **lambivalik** – lambipakendi silt, kus kolm arvu (lm, W, K) peal
       märgitud. Kelvin on kaetud (`ThreeColoursFigure`), lumen ja vatt mitte –
       ja pakend ongi see päris asi, millest moodul räägib.
-- [ ] **vari-ja-poolvari** – punktallika juhtum (ainult täisvari, poolvarju
+      (Tehtud: `PackageLabelFigure`, mis paneb selle kokku
+      `ThreeColoursFigure`'iga võtme `lv-kolm-varvust` alla komponendina
+      `PackageLabelAndThreeColoursFigure` – moodul jääb 6 sammu juurde, teist
+      theory-sammu ei lisatud. Version bumbitud 1.0.2.)
+- [x] **vari-ja-poolvari** – punktallika juhtum (ainult täisvari, poolvarju
       pole) teise paneelina `UmbraPenumbraFigure` kõrvale. Tekst rõhutab
       kontrasti, joonis näitab ainult laia allika poolt.
+      (Tehtud: `PointSourceOnlyUmbraFigure`, mis paneb selle kokku
+      `UmbraPenumbraFigure`'iga võtme `vp-taisvari-poolvari` alla
+      komponendina `UmbraPenumbraAndPointSourceFigure` – moodul jääb 6 sammu
+      juurde, teist theory-sammu ei lisatud. Version bumbitud 1.0.2.)
 - [ ] **esemete-varvus** – liitmisreegel kolme kattuva ringina
       (P+R→kollane, kõik kolm→valge). Olemas: `RedAppleFigure`.
 - [ ] **valgusfiltrid** – „filter ≠ prisma" kahe paneelina: filter (valge

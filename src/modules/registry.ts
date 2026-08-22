@@ -307,7 +307,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "vp-taisvari-poolvari": lazy(() =>
       import("./physics/vari-ja-poolvari/figures").then((module) => ({
-        default: module.UmbraPenumbraFigure,
+        default: module.UmbraPenumbraAndPointSourceFigure,
       })),
     ),
   },
