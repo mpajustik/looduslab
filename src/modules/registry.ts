@@ -399,7 +399,7 @@ export const moduleFigures: Record<string, ModuleFigures> = {
     ),
     "np-ristsirge": lazy(() =>
       import("./physics/noguspeegel/figures").then((module) => ({
-        default: module.NormalFigure,
+        default: module.NormalAndFocalRadiusFigure,
       })),
     ),
     "np-kolm-kiirt": lazy(() =>

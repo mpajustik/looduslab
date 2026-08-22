@@ -701,3 +701,119 @@ export function ThreeRaysFigure() {
     </figure>
   );
 }
+
+// ---------------------------------------------------------------------------
+// np-ristsirge – teooria (F ja C koos peateljel: f = R/2)
+// ---------------------------------------------------------------------------
+
+const FR_VIEW = { width: 360, height: 130 };
+const FR_VERTEX_X = 26;
+const FR_AXIS_Y = 58;
+const FR_TICK_Y = FR_AXIS_Y + 34;
+
+/** Punkt joonisel: F (mudeli `focalLength`) ja C (mudeli enda `RADIUS_M`). */
+const FR_FOCUS_X = FR_VERTEX_X + focalLength(RADIUS_M) * PX_PER_METRE;
+const FR_CENTRE_X = FR_VERTEX_X + RADIUS_M * PX_PER_METRE;
+
+/** Mõõdujoon kahe x-koordinaadi vahel, sildiga selle all. */
+function FocalMeasure({
+  fromX,
+  toX,
+  y,
+  label,
+}: {
+  fromX: number;
+  toX: number;
+  y: number;
+  label: string;
+}) {
+  return (
+    <g className="stroke-ink-soft" strokeWidth={1}>
+      <line x1={fromX} y1={y - 5} x2={fromX} y2={y + 5} />
+      <line x1={toX} y1={y - 5} x2={toX} y2={y + 5} />
+      <line x1={fromX} y1={y} x2={toX} y2={y} />
+      <text
+        x={(fromX + toX) / 2}
+        y={y + 16}
+        textAnchor="middle"
+        className="fill-ink"
+        fontSize={12}
+        fontWeight={600}
+        stroke="none"
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * „F ja C koos": näitab SUHET f = R/2, mitte ainult F asukohta.
+ *
+ * `NormalFigure` märgib kera keskpunkti C ja tuletab, kuhu peegeldunud kiir
+ * peatelge lõikab, aga see lõikepunkt ei kanna joonisel silti „F" ega ütle,
+ * KUI KAUGEL ta C-st on. Siin on FOOKUS punktiks endaks, mitte kiire
+ * tagajärjeks – ja kaks võrdset mõõdujoont (tipust F-ni, F-ist C-ni) näitavad
+ * f = R/2 SILMAGA, ilma et joonis peaks nurka ega kiirt üldse joonistama.
+ *
+ * F asukoht tuleb `focalLength`-ist ja C asukoht `RADIUS_M`-ist – mõlemad
+ * juba mudeli enda konstandid (samad, mida `ThreeRaysFigure` kasutab), seega
+ * ei saa see joonis mudeliga vastuollu minna.
+ */
+export function FocalRadiusFigure() {
+  return (
+    <figure className="flex w-full max-w-md flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${FR_VIEW.width} ${FR_VIEW.height}`}
+        role="img"
+        aria-label="Joonis: nõguspeegli kaar ja peatelg. Peateljel on kaks punkti: F ehk fookus ja C ehk kera keskpunkt. Kaks mõõdujoont on täpselt ühepikkused: üks peegli tipust fookuseni, teine fookusest kera keskpunktini. Nii on näha, et fookus on täpselt poolel teel tipu ja kera keskpunkti vahel – fookuskaugus on pool raadiusest."
+        className="w-full rounded-2xl border border-line bg-white"
+      >
+        <PrincipalAxis axisY={FR_AXIS_Y} left={FR_VERTEX_X} right={FR_VIEW.width - 8} />
+        <MirrorArc vertexX={FR_VERTEX_X} axisY={FR_AXIS_Y} />
+
+        <circle cx={FR_FOCUS_X} cy={FR_AXIS_Y} r={4} className="fill-info" />
+        <text x={FR_FOCUS_X} y={FR_AXIS_Y - 12} textAnchor="middle" className="fill-info" fontSize={13} fontWeight={600}>
+          F
+        </text>
+        <circle cx={FR_CENTRE_X} cy={FR_AXIS_Y} r={4} className="fill-ink" />
+        <text x={FR_CENTRE_X} y={FR_AXIS_Y - 12} textAnchor="middle" className="fill-ink" fontSize={13} fontWeight={600}>
+          C
+        </text>
+
+        <FocalMeasure fromX={FR_VERTEX_X} toX={FR_FOCUS_X} y={FR_TICK_Y} label="f" />
+        <FocalMeasure fromX={FR_FOCUS_X} toX={FR_CENTRE_X} y={FR_TICK_Y} label="f" />
+
+        <text
+          x={FR_VIEW.width / 2}
+          y={FR_VIEW.height - 8}
+          textAnchor="middle"
+          className="fill-ink"
+          fontSize={11}
+          fontWeight={600}
+        >
+          f = R/2 – fookus on täpselt poolel teel tipu ja C vahel
+        </text>
+      </svg>
+      <figcaption className="text-base leading-relaxed text-ink-soft">
+        Fookuskaugus f on alati pool raadiusest R: fookus F jääb täpselt poolele
+        teele peegli tipu ja kera keskpunkti C vahel.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Theory-1 juurde: mehhanismi joonis (`NormalFigure`, α = β) ja selle all
+ * suhte joonis (`FocalRadiusFigure`, f = R/2) – kaks eri ideed samast
+ * teooriatekstist ühe joonisena, moodul jääb 6 sammu juurde, teist
+ * theory-sammu ei lisata (sama muster mis mujal P1-s).
+ */
+export function NormalAndFocalRadiusFigure() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <NormalFigure />
+      <FocalRadiusFigure />
+    </div>
+  );
+}
