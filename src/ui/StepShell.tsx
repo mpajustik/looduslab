@@ -49,6 +49,7 @@ export function StepShell({
   Simulation,
   figures,
   summaryAction,
+  reviewLink,
 }: {
   /**
    * Mooduli id (või demo puhul mõni püsiv silt). Muutumine tähendab: õpilane
@@ -90,6 +91,14 @@ export function StepShell({
    * app-kihist, sest ui ei tea marsruutidest (docs/ARHITEKTUUR.md).
    */
   summaryAction?: ReactNode;
+  /**
+   * Link „Ava kordamine" (`/kordamine`). Tuleb app-kihist, sest ui ei tea
+   * marsruutidest. StepShell näitab teda kokkuvõttel ainult siis, kui
+   * `progress.hasReviewCards` on tõene – see loeb reviewStore'i PÄRISELT,
+   * mitte lihtsalt seda, et moodulil on `reviewCards` kirjeldatud. Nii ei
+   * lubata midagi, mida ketas täis vms tõttu tegelikult ei juhtunud.
+   */
+  reviewLink?: ReactNode;
 }) {
   const progress = useModuleProgress({
     moduleId,
@@ -238,6 +247,11 @@ export function StepShell({
           goal={moduleGoal}
           headingRef={headingRef}
           action={summaryAction}
+          reviewNote={
+            reviewLink && progress.hasReviewCards ? (
+              <>Kordamisküsimused lisatud sinu kordamisse. {reviewLink}</>
+            ) : undefined
+          }
           onReview={() => {
             // Sirvimine algab esimesest sammust: „vaata samme uuesti"
             // tähendab õpilase jaoks algusest, mitte sealt, kus ta lõpetas.

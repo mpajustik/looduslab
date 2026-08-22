@@ -13,15 +13,17 @@ import { Button } from "./Button";
  * sõnastatud õpieesmärk) – nii ütleb kokkuvõte iga mooduli puhul midagi
  * sisulist, ilma et mooduli autor peaks lõputeksti eraldi kirjutama.
  *
- * Disainijuhises on kokkuvõttes ka lause „Kordamisküsimused lisatud sinu
- * kordamisse". Seda EI ole siin: kordamismootor valmib etapis 3 ja praegu ei
- * lisata mitte kuhugi mitte midagi. Lubadus, mille taga ei ole tegu, õpetab
- * õpilast ekraani mitte uskuma – lause lisandub koos kordamisega.
+ * Kordamislause („Kordamisküsimused lisatud sinu kordamisse") tuleb siia
+ * `reviewNote`-na ainult app-kihist, kes teab, kas moodulil oli kordamiskaarte
+ * JA kas need sellesse seadmesse tegelikult lisati (`preview` ei lisa
+ * kunagi midagi, CLAUDE.md reegel 14) – lubadus, mille taga ei ole tegu,
+ * õpetab õpilast ekraani mitte uskuma.
  */
 export function ModuleSummary({
   goal,
   onReview,
   action,
+  reviewNote,
   headingRef,
 }: {
   /** Mooduli õpieesmärk õpilase keeles. Demol/arendusraamil võib puududa. */
@@ -29,11 +31,14 @@ export function ModuleSummary({
   /** „Vaata samme uuesti" – tagasi esimesele sammule, kokkuvõtet kaotamata. */
   onReview: () => void;
   /**
-   * Üks selge edasiviiv nupp (nt „Tagasi kursuse juurde"). Tuleb app-kihist,
-   * sest ui-kiht ei tea marsruutidest (docs/ARHITEKTUUR.md) – kuhu edasi, see
-   * sõltub sellest, kust õpilane tuli.
+   * Edasiviivad nupud (nt „Järgmine tund" ja „Tagasi kursuse juurde"). Tuleb
+   * app-kihist, sest ui-kiht ei tea marsruutidest (docs/ARHITEKTUUR.md) –
+   * kuhu edasi, see sõltub sellest, kust õpilane tuli ja mis kursusefailis
+   * järgmisena tuleb.
    */
   action?: ReactNode;
+  /** Rida „Kordamisküsimused lisatud sinu kordamisse" + link. Vt ülal. */
+  reviewNote?: ReactNode;
   headingRef?: RefObject<HTMLHeadingElement | null>;
 }) {
   return (
@@ -54,6 +59,7 @@ export function ModuleSummary({
             Täna õppisid: <span className="font-medium">{goal}</span>
           </p>
         ) : null}
+        {reviewNote ? <p className="text-ink">{reviewNote}</p> : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

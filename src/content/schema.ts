@@ -33,3 +33,20 @@ export function blockModules(block: CourseBlock): string[] {
   if (block.parts) return block.parts.flatMap((part) => part.modules);
   return block.modules ?? [];
 }
+
+/**
+ * Järgmise mooduli id SAMAS plokis, kursusefaili järjekorras.
+ *
+ * `undefined`, kui `currentId` on plokk viimane moodul (või tundmatu) –
+ * plokid vastavad ainekava teemadele (P1, P2, …) ja üleminek ühelt teiselt
+ * ei ole veel disainitud, seega ei paku kokkuvõte seda ise.
+ */
+export function nextModuleId(course: Course, currentId: string): string | undefined {
+  for (const block of course.blocks) {
+    const ids = blockModules(block);
+    const index = ids.indexOf(currentId);
+    if (index === -1) continue;
+    return index === ids.length - 1 ? undefined : ids[index + 1];
+  }
+  return undefined;
+}

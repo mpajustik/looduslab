@@ -111,34 +111,45 @@ Navigatsioon on sisu all (`StepShell.tsx`). Pikal explore- või
 practice-sammul tähendab see 360 px ekraanil rütmi „vastad → kerid alla →
 Edasi → kerid üles".
 
-- [ ] Proovi PÄRIS telefonis, mitte devtoolsis: kas probleem on päriselt olemas
-- [ ] Kui on: kleepuv nupuriba (`sticky bottom-0`) ainult mobiilis
-- [ ] Kontrolli, et riba ei kata sisu viimast rida ega vastuse tagasisidet
-- [ ] Klaviatuuri avanemine telefonis ei tohi riba sisu peale tõsta
+- [x] Proovitud päris telefonis (2026-08-22) – probleemi ei esine, muudatust
+      ei tehta. Kui olukord muutub (nt pikem samm lisandub), vaata uuesti üle
 
 ## 5. Explore-sammul on näit ja sisestusväli teineteisest kaugel — Sonnet, ALLES pärast proovimist
 
 Sama juur mis sammul 4: õpilane loeb simulatsioonilt arvu, kerib alla,
 tipib, kerib üles kontrollima.
 
-- [ ] Küsimuse juures väike kordusnäit („Praegu: 12 cm"), MITTE kogu
-      simulatsiooni dubleerimine
-- [ ] Näit tuleb simulatsiooni enda väärtusest, mitte teisest arvutusest –
-      kaks tõde annaks kaks eri arvu
-- [ ] Kui see osutub keeruliseks: alternatiiv on lühem simulatsioon, mitte
-      keerulisem kordusnäit
+- [x] Proovitud päris telefonis (2026-08-22) – probleemi ei esine, muudatust
+      ei tehta. Kui olukord muutub, vaata uuesti üle
 
 ## 6. Kokkuvõte võiks nüüd rohkem lubada — Sonnet
 
 `ModuleSummary.tsx` jättis meelega välja lause „Kordamisküsimused lisatud
 sinu kordamisse", sest kordamist ei olnud olemas. Nüüd on (etapp 3).
 
-- [ ] Lause tagasi + link `/kordamine` – aga alles siis, kui kaardid
-      päriselt tekivad (kontrolli `src/engine/review.ts`)
-- [ ] Järgmise tunni nimi kokkuvõttel, kõrvuti „Tagasi kursuse juurde"
-      nupuga. Järjestust teab kursusefail (`src/content/fyysika-8.ts`),
-      `ui/` ei tohi seda teada – link läheb `summaryAction` kaudu nagu praegu
-- [ ] Viimasel moodulil ploki lõpus ei ole „järgmist" – see haru peab olema
+- [x] Lause tagasi + link `/kordamine` – ainult siis, kui moodulil on
+      kordamiskaarte JA need selles seadmes päriselt lisati (mitte
+      `preview`). Otsuse teeb `StepShell` (`reviewCards.length` + `mode`),
+      link ise tuleb `ModulePage.tsx`-st (`reviewLink` prop) – `ui/` ei tea
+      marsruutidest
+- [x] Järgmise tunni nimi kokkuvõttel, kõrvuti „Tagasi kursuse juurde"
+      nupuga. Järjestust teab kursusefail (uus `nextModuleId` funktsioon
+      `src/content/schema.ts`-is), `ui/` ei tea sellest midagi – nupp tuleb
+      `summaryAction` kaudu nagu enne, `ModulePage.tsx` laadib järgmise
+      mooduli PELGALT manifesti (pealkirja jaoks), mitte Simulation.tsx-i
+- [x] Viimasel moodulil ploki lõpus ei ole „järgmist" – `nextModuleId`
+      otsib ainult SAMAST plokist, seega ploki viimane moodul annab
+      `undefined` ja kokkuvõttel jääb ainult „Tagasi kursuse juurde"
+      (test: `tests/course.test.ts` „nextModuleId")
+- [x] Codexi ülevaatus tehtud (`npm run review`, CodeRabbit oli Free-plaani
+      päevase limiidiga täis). Kaks päris viga: (1) „Järgmine" nupp kaotas
+      õpetaja eelvaates `?eelvaade=1` parameetri – üks klõps viiks päris
+      salvestusrežiimi (reegel 14); parandatud, link säilitab parameetri
+      preview-režiimis. (2) „Kordamisküsimused lisatud" lubas seda ka siis,
+      kui salvestus seadmesse ebaõnnestub (ketas täis) – parandatud:
+      `useModuleProgress` annab nüüd `hasReviewCards`, mis loeb
+      reviewStore'i PÄRISELT, mitte ainult `activities.reviewCards`
+      olemasolu. Üks stiiliküsimus (eksitav kommentaar) parandatud samas
 
 ## 7. Väiksemad kohad — Sonnet, ühe commitina või jupiti
 

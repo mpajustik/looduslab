@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { course } from "../src/content/fyysika-8";
 import { courseSchema } from "../src/content/courseSchema";
-import { blockModules } from "../src/content/schema";
+import { blockModules, nextModuleId } from "../src/content/schema";
 import { hasModule } from "../src/modules/registry";
 
 /**
@@ -144,5 +144,32 @@ describe("blockModules", () => {
 
   it("annab tühja loendi, kui plokis pole veel mooduleid", () => {
     expect(blockModules({ title: "Plokk", modules: [] })).toEqual([]);
+  });
+});
+
+describe("nextModuleId", () => {
+  const testCourse = {
+    id: "test",
+    title: "Test",
+    blocks: [
+      { title: "Plokk A", modules: ["physics.a1", "physics.a2"] },
+      { title: "Plokk B", modules: ["physics.b1"] },
+    ],
+  };
+
+  it("annab järgmise mooduli id samas plokis", () => {
+    expect(nextModuleId(testCourse, "physics.a1")).toBe("physics.a2");
+  });
+
+  it("ei ületa ploki piiri – ploki viimasel moodulil ei ole järgmist", () => {
+    expect(nextModuleId(testCourse, "physics.a2")).toBeUndefined();
+  });
+
+  it("annab undefined tundmatu mooduli id-le", () => {
+    expect(nextModuleId(testCourse, "physics.tundmatu")).toBeUndefined();
+  });
+
+  it("annab undefined ainsa mooduliga ploki puhul", () => {
+    expect(nextModuleId(testCourse, "physics.b1")).toBeUndefined();
   });
 });

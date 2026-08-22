@@ -57,6 +57,13 @@ export type ModuleProgressHandle = {
   /** Kas moodul on läbi tehtud – siis kuulub ekraan kokkuvõttele. */
   isCompleted: boolean;
   /**
+   * Kas SELLE mooduli kordamiskaardid on reviewStore'is päriselt olemas –
+   * mitte lihtsalt see, et `activities.reviewCards` pole tühi. Ketas täis
+   * (`addCards` ebaõnnestub) jätaks kaardid lisamata, kuigi moodulil
+   * kaardid on – kokkuvõte ei tohi siis lubada „lisatud sinu kordamisse".
+   */
+  hasReviewCards: boolean;
+  /**
    * Kas vastused on serverisse jõudnud (`unknown`/`off` = ära ütle midagi).
    * Vaade ainult kuvab – seisu omanik on sünkroonimisjärjekord.
    */
@@ -197,6 +204,9 @@ export function useModuleProgress({
     runId,
     hasProgress: index > 0 || Object.keys(progress.responses).length > 0,
     isCompleted: progress.status === "completed",
+    hasReviewCards: reviewStore
+      .list()
+      .some((item) => item.moduleId === moduleId),
     saveState,
     goToIndex: (target) => {
       const step = steps[target];

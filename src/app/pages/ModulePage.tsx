@@ -11,11 +11,14 @@ import type { ProgressMode } from "../../engine/progress";
 import { joinPath } from "../../lib/shareLinks";
 import { clearGuest, markGuest, readMembership } from "../../lib/studentIdentity";
 import type { Membership } from "../../lib/studentIdentity";
+import { course } from "../../content/fyysika-8";
+import { nextModuleId } from "../../content/schema";
 import type { LoadedModule } from "../../modules/registry";
 import {
   moduleFigures,
   moduleRegistry,
   moduleSimulations,
+  slugFromId,
   slugIndex,
 } from "../../modules/registry";
 
@@ -219,6 +222,10 @@ function JoinGate({ slug, onGuest }: { slug: string; onGuest: () => void }) {
 function ModuleLoader({ id, mode }: { id: string; mode: ProgressMode }) {
   const [loaded, setLoaded] = useState<LoadedModule | null>(null);
   const [failed, setFailed] = useState(false);
+  // Järgmise tunni pealkiri kokkuvõtte jaoks (samm „Kokkuvõte võiks nüüd
+  // rohkem lubada"). `null` tähendab nii „veel ei tea" kui ka „järgmist ei
+  // ole" – kokkuvõte näitab siis lihtsalt „Tagasi kursuse juurde" üksi.
+  const [next, setNext] = useState<{ slug: string; title: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -239,6 +246,30 @@ function ModuleLoader({ id, mode }: { id: string; mode: ProgressMode }) {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    // Ei ole vaja `setNext(null)`-iga nullida: `ModuleEntry` (kutsuja pool)
+    // on juba `key={id+mode}` peal, seega mooduli vahetus ehitab kogu selle
+    // komponendi (ja tema oleku) niikuinii uuesti üles.
+    if (!loaded) return;
+    const nextId = nextModuleId(course, loaded.manifest.id);
+    if (!nextId) return;
+    let cancelled = false;
+    // Manifest JA activities laaditakse (registri kirje annab mõlemad
+    // korraga), aga MITTE Simulation.tsx-i – sama põhjus mis
+    // `moduleManifests.ts`-is (CLAUDE.md reegel 13). Pealkirja jaoks
+    // kasutame ainult manifesti, activities jääb siin kasutamata.
+    moduleRegistry[nextId]()
+      .then((module) => {
+        if (!cancelled) setNext({ slug: slugFromId(nextId), title: module.manifest.title });
+      })
+      // Katkine võrk jätab kokkuvõtte lihtsalt ilma "Järgmine tund" nuputa –
+      // "Tagasi kursuse juurde" jääb ikka alles.
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded]);
 
   if (failed) {
     return (
@@ -277,17 +308,47 @@ function ModuleLoader({ id, mode }: { id: string; mode: ProgressMode }) {
         moduleGoal={manifest.goal}
         steps={activities.steps}
         // Kaardid lähevad engine'ile: mooduli lõpetamine paneb nad ootele
-        // (src/engine/review.ts). Ekraanil neid praegu ei näidata – see on
-        // /kordamine lehe töö (samm 3.3).
+        // (src/engine/review.ts).
         reviewCards={activities.reviewCards}
         mode={mode}
         Simulation={moduleSimulations[manifest.id]}
         figures={moduleFigures[manifest.id]}
-        // Edasiviiv nupp tuleb app-kihist, sest ui ei tea marsruutidest.
+        // Edasiviivad nupud tulevad app-kihist, sest ui ei tea marsruutidest
+        // ega kursusefaili järjekorrast. „Järgmine tund" on esikohal (primary)
+        // ja ilmub ainult siis, kui see on olemas – viimasel plokis moodulil
+        // (`next === null`) jääb ainus tee kursuse juurde.
         summaryAction={
-          <Link to="/kursus" className={buttonClasses()}>
-            Tagasi kursuse juurde
-            <ArrowRight aria-hidden="true" className="size-5" />
+          <>
+            {next ? (
+              // `?eelvaade=1` peab säilima: õpetaja „Vaata õpilasena" ei tohi
+              // ühe klõpsuga päris salvestusrežiimi minna (CLAUDE.md reegel
+              // 14, Codexi ülevaatuse leid).
+              <Link
+                to={mode === "preview" ? `/m/${next.slug}?eelvaade=1` : `/m/${next.slug}`}
+                className={buttonClasses()}
+              >
+                Järgmine: {next.title}
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </Link>
+            ) : null}
+            <Link
+              to="/kursus"
+              className={buttonClasses(next ? "secondary" : "primary")}
+            >
+              Tagasi kursuse juurde
+              {next ? null : <ArrowRight aria-hidden="true" className="size-5" />}
+            </Link>
+          </>
+        }
+        // „Kordamisküsimused lisatud sinu kordamisse" – link ise tuleb siit
+        // (ui ei tea marsruutidest), aga KAS lauset üldse näidatakse, otsustab
+        // StepShell reviewCards/mode järgi (vt seal olevat kommentaari).
+        reviewLink={
+          <Link
+            to="/kordamine"
+            className="font-medium text-brand underline underline-offset-2 hover:no-underline"
+          >
+            Ava kordamine
           </Link>
         }
       />
